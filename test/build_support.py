@@ -8,6 +8,13 @@ ffi.set_source("support",
         """, sources=['../qcgc.c'])
 
 ffi.cdef("""
+        struct qcgc_state {
+                void **shadow_stack;
+                void **shadow_stack_base;
+        } qcgc_state;
+
+        void qcgc_initialize(void);
+        void qcgc_destroy(void);
         void *qcgc_allocate(size_t bytes);
         void qcgc_collect(void);
         """)
