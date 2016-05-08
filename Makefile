@@ -1,6 +1,6 @@
 CC=clang
 CFLAGS=-Wall -Wextra
-SRC=qcgc.c qcgc.h
+SRC=qcgc.c
 
 lib: $(SRC)
 	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $<
@@ -14,5 +14,5 @@ test:
 
 .PHONY: clean
 clean:
-	$(RM) -f qcgc.so qcgc.o
+	$(RM) -f *.so *.o
 	cd test && make $@
