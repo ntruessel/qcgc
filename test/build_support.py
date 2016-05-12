@@ -8,6 +8,7 @@ ffi.set_source("support",
         #include "../arena.h"
 
         // arena.h - Macro replacements
+        // TODO: use macros here
         const size_t qcgc_arena_size = 1<<QCGC_ARENA_SIZE_EXP;
 
         const size_t qcgc_arena_bitmap_size = 1<<(QCGC_ARENA_SIZE_EXP - 7); // 1 / 128
