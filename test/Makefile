@@ -5,7 +5,7 @@ support: $(BUILD_SUPPORT)
 
 .PHONY: test
 test: support
-	python -m unittest
+	python -m unittest -v
 
 .PHONY: clean
 clean:
