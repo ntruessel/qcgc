@@ -6,7 +6,7 @@ class ArenaTestCase(QCGCTest):
         exp = lib.QCGC_ARENA_SIZE_EXP
         size = 2**exp
         bitmap = size / 128
-        cells = (size - 2 * bitmap) / 16
+        cells = size / 16
         self.assertEqual(size, lib.qcgc_arena_size)
         self.assertEqual(bitmap, lib.qcgc_arena_bitmap_size)
         self.assertEqual(cells, lib.qcgc_arena_cells_count)
