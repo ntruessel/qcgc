@@ -36,11 +36,7 @@ ffi.cdef("""
         typedef uint8_t cell_t[16];
 
         // cffi forces these values to be hardcoded
-        typedef struct arena_s {
-                uint8_t block_bitmap[8192]; //  2^(QCGC_ARENA_SIZE_EXP - 7) = 2^13
-                uint8_t mark_bitmap[8192];
-                cell_t cells[64512]; // 2^(QCGC_ARENA_SIZE_EXP - 4) - 2^(QCGC_ARENA_SIZE_EXP - 10) = 2^16 - 2^10
-        } arena_t;
+        typedef struct arena_s arena_t;
 
         arena_t *qcgc_arena_create(void);
 
