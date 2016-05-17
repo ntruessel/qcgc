@@ -10,3 +10,12 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(size, lib.qcgc_arena_size)
         self.assertEqual(bitmap, lib.qcgc_arena_bitmap_size)
         self.assertEqual(cells, lib.qcgc_arena_cells_count)
+
+    def test_create(self):
+        p = lib.qcgc_arena_create()
+        self.assertEqual(p, lib.qcgc_arena_addr(p))
+        self.assertEqual(0, lib.qcgc_arena_cell_index(p))
+        self.assertEqual(int(ffi.cast("uint64_t", p)),
+                int(ffi.cast("uint64_t", p))
+                    << lib.QCGC_ARENA_SIZE_EXP
+                    >> lib.QCGC_ARENA_SIZE_EXP)
