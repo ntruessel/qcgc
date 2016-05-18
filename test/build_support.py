@@ -13,6 +13,18 @@ ffi.set_source("support",
         const size_t qcgc_arena_bitmap_size = QCGC_ARENA_BITMAP_SIZE;
         const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
 
+        cell_t *arena_cells(arena_t *arena) {
+            return arena->cells;
+        }
+
+        uint8_t *arena_mark_bitmap(arena_t *arena) {
+            return arena->mark_bitmap;
+        }
+
+        uint8_t *arena_block_bitmap(arena_t *arena) {
+            return arena->block_bitmap;
+        }
+
         arena_t *qcgc_arena_addr(void *x) {
             return QCGC_ARENA_ADDR(x);
         }
@@ -35,8 +47,11 @@ ffi.cdef("""
 
         typedef uint8_t cell_t[16];
 
-        // cffi forces these values to be hardcoded
-        typedef struct arena_s arena_t;
+        typedef union arena_u arena_t;
+
+        cell_t *arena_cells(arena_t *arena);
+        uint8_t *arena_mark_bitmap(arena_t *arena);
+        uint8_t *arena_block_bitmap(arena_t *arena);
 
         arena_t *qcgc_arena_create(void);
 
