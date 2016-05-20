@@ -33,6 +33,10 @@ ffi.set_source("support",
             return QCGC_ARENA_CELL_INDEX(x);
         }
 
+        size_t qcgc_arena_sizeof(void) {
+            return sizeof(arena_t);
+        }
+
         """, sources=['../qcgc.c', '../arena.c'])
 
 ffi.cdef("""
@@ -58,6 +62,8 @@ ffi.cdef("""
         arena_t *qcgc_arena_addr(void *x);
 
         size_t qcgc_arena_cell_index(void *x);
+
+        size_t qcgc_arena_sizeof(void);
 
         // qcgc.h
         typedef struct object_s {

@@ -20,6 +20,9 @@ class ArenaTestCase(QCGCTest):
                     << lib.QCGC_ARENA_SIZE_EXP
                     >> lib.QCGC_ARENA_SIZE_EXP)
 
+    def test_arena_size(self):
+        self.assertEqual(lib.qcgc_arena_sizeof(), lib.qcgc_arena_size)
+
     def test_arena_layout(self):
         arena = lib.qcgc_arena_create()
 
