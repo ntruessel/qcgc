@@ -14,10 +14,10 @@ arena_t *qcgc_arena_create(void) {
 		// ERROR: OUT OF MEMORY
 		return NULL;
 	}
-	if (mem != QCGC_ARENA_ADDR(mem)) {
+	if (mem != qcgc_arena_addr(mem)) {
 		// align
 		void *aligned_mem = (void *)(
-				(intptr_t) QCGC_ARENA_ADDR(mem) + QCGC_ARENA_SIZE);
+				(intptr_t) qcgc_arena_addr(mem) + QCGC_ARENA_SIZE);
 		size_t size_before = (size_t)((intptr_t) aligned_mem - (intptr_t) mem);
 		size_t size_after = QCGC_ARENA_SIZE - size_before;
 
@@ -31,16 +31,36 @@ arena_t *qcgc_arena_create(void) {
 	}
 
 	// Init bitmaps: One large free block
-	size_t first_cell_index = QCGC_ARENA_CELL_INDEX(((intptr_t) result) + 2 * QCGC_ARENA_BITMAP_SIZE);
-	QCGC_ARNEA_SET_BITMAP_ENTRY(result->mark_bitmap, first_cell_index, 1);
+	size_t first_cell_index = qcgc_arena_cell_index((void *)((intptr_t) result) + 2 * QCGC_ARENA_BITMAP_SIZE);
+	qcgc_arena_set_bitmap_entry(result->mark_bitmap, first_cell_index, true);
 	return result;
 }
 
+arena_t *qcgc_arena_addr(void *ptr) {
+	return (arena_t *)((intptr_t) ptr & ~(QCGC_ARENA_SIZE - 1));
+}
+
+size_t qcgc_arena_cell_index(void *ptr) {
+	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1));
+}
+
+bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index) {
+	return (bitmap[index / 8] >> (index % 8) == 0x01);
+}
+
+void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value) {
+	if (value) {
+		bitmap[index / 8] |= value << (index % 8);
+	} else {
+		bitmap[index / 8] &= ~(value << (index % 8));
+	}
+}
+
 blocktype_t qcgc_arena_blocktype(void *ptr) {
-	size_t index = QCGC_ARENA_CELL_INDEX(ptr);
-	arena_t *arena = QCGC_ARENA_ADDR(ptr);
-	uint8_t block_bit = QCGC_ARENA_GET_BITMAP_ENTRY(arena->block_bitmap, index);
-	uint8_t mark_bit = QCGC_ARENA_GET_BITMAP_ENTRY(arena->mark_bitmap, index);
+	size_t index = qcgc_arena_cell_index(ptr);
+	arena_t *arena = qcgc_arena_addr(ptr);
+	uint8_t block_bit = qcgc_arena_get_bitmap_entry(arena->block_bitmap, index);
+	uint8_t mark_bit = qcgc_arena_get_bitmap_entry(arena->mark_bitmap, index);
 
 	if (block_bit) {
 		if (mark_bit) {

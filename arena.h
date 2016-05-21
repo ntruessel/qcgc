@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -8,13 +9,8 @@ typedef union arena_u arena_t;
 
 #define QCGC_ARENA_SIZE (1<<QCGC_ARENA_SIZE_EXP)
 
-#define QCGC_ARENA_ADDR(x) ((arena_t *)(((intptr_t) x) & ~(QCGC_ARENA_SIZE - 1)))
 #define QCGC_ARENA_BITMAP_SIZE (1<<(QCGC_ARENA_SIZE_EXP - 7)) // 1 / 128
 #define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
-
-#define QCGC_ARENA_CELL_INDEX(x) ((size_t)(((intptr_t)(x)) & (QCGC_ARENA_SIZE - 1)))
-#define QCGC_ARENA_GET_BITMAP_ENTRY(b, i) (((b)[(i) / 8] >> ((i) % 8)) & 0x1)
-#define QCGC_ARNEA_SET_BITMAP_ENTRY(b, i, v) (((b)[(i) / 8]) = ((b)[(i) / 8]) & ~(1<<((i) % 8)) | (v<<((i) % 8)))
 
 typedef uint8_t cell_t[16];
 
@@ -39,6 +35,12 @@ typedef enum blocktype {
 arena_t *qcgc_arena_create(void);
 
 /* Utility functions */
+
+arena_t *qcgc_arena_addr(void *ptr);
+size_t qcgc_arena_cell_index(void *ptr);
+
+bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index);
+void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value);
 
 /**
  * Get blocktype, no validation of ptr
