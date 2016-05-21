@@ -25,14 +25,6 @@ ffi.set_source("support",
             return arena->block_bitmap;
         }
 
-        arena_t *qcgc_arena_addr(void *x) {
-            return QCGC_ARENA_ADDR(x);
-        }
-
-        size_t qcgc_arena_cell_index(void *x) {
-            return QCGC_ARENA_CELL_INDEX(x);
-        }
-
         size_t qcgc_arena_sizeof(void) {
             return sizeof(arena_t);
         }
@@ -59,9 +51,10 @@ ffi.cdef("""
 
         arena_t *qcgc_arena_create(void);
 
-        arena_t *qcgc_arena_addr(void *x);
-
-        size_t qcgc_arena_cell_index(void *x);
+        arena_t *qcgc_arena_addr(void *);
+        size_t qcgc_arena_cell_index(void *);
+        bool qcgc_arena_get_bitmap_entry(uint8_t *, size_t);
+        void qcgc_arena_set_bitmap_entry(uint8_t *, size_t, bool);
 
         size_t qcgc_arena_sizeof(void);
 
@@ -73,6 +66,8 @@ ffi.cdef("""
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
+                arena_t *current_arena;
+                size_t current_arena_used;
         } qcgc_state;
 
         void qcgc_initialize(void);
