@@ -13,6 +13,7 @@ typedef union arena_u arena_t;
 #define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
 
 #define QCGC_ARENA_CELL_INDEX(x) ((size_t)(((intptr_t)(x)) & (QCGC_ARENA_SIZE - 1)))
+#define QCGC_ARENA_BITMAP_ENTRY(b, i) (((b)[(i) / 8] >> ((i) % 8)) & 0x1)
 
 typedef uint8_t cell_t[16];
 
@@ -24,7 +25,21 @@ union arena_u {
 	cell_t cells[QCGC_ARENA_CELLS_COUNT];
 };
 
+typedef enum blocktype {
+	BLOCK_EXTENT,
+	BLOCK_FREE,
+	BLOCK_WHITE,
+	BLOCK_BLACK,
+} blocktype_t;
+
 /**
  * Create a new arena
  */
 arena_t *qcgc_arena_create(void);
+
+/* Utility functions */
+
+/**
+ * Get blocktype, no validation of ptr
+ */
+blocktype_t qcgc_arena_blocktype(void *ptr);

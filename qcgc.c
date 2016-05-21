@@ -6,6 +6,8 @@
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
 		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
+	qcgc_state.current_arena = NULL;
+	qcgc_state.current_arena_used = 0;
 }
 
 void qcgc_destroy(void) {
