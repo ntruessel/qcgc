@@ -13,7 +13,8 @@ typedef union arena_u arena_t;
 #define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
 
 #define QCGC_ARENA_CELL_INDEX(x) ((size_t)(((intptr_t)(x)) & (QCGC_ARENA_SIZE - 1)))
-#define QCGC_ARENA_BITMAP_ENTRY(b, i) (((b)[(i) / 8] >> ((i) % 8)) & 0x1)
+#define QCGC_ARENA_GET_BITMAP_ENTRY(b, i) (((b)[(i) / 8] >> ((i) % 8)) & 0x1)
+#define QCGC_ARNEA_SET_BITMAP_ENTRY(b, i, v) (((b)[(i) / 8]) = ((b)[(i) / 8]) & ~(1<<((i) % 8)) | (v<<((i) % 8)))
 
 typedef uint8_t cell_t[16];
 

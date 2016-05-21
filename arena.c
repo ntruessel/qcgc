@@ -31,15 +31,16 @@ arena_t *qcgc_arena_create(void) {
 	}
 
 	// Init bitmaps: One large free block
-	result->mark_bitmap[0] = 0xf0;
+	size_t first_cell_index = QCGC_ARENA_CELL_INDEX(((intptr_t) result) + 2 * QCGC_ARENA_BITMAP_SIZE);
+	QCGC_ARNEA_SET_BITMAP_ENTRY(result->mark_bitmap, first_cell_index, 1);
 	return result;
 }
 
 blocktype_t qcgc_arena_blocktype(void *ptr) {
 	size_t index = QCGC_ARENA_CELL_INDEX(ptr);
 	arena_t *arena = QCGC_ARENA_ADDR(ptr);
-	uint8_t block_bit = QCGC_ARENA_BITMAP_ENTRY(arena->block_bitmap, index);
-	uint8_t mark_bit = QCGC_ARENA_BITMAP_ENTRY(arena->mark_bitmap, index);
+	uint8_t block_bit = QCGC_ARENA_GET_BITMAP_ENTRY(arena->block_bitmap, index);
+	uint8_t mark_bit = QCGC_ARENA_GET_BITMAP_ENTRY(arena->mark_bitmap, index);
 
 	if (block_bit) {
 		if (mark_bit) {
