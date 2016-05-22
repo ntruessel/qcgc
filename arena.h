@@ -12,6 +12,8 @@ typedef union arena_u arena_t;
 #define QCGC_ARENA_BITMAP_SIZE (1<<(QCGC_ARENA_SIZE_EXP - 7)) // 1 / 128
 #define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
 
+#define QCGC_ARENA_FIRST_CELL_INDEX (1<<(QCGC_ARENA_SIZE_EXP - 10))
+
 typedef uint8_t cell_t[16];
 
 union arena_u {

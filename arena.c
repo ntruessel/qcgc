@@ -31,8 +31,7 @@ arena_t *qcgc_arena_create(void) {
 	}
 
 	// Init bitmaps: One large free block
-	size_t first_cell_index = qcgc_arena_cell_index((void *)((intptr_t) result) + 2 * QCGC_ARENA_BITMAP_SIZE);
-	qcgc_arena_set_bitmap_entry(result->mark_bitmap, first_cell_index, true);
+	qcgc_arena_set_bitmap_entry(result->mark_bitmap, QCGC_ARENA_FIRST_CELL_INDEX, true);
 	return result;
 }
 
