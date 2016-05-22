@@ -44,14 +44,14 @@ size_t qcgc_arena_cell_index(void *ptr) {
 }
 
 bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index) {
-	return (bitmap[index / 8] >> (index % 8) == 0x01);
+	return (((bitmap[index / 8] >> (index % 8)) & 0x1) == 0x01);
 }
 
 void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value) {
 	if (value) {
-		bitmap[index / 8] |= value << (index % 8);
+		bitmap[index / 8] |= 1<<(index % 8);
 	} else {
-		bitmap[index / 8] &= ~(value << (index % 8));
+		bitmap[index / 8] &= ~(1<<(index % 8));
 	}
 }
 

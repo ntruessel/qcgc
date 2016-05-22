@@ -26,8 +26,6 @@ class ArenaTestCase(QCGCTest):
     def test_bitmap_manipulation(self):
         p = lib.qcgc_arena_create()
         for i in range(0, 7):
-            import pdb
-            pdb.set_trace()
             index = i + lib.qcgc_arena_first_cell_index + 8
             lib.qcgc_arena_set_bitmap_entry(lib.arena_mark_bitmap(p), index, True)
             for j in range(0, 7):
