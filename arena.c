@@ -40,7 +40,7 @@ arena_t *qcgc_arena_addr(void *ptr) {
 }
 
 size_t qcgc_arena_cell_index(void *ptr) {
-	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1));
+	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1)) >> 4;
 }
 
 bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index) {
