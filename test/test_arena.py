@@ -13,6 +13,11 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(cells, lib.qcgc_arena_cells_count)
         self.assertEqual(first_cell_index, lib.qcgc_arena_first_cell_index)
 
+    def test_index_calculation(self):
+        p = lib.qcgc_arena_create()
+        self.assertEqual(lib.qcgc_arena_first_cell_index,
+                lib.qcgc_arena_cell_index(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
+
     def test_arena_create(self):
         p = lib.qcgc_arena_create()
         self.assertEqual(p, lib.qcgc_arena_addr(p))
