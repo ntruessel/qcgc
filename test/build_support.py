@@ -65,7 +65,7 @@ ffi.cdef("""
         bool qcgc_arena_get_bitmap_entry(uint8_t *, size_t);
         void qcgc_arena_set_bitmap_entry(uint8_t *, size_t, bool);
 
-        blocktype_t qcgc_arena_blocktype(void *ptr);
+        blocktype_t qcgc_arena_get_blocktype(void *ptr);
 
         size_t qcgc_arena_sizeof(void);
 

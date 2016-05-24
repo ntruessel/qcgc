@@ -26,7 +26,7 @@ class ArenaTestCase(QCGCTest):
                 int(ffi.cast("uint64_t", p))
                     << lib.QCGC_ARENA_SIZE_EXP
                     >> lib.QCGC_ARENA_SIZE_EXP)
-        self.assertEqual(lib.BLOCK_FREE, lib.qcgc_arena_blocktype(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
+        self.assertEqual(lib.BLOCK_FREE, lib.qcgc_arena_get_blocktype(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
 
     def test_bitmap_manipulation(self):
         p = lib.qcgc_arena_create()
