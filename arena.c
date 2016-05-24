@@ -3,9 +3,14 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-arena_t *qcgc_arena_create(void) {
-	arena_t *result;
+/**
+ * Internal functions
+ */
+static blocktype_t get_blocktype(arena_t *arena, size_t index);
+static void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 
+arena_t *qcgc_arena_create(void) {
+	arena_t *result; 
 	// Linux: MAP_ANONYMOUS is initialized to zero
 	void *mem = mmap(0, 2 * QCGC_ARENA_SIZE,
 			PROT_READ | PROT_WRITE,
@@ -55,9 +60,7 @@ void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value) {
 	}
 }
 
-blocktype_t qcgc_arena_get_blocktype(void *ptr) {
-	size_t index = qcgc_arena_cell_index(ptr);
-	arena_t *arena = qcgc_arena_addr(ptr);
+static blocktype_t get_blocktype(arena_t *arena, size_t index) {
 	uint8_t block_bit = qcgc_arena_get_bitmap_entry(arena->block_bitmap, index);
 	uint8_t mark_bit = qcgc_arena_get_bitmap_entry(arena->mark_bitmap, index);
 
@@ -76,9 +79,14 @@ blocktype_t qcgc_arena_get_blocktype(void *ptr) {
 	}
 }
 
-void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
+blocktype_t qcgc_arena_get_blocktype(void *ptr) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
+
+	return get_blocktype(arena, index);
+}
+
+static void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
 	switch(type) {
 		case BLOCK_EXTENT:
 			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, false);
@@ -97,4 +105,26 @@ void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
 			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, true);
 			break;
 	}
+}
+
+void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
+	size_t index = qcgc_arena_cell_index(ptr);
+	arena_t *arena = qcgc_arena_addr(ptr);
+	set_blocktype(arena, index, type);
+}
+
+void qcgc_arena_mark_allocated(void *ptr, size_t size) {
+	size_t index = qcgc_arena_cell_index(ptr);
+	arena_t *arena = qcgc_arena_addr(ptr);
+	set_blocktype(arena, index, BLOCK_WHITE);
+	size_t index_of_next_block = index + ((size + 15) / 16);
+	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT &&
+			get_blocktype(arena, index_of_next_block) == BLOCK_EXTENT) {
+		set_blocktype(arena, index_of_next_block, BLOCK_FREE);
+	}
+}
+
+void qcgc_arena_mark_free(void *ptr) {
+	qcgc_arena_set_blocktype(ptr, BLOCK_FREE);
+	// FIXME: Coalescing
 }

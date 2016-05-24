@@ -49,3 +49,13 @@ void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value);
  */
 blocktype_t qcgc_arena_get_blocktype(void *ptr);
 void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
+
+/**
+ * Mark ptr as allocated area with given size
+ */
+void qcgc_arena_mark_allocated(void *ptr, size_t size);
+
+/**
+ * Mark ptr as free
+ */
+void qcgc_arena_mark_free(void *ptr);
