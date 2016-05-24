@@ -45,6 +45,7 @@ bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index);
 void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value);
 
 /**
- * Get blocktype, no validation of ptr
+ * Get/Set blocktype, no validation of ptr
  */
-blocktype_t qcgc_arena_blocktype(void *ptr);
+blocktype_t qcgc_arena_get_blocktype(void *ptr);
+void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);

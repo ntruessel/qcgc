@@ -55,7 +55,7 @@ void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value) {
 	}
 }
 
-blocktype_t qcgc_arena_blocktype(void *ptr) {
+blocktype_t qcgc_arena_get_blocktype(void *ptr) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 	uint8_t block_bit = qcgc_arena_get_bitmap_entry(arena->block_bitmap, index);
@@ -73,5 +73,28 @@ blocktype_t qcgc_arena_blocktype(void *ptr) {
 		} else {
 			return BLOCK_EXTENT;
 		}
+	}
+}
+
+void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
+	size_t index = qcgc_arena_cell_index(ptr);
+	arena_t *arena = qcgc_arena_addr(ptr);
+	switch(type) {
+		case BLOCK_EXTENT:
+			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, false);
+			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, false);
+			break;
+		case BLOCK_FREE:
+			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, false);
+			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, true);
+			break;
+		case BLOCK_WHITE:
+			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, true);
+			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, false);
+			break;
+		case BLOCK_BLACK:
+			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, true);
+			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, true);
+			break;
 	}
 }
