@@ -40,6 +40,13 @@ class ArenaTestCase(QCGCTest):
                 else:
                     self.assertEqual(False, lib.qcgc_arena_get_bitmap_entry(lib.arena_mark_bitmap(p), jndex))
 
+    def test_blocktype_manipulation(self):
+        p = lib.qcgc_arena_create()
+        block = ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])
+        for t in [lib.BLOCK_EXTENT, lib.BLOCK_FREE, lib.BLOCK_WHITE, lib.BLOCK_BLACK]:
+            lib.qcgc_arena_set_blocktype(block, t);
+            self.assertEqual(t, lib.qcgc_arena_get_blocktype(block))
+
     def test_arena_size(self):
         self.assertEqual(lib.qcgc_arena_sizeof(), lib.qcgc_arena_size)
 
