@@ -19,7 +19,7 @@ struct qcgc_state {
 	object_t **shadow_stack;
 	object_t **shadow_stack_base;
 	arena_t *current_arena;
-	size_t current_arena_used;
+	size_t current_cell_index;
 } qcgc_state;
 
 void qcgc_initialize(void);
