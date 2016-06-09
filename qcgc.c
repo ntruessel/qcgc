@@ -16,7 +16,7 @@ void qcgc_destroy(void) {
 
 object_t *qcgc_allocate(size_t bytes) {
 	object_t *result = NULL;
-	if (bytes >= 1<<14) {
+	if (bytes >= 1<<14) { // XXX: REPLACE BY MACRO
 		// Use malloc for large objects
 		result = (object_t *) malloc(bytes);
 	} else {
