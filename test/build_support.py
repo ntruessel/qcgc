@@ -14,6 +14,8 @@ ffi.set_source("support",
         const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
         const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 
+        object_t *qcgc_bump_allocate(size_t bytes);
+
         cell_t *arena_cells(arena_t *arena) {
             return arena->cells;
         }
@@ -59,6 +61,7 @@ ffi.cdef("""
         uint8_t *arena_block_bitmap(arena_t *arena);
 
         arena_t *qcgc_arena_create(void);
+        void qcgc_arena_destroy(arena_t *arena);
 
         arena_t *qcgc_arena_addr(void *);
         size_t qcgc_arena_cell_index(void *);
@@ -87,6 +90,9 @@ ffi.cdef("""
         void qcgc_destroy(void);
         object_t *qcgc_allocate(size_t bytes);
         void qcgc_collect(void);
+
+        // qcgc.c
+        object_t *qcgc_bump_allocate(size_t bytes);
         """)
 
 if __name__ == "__main__":
