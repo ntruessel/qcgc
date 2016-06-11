@@ -18,7 +18,8 @@ typedef struct object_s {
 struct qcgc_state {
 	object_t **shadow_stack;
 	object_t **shadow_stack_base;
-	arena_t *current_arena;
+	arena_t **arenas;
+	size_t arena_index;
 	size_t current_cell_index;
 } qcgc_state;
 
