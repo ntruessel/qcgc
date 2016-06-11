@@ -18,6 +18,7 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	// Allocate in current arena
 	result = (object_t *) &(qcgc_state.arenas[qcgc_state.arena_index]->cells[qcgc_state.current_cell_index]);
 	qcgc_arena_mark_allocated((void *) result, bytes);
+	qcgc_state.current_cell_index += size_in_cells;
 
 	return result;
 }
