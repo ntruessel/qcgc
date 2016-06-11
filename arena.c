@@ -10,7 +10,7 @@ static blocktype_t get_blocktype(arena_t *arena, size_t index);
 static void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 
 arena_t *qcgc_arena_create(void) {
-	arena_t *result; 
+	arena_t *result;
 	// Linux: MAP_ANONYMOUS is initialized to zero
 	void *mem = mmap(0, 2 * QCGC_ARENA_SIZE,
 			PROT_READ | PROT_WRITE,
@@ -38,6 +38,10 @@ arena_t *qcgc_arena_create(void) {
 	// Init bitmaps: One large free block
 	qcgc_arena_set_bitmap_entry(result->mark_bitmap, QCGC_ARENA_FIRST_CELL_INDEX, true);
 	return result;
+}
+
+void qcgc_arena_destroy(arena_t *arena) {
+	munmap((void *) arena, QCGC_ARENA_SIZE);
 }
 
 arena_t *qcgc_arena_addr(void *ptr) {

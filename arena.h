@@ -36,6 +36,11 @@ typedef enum blocktype {
  */
 arena_t *qcgc_arena_create(void);
 
+/**
+ * Destructor
+ */
+void qcgc_arena_destroy(arena_t *arena);
+
 /* Utility functions */
 
 arena_t *qcgc_arena_addr(void *ptr);

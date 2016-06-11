@@ -9,6 +9,9 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	if (qcgc_state.current_cell_index + size_in_cells > QCGC_ARENA_CELLS_COUNT) {
 		// Create new arena and allocate there
 		qcgc_state.arena_index++;
+		if (qcgc_state.arena_index >= QCGC_ARENA_COUNT) {
+			return NULL; // No more space available
+		}
 		qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 		qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 	}
@@ -30,11 +33,15 @@ void qcgc_initialize(void) {
 
 void qcgc_destroy(void) {
 	free(qcgc_state.shadow_stack_base);
+	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
+		qcgc_arena_destroy(qcgc_state.arenas[i]);
+	}
+	free(qcgc_state.arenas);
 }
 
 object_t *qcgc_allocate(size_t bytes) {
 	object_t *result = NULL;
-	if (bytes >= 1<<14) { // XXX: REPLACE BY MACRO
+	if (bytes >= QCGC_LARGE_ALLOC_THRESHOLD) {
 		// Use malloc for large objects
 		result = (object_t *) malloc(bytes);
 	} else {
