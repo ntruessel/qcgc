@@ -3,24 +3,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "bump_allocator.h"
+
 object_t *qcgc_bump_allocate(size_t bytes) {
-	object_t *result = NULL;
 	size_t size_in_cells = (bytes + 15) / 16;
-	if (qcgc_state.current_cell_index + size_in_cells > QCGC_ARENA_CELLS_COUNT) {
-		// Create new arena and allocate there
+	if (!qcgc_balloc_can_allocate(size_in_cells)) {
+		// Create a new arena and assign its memory to bump allocator
 		qcgc_state.arena_index++;
 		if (qcgc_state.arena_index >= QCGC_ARENA_COUNT) {
 			return NULL; // No more space available
 		}
 		qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 		qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
+		qcgc_balloc_assign(
+				&(qcgc_state.arenas[qcgc_state.arena_index]
+					->cells[qcgc_state.current_cell_index]),
+				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 	}
-	// Allocate in current arena
-	result = (object_t *) &(qcgc_state.arenas[qcgc_state.arena_index]->cells[qcgc_state.current_cell_index]);
-	qcgc_arena_mark_allocated((void *) result, bytes);
-	qcgc_state.current_cell_index += size_in_cells;
-
-	return result;
+	return (object_t *) qcgc_balloc_allocate(size_in_cells);
 }
 
 void qcgc_initialize(void) {
@@ -30,6 +30,11 @@ void qcgc_initialize(void) {
 	qcgc_state.arena_index = 0;
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
+	
+	qcgc_balloc_assign(
+			&(qcgc_state.arenas[qcgc_state.arena_index]
+				->cells[qcgc_state.current_cell_index]),
+			QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 }
 
 void qcgc_destroy(void) {

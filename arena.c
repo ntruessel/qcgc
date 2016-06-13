@@ -117,11 +117,11 @@ void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
 	set_blocktype(arena, index, type);
 }
 
-void qcgc_arena_mark_allocated(void *ptr, size_t size) {
+void qcgc_arena_mark_allocated(void *ptr, size_t cells) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 	set_blocktype(arena, index, BLOCK_WHITE);
-	size_t index_of_next_block = index + ((size + 15) / 16);
+	size_t index_of_next_block = index + cells;
 	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT &&
 			get_blocktype(arena, index_of_next_block) == BLOCK_EXTENT) {
 		set_blocktype(arena, index_of_next_block, BLOCK_FREE);
@@ -130,5 +130,5 @@ void qcgc_arena_mark_allocated(void *ptr, size_t size) {
 
 void qcgc_arena_mark_free(void *ptr) {
 	qcgc_arena_set_blocktype(ptr, BLOCK_FREE);
-	// FIXME: Coalescing
+	// No coalescing, collector will do this
 }

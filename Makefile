@@ -1,6 +1,6 @@
 CC=clang
 CFLAGS=-Wall -Wextra
-SRC=qcgc.c
+SRC=qcgc.c arena.c bump_allocator.c
 
 lib: $(SRC)
 	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $<

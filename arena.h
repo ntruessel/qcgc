@@ -58,7 +58,7 @@ void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
 /**
  * Mark ptr as allocated area with given size
  */
-void qcgc_arena_mark_allocated(void *ptr, size_t size);
+void qcgc_arena_mark_allocated(void *ptr, size_t cells);
 
 /**
  * Mark ptr as free

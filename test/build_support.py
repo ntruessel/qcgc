@@ -32,7 +32,7 @@ ffi.set_source("support",
             return sizeof(arena_t);
         }
 
-        """, sources=['../qcgc.c', '../arena.c'])
+        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
 
 ffi.cdef("""
         // config.h
