@@ -2,44 +2,17 @@ from cffi import FFI
 
 ffi = FFI()
 
-ffi.set_source("support",
-        """
-        #include "../qcgc.h"
-        #include "../arena.h"
-
-        // arena.h - Macro replacements
-        const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
-
-        const size_t qcgc_arena_bitmap_size = QCGC_ARENA_BITMAP_SIZE;
-        const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
-        const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
-
-        object_t *qcgc_bump_allocate(size_t bytes);
-
-        cell_t *arena_cells(arena_t *arena) {
-            return arena->cells;
-        }
-
-        uint8_t *arena_mark_bitmap(arena_t *arena) {
-            return arena->mark_bitmap;
-        }
-
-        uint8_t *arena_block_bitmap(arena_t *arena) {
-            return arena->block_bitmap;
-        }
-
-        size_t qcgc_arena_sizeof(void) {
-            return sizeof(arena_t);
-        }
-
-        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
-
+################################################################################
+# config.h                                                                     #
+################################################################################
 ffi.cdef("""
-        // config.h
-        #define QCGC_SHADOWSTACK_SIZE 4096
-        #define QCGC_ARENA_SIZE_EXP 20	    // Between 16 (64kB) and 20 (1MB)
+        #define QCGC_ARENA_SIZE_EXP 20				// Between 16 (64kB) and 20 (1MB)
+        """)
 
-        // arena.h
+################################################################################
+# arena                                                                        #
+################################################################################
+ffi.cdef("""
         const size_t qcgc_arena_size;
         const size_t qcgc_arena_bitmap_size;
         const size_t qcgc_arena_cells_count;
@@ -72,7 +45,12 @@ ffi.cdef("""
         void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
 
         size_t qcgc_arena_sizeof(void);
+        """)
 
+################################################################################
+# qcgc                                                                         #
+################################################################################
+ffi.cdef("""
         // qcgc.h
         typedef struct object_s {
             uint16_t flags;
@@ -94,6 +72,42 @@ ffi.cdef("""
         // qcgc.c
         object_t *qcgc_bump_allocate(size_t bytes);
         """)
+
+################################################################################
+# set_source                                                                   #
+################################################################################
+
+ffi.set_source("support",
+        """
+        #include "../qcgc.h"
+        #include "../arena.h"
+
+        // arena.h - Macro replacements
+        const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
+
+        const size_t qcgc_arena_bitmap_size = QCGC_ARENA_BITMAP_SIZE;
+        const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
+        const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
+
+        object_t *qcgc_bump_allocate(size_t bytes);
+
+        cell_t *arena_cells(arena_t *arena) {
+            return arena->cells;
+        }
+
+        uint8_t *arena_mark_bitmap(arena_t *arena) {
+            return arena->mark_bitmap;
+        }
+
+        uint8_t *arena_block_bitmap(arena_t *arena) {
+            return arena->block_bitmap;
+        }
+
+        size_t qcgc_arena_sizeof(void) {
+            return sizeof(arena_t);
+        }
+
+        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
 
 if __name__ == "__main__":
     ffi.compile()
