@@ -6,14 +6,13 @@ ffi = FFI()
 # config.h                                                                     #
 ################################################################################
 ffi.cdef("""
-        #define QCGC_ARENA_SIZE_EXP 20				// Between 16 (64kB) and 20 (1MB)
+        #define QCGC_ARENA_SIZE_EXP 20	// Between 16 (64kB) and 20 (1MB)
         """)
 
 ################################################################################
 # arena                                                                        #
 ################################################################################
-ffi.cdef("""
-        const size_t qcgc_arena_size;
+ffi.cdef(""" const size_t qcgc_arena_size;
         const size_t qcgc_arena_bitmap_size;
         const size_t qcgc_arena_cells_count;
         const size_t qcgc_arena_first_cell_index;
@@ -45,6 +44,21 @@ ffi.cdef("""
         void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
 
         size_t qcgc_arena_sizeof(void);
+        """)
+
+################################################################################
+# bump_allocator                                                               #
+################################################################################
+ffi.cdef("""
+        struct qcgc_balloc_state {
+            cell_t *bump_ptr;
+            size_t remaining_cells;
+        } qcgc_balloc_state;
+
+        void qcgc_balloc_assign(cell_t *bump_ptr, size_t cells);
+        void *qcgc_balloc_allocate(size_t cells);
+        bool qcgc_balloc_can_allocate(size_t cells);
+        size_t qcgc_balloc_remaining_cells(void);
         """)
 
 ################################################################################
@@ -81,6 +95,7 @@ ffi.set_source("support",
         """
         #include "../qcgc.h"
         #include "../arena.h"
+        #include "../bump_allocator.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
