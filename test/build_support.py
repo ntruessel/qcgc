@@ -58,7 +58,6 @@ ffi.cdef("""
         void qcgc_balloc_assign(cell_t *bump_ptr, size_t cells);
         void *qcgc_balloc_allocate(size_t cells);
         bool qcgc_balloc_can_allocate(size_t cells);
-        size_t qcgc_balloc_remaining_cells(void);
         """)
 
 ################################################################################
