@@ -11,3 +11,4 @@ test: support
 clean:
 	$(RM) -f support.*
 	$(RM) -rf __pycache__
+	$(RM) -rf runner/__pycache__
