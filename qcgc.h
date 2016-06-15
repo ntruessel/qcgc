@@ -8,7 +8,7 @@
 #include "qcgc.h"
 #include "arena.h"
 
-#define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (void *)(p))
+#define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (object_t *)(p))
 #define qcgc_shadowstack_pop(p) ((p) = *(--qcgc_state.shadow_stack))
 
 typedef struct object_s {
