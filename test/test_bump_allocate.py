@@ -36,14 +36,18 @@ class BumpAllocatorTest(QCGCTest):
         self.assertEqual(r, ffi.NULL)
 
     def test_many_small_allocations(self):
+        objects = set()
         p = lib.qcgc_bump_allocate(16)
-        self.assertNotEqual(p, ffi.NULL)
         arena = lib.qcgc_arena_addr(p)
-        for i in range(1, 1000):
-            q = lib.qcgc_bump_allocate(16)
-            self.assertNotEqual(p, q)
-            p = q
+        objects.add(p)
+
+        for _ in range(1000):
+            p = lib.qcgc_bump_allocate(16)
+            objects.add(p)
             self.assertEqual(arena, lib.qcgc_arena_addr(p))
+
+        self.assertFalse(ffi.NULL in objects)
+        self.assertEqual(len(objects), 1001)
 
     def test_large_alloc_overlap(self):
         p = lib.qcgc_bump_allocate(2**19)
