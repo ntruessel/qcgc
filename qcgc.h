@@ -28,3 +28,5 @@ void qcgc_destroy(void);
 
 object_t *qcgc_allocate(size_t bytes);
 void qcgc_collect(void);
+
+extern void qcgc_trace_cb(object_t *object, void (*visit)(object_t *object));
