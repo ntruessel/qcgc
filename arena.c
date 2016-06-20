@@ -162,3 +162,102 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	}
 	return free;
 }
+
+bool qcgc_arena_is_empty(arena_t *arena) {
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_WHITE: // Fall through
+			case BLOCK_BLACK:
+				return false;
+
+			default:
+				break;
+		}
+	}
+	return true;
+}
+
+bool qcgc_arena_is_coalesced(arena_t *arena) {
+	bool prev_was_free = false;
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_WHITE: // Fall through
+			case BLOCK_BLACK:
+				prev_was_free = false;
+				break;
+
+			case BLOCK_FREE:
+				if (prev_was_free) {
+					return false;
+				} else {
+					prev_was_free = true;
+				}
+				break;
+
+			case BLOCK_EXTENT:
+				break;
+		}
+	}
+	return true;
+}
+
+size_t qcgc_arena_free_blocks(arena_t *arena) {
+	size_t result = 0;
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_WHITE: // Fall through
+			case BLOCK_BLACK:
+			case BLOCK_EXTENT:
+				break;
+
+			case BLOCK_FREE:
+				result++;
+				break;
+		}
+	}
+	return result;
+}
+
+size_t qcgc_arena_white_blocks(arena_t *arena) {
+	size_t result = 0;
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_BLACK:	// Fall through
+			case BLOCK_EXTENT:
+			case BLOCK_FREE:
+				break;
+
+			case BLOCK_WHITE:
+				result++;
+				break;
+		}
+	}
+	return result;
+}
+
+size_t qcgc_arena_black_blocks(arena_t *arena) {
+	size_t result = 0;
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_WHITE: // Fall through
+			case BLOCK_FREE:
+			case BLOCK_EXTENT:
+				break;
+
+			case BLOCK_BLACK:
+				result++;
+				break;
+		}
+	}
+	return result;
+}

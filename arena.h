@@ -70,3 +70,10 @@ void qcgc_arena_mark_free(void *ptr);
  * Returns whether arena is empty
  */
 bool qcgc_arena_sweep(arena_t *arena);
+
+/* Debug functions */
+bool qcgc_arena_is_empty(arena_t *arena);
+bool qcgc_arena_is_coalesced(arena_t *arena);
+size_t qcgc_arena_free_blocks(arena_t *arena);
+size_t qcgc_arena_white_blocks(arena_t *arena);
+size_t qcgc_arena_black_blocks(arena_t *arena);
