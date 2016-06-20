@@ -7,7 +7,7 @@ class ArenaTestCase(QCGCTest):
         size = 2**exp
         bitmap = size / 128
         cells = size / 16
-        first_cell_index = 2 * bitmap / 16;
+        first_cell_index = 2 * bitmap / 16
         self.assertEqual(size, lib.qcgc_arena_size)
         self.assertEqual(bitmap, lib.qcgc_arena_bitmap_size)
         self.assertEqual(cells, lib.qcgc_arena_cells_count)
@@ -44,7 +44,7 @@ class ArenaTestCase(QCGCTest):
         p = lib.qcgc_arena_create()
         block = ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])
         for t in [lib.BLOCK_EXTENT, lib.BLOCK_FREE, lib.BLOCK_WHITE, lib.BLOCK_BLACK]:
-            lib.qcgc_arena_set_blocktype(block, t);
+            lib.qcgc_arena_set_blocktype(block, t)
             self.assertEqual(t, lib.qcgc_arena_get_blocktype(block))
 
     def test_arena_size(self):
@@ -61,9 +61,9 @@ class ArenaTestCase(QCGCTest):
 
         lib.arena_cells(arena)[lib.qcgc_arena_cells_count - 1][15] = 12
 
-    def test_arena_sweep(self):
+    def test_arena_sweep_white(self):
         arena = lib.qcgc_arena_create()
-        i = lib.qcgc_arena_first_cell_index;
+        i = lib.qcgc_arena_first_cell_index
 
         for j in range(10):
             lib.qcgc_arena_mark_allocated(
@@ -77,4 +77,22 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
 
         self.assertTrue(lib.qcgc_arena_is_empty(arena))
+        self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
+
+    def test_arena_sweep_black(self):
+        arena = lib.qcgc_arena_create()
+        i = lib.qcgc_arena_first_cell_index
+
+        for j in range(10):
+            p = ffi.addressof(lib.arena_cells(arena)[i + j])
+            lib.qcgc_arena_mark_allocated(p, 1)
+            lib.qcgc_mark_object(ffi.cast("object_t *", p))
+
+        self.assertEqual(lib.qcgc_arena_black_blocks(arena), 10)
+
+        self.assertFalse(lib.qcgc_arena_sweep(arena))
+        self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
+        self.assertEqual(lib.qcgc_arena_white_blocks(arena), 10)
+        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
+
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
