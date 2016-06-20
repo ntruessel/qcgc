@@ -8,6 +8,7 @@
 object_t *qcgc_bump_allocate(size_t bytes);
 void qcgc_mark(void);
 void qcgc_mark_object(object_t *object);
+void qcgc_sweep(void);
 
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base = (object_t **) malloc(QCGC_SHADOWSTACK_SIZE); qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
@@ -86,5 +87,6 @@ void qcgc_sweep(void) {
 }
 
 void qcgc_collect(void) {
-	return;
+	qcgc_mark();
+	qcgc_sweep();
 }
