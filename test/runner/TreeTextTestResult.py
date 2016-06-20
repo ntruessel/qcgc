@@ -4,6 +4,8 @@ from unittest.util import strclass
 class TreeTextTestResult(result.TestResult):
     indent = ' ' * 4
     test_class = None
+    separator1 = '=' * 70
+    separator2 = '-' * 70
 
     def __init__(self, stream, descriptions, verbosity):
         super(TreeTextTestResult, self).__init__(stream, descriptions, verbosity)
