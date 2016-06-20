@@ -143,6 +143,9 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			case BLOCK_EXTENT:
 				break;
 			case BLOCK_FREE:
+				if (coalesce) {
+					set_blocktype(arena, cell, BLOCK_EXTENT);
+				}
 				coalesce = true;
 				break;
 			case BLOCK_WHITE:
