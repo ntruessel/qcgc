@@ -43,6 +43,8 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         blocktype_t qcgc_arena_get_blocktype(void *ptr);
         void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
 
+        bool qcgc_arena_sweep(arena_t *arena);
+
         size_t qcgc_arena_sizeof(void);
         """)
 
@@ -84,6 +86,9 @@ ffi.cdef("""
 
         // qcgc.c
         object_t *qcgc_bump_allocate(size_t bytes);
+        void qcgc_mark(void);
+        void qcgc_mark_object(object_t *object);
+        void qcgc_sweep(void);
         """)
 
 ################################################################################
@@ -103,7 +108,11 @@ ffi.set_source("support",
         const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
         const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 
+        // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t bytes);
+        void qcgc_mark(void);
+        void qcgc_mark_object(object_t *object);
+        void qcgc_sweep(void);
 
         cell_t *arena_cells(arena_t *arena) {
             return arena->cells;
