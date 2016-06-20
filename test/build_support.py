@@ -92,6 +92,21 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# utilities                                                                    #
+################################################################################
+
+ffi.cdef("""
+        // object
+        typedef struct {
+            object_t hdr;
+            uint32_t type_id;
+        } myobject_t;
+
+        void _set_type_id(myobject_t *obj, uint32_t id);
+        uint32_t _get_type_id(myobject_t *obj);
+        """)
+
+################################################################################
 # set_source                                                                   #
 ################################################################################
 
@@ -132,6 +147,15 @@ ffi.set_source("support",
 
         void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {
             return;
+        }
+
+        // Utilites
+        void _set_type_id(myobject_t *object, uint32_t id) {
+            object->type_id = id;
+        }
+
+        uint32_t _get_type_id(myobject_t *object) {
+            return object->type_id;
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
