@@ -132,3 +132,33 @@ void qcgc_arena_mark_free(void *ptr) {
 	qcgc_arena_set_blocktype(ptr, BLOCK_FREE);
 	// No coalescing, collector will do this
 }
+
+bool qcgc_arena_sweep(arena_t *arena) {
+	bool free = true;
+	bool coalesce = false;
+	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+			cell < QCGC_ARENA_CELLS_COUNT;
+			cell++) {
+		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+			case BLOCK_EXTENT:
+				break;
+			case BLOCK_FREE:
+				coalesce = true;
+				break;
+			case BLOCK_WHITE:
+				if (coalesce) {
+					set_blocktype(arena, cell, BLOCK_EXTENT);
+				} else {
+					set_blocktype(arena, cell, BLOCK_FREE);
+				}
+				coalesce = true;
+				break;
+			case BLOCK_BLACK:
+				free = false;
+				coalesce = false;
+				set_blocktype(arena, cell, BLOCK_WHITE);
+				break;
+		}
+	}
+	return free;
+}

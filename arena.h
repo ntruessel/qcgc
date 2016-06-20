@@ -64,3 +64,9 @@ void qcgc_arena_mark_allocated(void *ptr, size_t cells);
  * Mark ptr as free
  */
 void qcgc_arena_mark_free(void *ptr);
+
+/**
+ * Sweep arena
+ * Returns whether arena is empty
+ */
+bool qcgc_arena_sweep(arena_t *arena);

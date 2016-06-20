@@ -81,23 +81,6 @@ void qcgc_mark_object(object_t *object) {
 	qcgc_trace_cb(object, &qcgc_mark_object);
 }
 
-void qcgc_sweep_arena(arena_t *arena) {
-	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
-			cell < QCGC_ARENA_CELLS_COUNT;
-			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
-			case BLOCK_EXTENT:
-				break;
-			case BLOCK_FREE:
-				break;
-			case BLOCK_WHITE:
-				break;
-			case BLOCK_BLACK:
-				break;
-		}
-	}
-}
-
 void qcgc_collect(void) {
 	return;
 }
