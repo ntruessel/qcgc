@@ -130,6 +130,10 @@ ffi.set_source("support",
             return sizeof(arena_t);
         }
 
+        void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {
+            return;
+        }
+
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
 
 if __name__ == "__main__":
