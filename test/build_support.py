@@ -40,8 +40,17 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         bool qcgc_arena_get_bitmap_entry(uint8_t *, size_t);
         void qcgc_arena_set_bitmap_entry(uint8_t *, size_t, bool);
 
+        void qcgc_arena_mark_allocated(void *ptr, size_t cells);
+        void qcgc_arena_mark_free(void *ptr);
+
         blocktype_t qcgc_arena_get_blocktype(void *ptr);
         void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
+
+        bool qcgc_arena_is_empty(arena_t *arena);
+        bool qcgc_arena_is_coalesced(arena_t *arena);
+        size_t qcgc_arena_free_blocks(arena_t *arena);
+        size_t qcgc_arena_white_blocks(arena_t *arena);
+        size_t qcgc_arena_black_blocks(arena_t *arena);
 
         bool qcgc_arena_sweep(arena_t *arena);
 
@@ -150,6 +159,13 @@ ffi.set_source("support",
         }
 
         // Utilites
+        typedef struct {
+            object_t hdr;
+            uint32_t type_id;
+        } myobject_t;
+
+        void _set_type_id(myobject_t *obj, uint32_t id);
+        uint32_t _get_type_id(myobject_t *obj);
         void _set_type_id(myobject_t *object, uint32_t id) {
             object->type_id = id;
         }

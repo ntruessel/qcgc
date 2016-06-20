@@ -60,3 +60,21 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(lib.arena_mark_bitmap(arena)[0], 3)
 
         lib.arena_cells(arena)[lib.qcgc_arena_cells_count - 1][15] = 12
+
+    def test_arena_sweep(self):
+        arena = lib.qcgc_arena_create()
+        i = lib.qcgc_arena_first_cell_index;
+
+        for j in range(10):
+            lib.qcgc_arena_mark_allocated(
+                    ffi.addressof(lib.arena_cells(arena)[i + j]),
+                    1)
+        self.assertEqual(lib.qcgc_arena_white_blocks(arena), 10)
+
+        self.assertTrue(lib.qcgc_arena_sweep(arena))
+        self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
+        self.assertEqual(lib.qcgc_arena_white_blocks(arena), 0)
+        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
+
+        self.assertTrue(lib.qcgc_arena_is_empty(arena))
+        self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
