@@ -10,9 +10,7 @@ void qcgc_mark(void);
 void qcgc_mark_object(object_t *object);
 
 void qcgc_initialize(void) {
-	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
-		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
-	qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
+	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base = (object_t **) malloc(QCGC_SHADOWSTACK_SIZE); qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
 	qcgc_state.arena_index = 0;
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
@@ -79,6 +77,12 @@ void qcgc_mark(void) {
 void qcgc_mark_object(object_t *object) {
 	qcgc_arena_set_blocktype((void *) object, BLOCK_BLACK);
 	qcgc_trace_cb(object, &qcgc_mark_object);
+}
+
+void qcgc_sweep(void) {
+	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
+		qcgc_arena_sweep(qcgc_state.arenas[i]);
+	}
 }
 
 void qcgc_collect(void) {
