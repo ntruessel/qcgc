@@ -1,4 +1,3 @@
-CC=clang
 CFLAGS=-Wall -Wextra
 SRC=qcgc.c arena.c bump_allocator.c
 
