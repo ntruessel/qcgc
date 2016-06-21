@@ -1,7 +1,5 @@
-BUILD_SUPPORT=build_support.py
-
-support: $(BUILD_SUPPORT)
-	python $(BUILD_SUPPORT)
+support: build_support.py
+	python $^
 
 .PHONY: test
 test: support
