@@ -20,7 +20,6 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         typedef uint8_t cell_t[16];
 
         typedef union arena_u arena_t;
-
         typedef enum blocktype {
                 BLOCK_EXTENT,
                 BLOCK_FREE,
@@ -111,8 +110,8 @@ ffi.cdef("""
             uint32_t type_id;
         } myobject_t;
 
-        void _set_type_id(myobject_t *obj, uint32_t id);
-        uint32_t _get_type_id(myobject_t *obj);
+        void _set_type_id(object_t *obj, uint32_t id);
+        uint32_t _get_type_id(object_t *obj);
         """)
 
 ################################################################################
@@ -154,24 +153,35 @@ ffi.set_source("support",
             return sizeof(arena_t);
         }
 
-        void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {
-            return;
-        }
-
         // Utilites
         typedef struct {
             object_t hdr;
             uint32_t type_id;
         } myobject_t;
 
-        void _set_type_id(myobject_t *obj, uint32_t id);
-        uint32_t _get_type_id(myobject_t *obj);
-        void _set_type_id(myobject_t *object, uint32_t id) {
-            object->type_id = id;
+        void _set_type_id(object_t *obj, uint32_t id);
+        uint32_t _get_type_id(object_t *obj);
+        void _set_type_id(object_t *object, uint32_t id) {
+            ((myobject_t *) object)->type_id = id;
         }
 
-        uint32_t _get_type_id(myobject_t *object) {
-            return object->type_id;
+        uint32_t _get_type_id(object_t *object) {
+            return ((myobject_t *) object)->type_id;
+        }
+
+        void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {
+            myobject_t *o = (myobject_t *) object;
+            if (o->type_id < 1<<16) {
+                // Default object, no references
+                return;
+            } else {
+                // Object containing only references
+                object_t *first_member = (object_t *) o + 1;
+                for (size_t i = 0; i < o->type_id - (1<<16); i++) {
+                    object_t *ref = first_member + i;
+                    visit(ref);
+                }
+            }
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
