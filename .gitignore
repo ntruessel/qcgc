@@ -1,5 +1,8 @@
 *.so
 *.o
+*.gcda
+*.gcno
+*.gcov
 __pycache__/
 
 test/support.c
