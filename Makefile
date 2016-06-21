@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -std=gnu99
 SRC=qcgc.c arena.c bump_allocator.c
 
 lib: $(SRC)

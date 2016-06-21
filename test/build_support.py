@@ -186,7 +186,7 @@ ffi.set_source("support",
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'],
-        extra_compile_args=['--coverage'], extra_link_args=['--coverage'])
+        extra_compile_args=['--coverage','-std=gnu99'], extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
     ffi.compile()

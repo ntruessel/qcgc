@@ -1,0 +1,11 @@
+language: c
+
+compiler:
+    - gcc
+    - clang
+
+install:
+    - pip install --user cffi
+
+script:
+    - make test
