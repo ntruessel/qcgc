@@ -14,5 +14,5 @@ test:
 
 .PHONY: clean
 clean:
-	$(RM) -f *.so *.o
+	$(RM) -f *.so *.o *.gcov *.gcda *.gcno
 	cd test && make $@

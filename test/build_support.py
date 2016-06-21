@@ -20,6 +20,7 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         typedef uint8_t cell_t[16];
 
         typedef union arena_u arena_t;
+
         typedef enum blocktype {
                 BLOCK_EXTENT,
                 BLOCK_FREE,
@@ -184,7 +185,8 @@ ffi.set_source("support",
             }
         }
 
-        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'])
+        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'],
+        extra_compile_args=['--coverage'], extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
     ffi.compile()

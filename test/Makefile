@@ -9,6 +9,6 @@ test: support
 
 .PHONY: clean
 clean:
-	$(RM) -f support.*
+	$(RM) -f support.* *.gcov
 	$(RM) -rf __pycache__
 	$(RM) -rf runner/__pycache__
