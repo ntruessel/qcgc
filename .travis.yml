@@ -2,7 +2,6 @@ language: c
 
 compiler:
     - gcc
-    - clang
 
 install:
     - pip install --user cffi
