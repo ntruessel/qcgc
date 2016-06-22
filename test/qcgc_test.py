@@ -18,13 +18,13 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_state.shadow_stack -= 1
         return ffi.cast("void *", lib.qcgc_state.shadow_stack[0])
 
-    def alloc(self, size):
+    def allocate(self, size):
         assert size < 2**16
         o = lib.qcgc_allocate(self.header_size + size)
         lib._set_type_id(o, size)
         return o
 
-    def alloc_ref(self, size):
+    def allocate_ref(self, size):
         assert size < 2**16
         o = lib.qcgc_allocate(self.header_size + size)
         lib._set_type_id(o, size + 2**16)
