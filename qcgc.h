@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "qcgc.h"
 #include "arena.h"
 
 #define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (object_t *)(p))
