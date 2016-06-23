@@ -48,6 +48,28 @@ class MarkTestCase(QCGCTest):
         for p in unreachable:
             self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_WHITE)
 
+    def test_circular(self):
+        """Circular references"""
+        reachable = list()
+        unreachable = list()
+
+        for i in range(10):
+            objects = self.gen_circular_structure(i + 1)
+            self.push_root(objects[0])
+            reachable.extend(objects)
+
+        for i in range(10):
+            objects = self.gen_circular_structure(i + 1)
+            unreachable.extend(objects)
+
+        lib.qcgc_mark()
+
+        for p in reachable:
+            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_BLACK)
+
+        for p in unreachable:
+            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_WHITE)
+
     def gen_structure_1(self):
         result = self.allocate_ref(6)
         result_list = [result]
@@ -64,6 +86,24 @@ class MarkTestCase(QCGCTest):
         result_list.append(q)
         self.set_ref(p, 0, q)
         return result, result_list
+
+    def gen_circular_structure(self, size):
+        assert size >= 1
+
+        first = self.allocate_ref(1)
+        objects = [first]
+        p = first
+
+        # Build chain
+        for _ in range(size - 1):
+            q = self.allocate_ref(1)
+            objects.append(q)
+            self.set_ref(p, 0, q)
+            p = q
+
+        # Close cycle
+        self.set_ref(p, 0, first)
+        return objects
 
 if __name__ == "__main__":
     unittest.main()
