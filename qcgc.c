@@ -5,7 +5,7 @@
 
 #include "bump_allocator.h"
 
-object_t *qcgc_bump_allocate(size_t bytes);
+object_t *qcgc_bump_allocate(size_t size);
 void qcgc_mark(void);
 void qcgc_mark_object(object_t *object);
 void qcgc_sweep(void);
@@ -34,19 +34,19 @@ void qcgc_destroy(void) {
  * Allocation                                                                  *
  ******************************************************************************/
 
-object_t *qcgc_allocate(size_t bytes) {
+object_t *qcgc_allocate(size_t size) {
 	object_t *result = NULL;
-	if (bytes >= QCGC_LARGE_ALLOC_THRESHOLD) {
+	if (size >= QCGC_LARGE_ALLOC_THRESHOLD) {
 		// Use malloc for large objects
-		result = (object_t *) malloc(bytes);
+		result = (object_t *) malloc(size);
 	} else {
-		result = qcgc_bump_allocate(bytes);
+		result = qcgc_bump_allocate(size);
 	}
 	return result;
 }
 
-object_t *qcgc_bump_allocate(size_t bytes) {
-	size_t size_in_cells = (bytes + 15) / 16;
+object_t *qcgc_bump_allocate(size_t size) {
+	size_t size_in_cells = (size + 15) / 16;
 	if (!qcgc_balloc_can_allocate(size_in_cells)) {
 		// Create a new arena and assign its memory to bump allocator
 		qcgc_state.arena_index++;

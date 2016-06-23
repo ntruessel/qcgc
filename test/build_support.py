@@ -90,11 +90,11 @@ ffi.cdef("""
 
         void qcgc_initialize(void);
         void qcgc_destroy(void);
-        object_t *qcgc_allocate(size_t bytes);
+        object_t *qcgc_allocate(size_t size);
         void qcgc_collect(void);
 
         // qcgc.c
-        object_t *qcgc_bump_allocate(size_t bytes);
+        object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
         void qcgc_mark_object(object_t *object);
         void qcgc_sweep(void);
@@ -133,7 +133,7 @@ ffi.set_source("support",
         const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 
         // qcgc.c prototoypes
-        object_t *qcgc_bump_allocate(size_t bytes);
+        object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
         void qcgc_mark_object(object_t *object);
         void qcgc_sweep(void);
