@@ -77,7 +77,7 @@ ffi.cdef("""
 ffi.cdef("""
         // qcgc.h
         typedef struct object_s {
-            uint16_t flags;
+            uint32_t flags;
         } object_t;
 
         struct qcgc_state {
@@ -177,9 +177,10 @@ ffi.set_source("support",
                 return;
             } else {
                 // Object containing only references
-                object_t *first_member = (object_t *) o + 1;
-                for (size_t i = 0; i < o->type_id - (1<<16); i++) {
-                    object_t *ref = first_member + i;
+                object_t **members = (object_t **) o + 1;
+                size_t fields = o->type_id - (1<<16);
+                for (size_t i = 0; i < fields; i++) {
+                    object_t *ref = members[i];
                     visit(ref);
                 }
             }
