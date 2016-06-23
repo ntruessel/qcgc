@@ -11,7 +11,7 @@
  * 
  * Global state of bump allocator
  */
-struct {
+struct qcgc_balloc_state {
 	cell_t *bump_ptr;
 	size_t remaining_cells;
 } qcgc_balloc_state;
