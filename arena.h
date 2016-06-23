@@ -1,3 +1,7 @@
+/**
+ * @file	arena.h
+ */
+
 #pragma once
 
 #include "config.h"

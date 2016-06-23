@@ -1,3 +1,7 @@
+/**
+ * @file	qcgc.h
+ */
+
 #pragma once
 
 #include "config.h"

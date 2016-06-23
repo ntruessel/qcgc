@@ -11,6 +11,10 @@ support:
 test:
 	cd test && make $@
 
+.PHONY: doc
+doc:
+	doxygen Doxyfile
+
 .PHONY: clean
 clean:
 	$(RM) -f *.so *.o *.gcov *.gcda *.gcno

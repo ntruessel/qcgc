@@ -1,3 +1,7 @@
+/**
+ * @file	bump_allocator.h
+ */
+
 #pragma once
 
 #include "config.h"
