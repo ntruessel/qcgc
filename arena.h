@@ -64,20 +64,21 @@ arena_t *qcgc_arena_create(void);
 void qcgc_arena_destroy(arena_t *arena);
 
 /**
- * Arena pointer for a given pointer into arena.
+ * Arena pointer for given cell.
  *
- * @param	ptr		Pointer for which you want to know the corresponding arena
+ * @param	ptr		Pointer to cell for which you want to know the corresponding
+ *					arena
  * @return	The arena the pointer belongs to
  */
-arena_t *qcgc_arena_addr(void *ptr);
+arena_t *qcgc_arena_addr(cell_t *ptr);
 
 /**
- * Cell index of a pointer into some arena.
+ * Index of cell in arena.
  *
- * @param	ptr		Pointer for which you want to know the cell index
+ * @param	ptr		Pointer to cell for which you want to know the cell index
  * @return	Index of the cell to which ptr points to
  */
-size_t qcgc_arena_cell_index(void *ptr);
+size_t qcgc_arena_cell_index(cell_t *ptr);
 
 /**
  * Get bitmap value for given bitmap and cell index.
@@ -93,40 +94,40 @@ bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index);
  *
  * @param	bitmap	Bitmap
  * @param	index	Index of cell
- * @param	value	true -> set entry, false -> reset entry
+ * @param	value	true to set entry, false to reset entry
  */
 void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value);
 
 /**
  * Get blocktype.
  *
- * @param	ptr		Pointer for which you want to know the blocktype
+ * @param	ptr		Pointer to cell for which you want to know the blocktype
  * @return	Blocktype
  */
-blocktype_t qcgc_arena_get_blocktype(void *ptr);
+blocktype_t qcgc_arena_get_blocktype(cell_t *ptr);
 
 /**
  * Set blocktype.
  *
- * @param	ptr		Pointer for which you want to set the blocktype
+ * @param	ptr		Pointer to cell for which you want to set the blocktype
  * @param	type	Blocktype that should be set
  */
-void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
+void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type);
 
 /**
  * Mark ptr as allocated area with given size.
  *
- * @param	ptr		Pointer to start of area
+ * @param	ptr		Pointer to first cell of area
  * @param	cells	Size in cells
  */
-void qcgc_arena_mark_allocated(void *ptr, size_t cells);
+void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells);
 
 /**
  * Mark cell ptr point to as free (no coalescing).
  *
  * @param	ptr		Pointer to cell that should be marked as free
  */
-void qcgc_arena_mark_free(void *ptr);
+void qcgc_arena_mark_free(cell_t *ptr);
 
 /**
  * Sweep given arena.

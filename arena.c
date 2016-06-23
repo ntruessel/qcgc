@@ -12,21 +12,21 @@ static void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 arena_t *qcgc_arena_create(void) {
 	arena_t *result;
 	// Linux: MAP_ANONYMOUS is initialized to zero
-	void *mem = mmap(0, 2 * QCGC_ARENA_SIZE,
+	cell_t *mem = (cell_t *) mmap(0, 2 * QCGC_ARENA_SIZE,
 			PROT_READ | PROT_WRITE,
 			MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	if (mem == MAP_FAILED) {
 		// ERROR: OUT OF MEMORY
 		return NULL;
 	}
-	if (mem != qcgc_arena_addr(mem)) {
-		// align
-		void *aligned_mem = (void *)(
+	if (mem != qcgc_arena_addr(mem)->cells) {
+		// Not aligned -> align
+		cell_t *aligned_mem = (cell_t *)(
 				(intptr_t) qcgc_arena_addr(mem) + QCGC_ARENA_SIZE);
 		size_t size_before = (size_t)((intptr_t) aligned_mem - (intptr_t) mem);
 		size_t size_after = QCGC_ARENA_SIZE - size_before;
 
-		munmap(mem, size_before);
+		munmap((void *) mem, size_before);
 		munmap((void *)((intptr_t) aligned_mem + QCGC_ARENA_SIZE), size_after);
 		result = (arena_t *) aligned_mem;
 	} else {
@@ -44,11 +44,11 @@ void qcgc_arena_destroy(arena_t *arena) {
 	munmap((void *) arena, QCGC_ARENA_SIZE);
 }
 
-arena_t *qcgc_arena_addr(void *ptr) {
+arena_t *qcgc_arena_addr(cell_t *ptr) {
 	return (arena_t *)((intptr_t) ptr & ~(QCGC_ARENA_SIZE - 1));
 }
 
-size_t qcgc_arena_cell_index(void *ptr) {
+size_t qcgc_arena_cell_index(cell_t *ptr) {
 	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1)) >> 4;
 }
 
@@ -83,7 +83,7 @@ static blocktype_t get_blocktype(arena_t *arena, size_t index) {
 	}
 }
 
-blocktype_t qcgc_arena_get_blocktype(void *ptr) {
+blocktype_t qcgc_arena_get_blocktype(cell_t *ptr) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 
@@ -111,13 +111,13 @@ static void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
 	}
 }
 
-void qcgc_arena_set_blocktype(void *ptr, blocktype_t type) {
+void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 	set_blocktype(arena, index, type);
 }
 
-void qcgc_arena_mark_allocated(void *ptr, size_t cells) {
+void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 	set_blocktype(arena, index, BLOCK_WHITE);
@@ -128,7 +128,7 @@ void qcgc_arena_mark_allocated(void *ptr, size_t cells) {
 	}
 }
 
-void qcgc_arena_mark_free(void *ptr) {
+void qcgc_arena_mark_free(cell_t *ptr) {
 	qcgc_arena_set_blocktype(ptr, BLOCK_FREE);
 	// No coalescing, collector will do this
 }
@@ -139,7 +139,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena->cells + cell)) {
 			case BLOCK_EXTENT:
 				break;
 			case BLOCK_FREE:

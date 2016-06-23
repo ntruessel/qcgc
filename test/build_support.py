@@ -35,16 +35,16 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         arena_t *qcgc_arena_create(void);
         void qcgc_arena_destroy(arena_t *arena);
 
-        arena_t *qcgc_arena_addr(void *);
-        size_t qcgc_arena_cell_index(void *);
+        arena_t *qcgc_arena_addr(cell_t *);
+        size_t qcgc_arena_cell_index(cell_t *);
         bool qcgc_arena_get_bitmap_entry(uint8_t *, size_t);
         void qcgc_arena_set_bitmap_entry(uint8_t *, size_t, bool);
 
-        void qcgc_arena_mark_allocated(void *ptr, size_t cells);
-        void qcgc_arena_mark_free(void *ptr);
+        void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells);
+        void qcgc_arena_mark_free(cell_t *ptr);
 
-        blocktype_t qcgc_arena_get_blocktype(void *ptr);
-        void qcgc_arena_set_blocktype(void *ptr, blocktype_t type);
+        blocktype_t qcgc_arena_get_blocktype(cell_t *ptr);
+        void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type);
 
         bool qcgc_arena_is_empty(arena_t *arena);
         bool qcgc_arena_is_coalesced(arena_t *arena);

@@ -19,10 +19,10 @@ class MarkTestCase(QCGCTest):
         lib.qcgc_mark()
 
         for p in roots:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_BLACK)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
 
         for p in garbage:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_WHITE)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
     def test_ref_1(self):
         """Tree shaped reference struct"""
@@ -43,10 +43,10 @@ class MarkTestCase(QCGCTest):
         lib.qcgc_mark()
 
         for p in reachable:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_BLACK)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
 
         for p in unreachable:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_WHITE)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
     def test_circular(self):
         """Circular references"""
@@ -65,10 +65,10 @@ class MarkTestCase(QCGCTest):
         lib.qcgc_mark()
 
         for p in reachable:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_BLACK)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
 
         for p in unreachable:
-            self.assertEqual(lib.qcgc_arena_get_blocktype(p), lib.BLOCK_WHITE)
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
     def gen_structure_1(self):
         result = self.allocate_ref(6)

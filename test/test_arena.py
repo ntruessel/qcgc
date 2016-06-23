@@ -186,8 +186,8 @@ class ArenaTestCase(QCGCTest):
     ############################################################################
     def test_arena_create(self):
         p = lib.qcgc_arena_create()
-        self.assertEqual(p, lib.qcgc_arena_addr(p))
-        self.assertEqual(0, lib.qcgc_arena_cell_index(p))
+        self.assertEqual(p, lib.qcgc_arena_addr(lib.arena_cells(p)))
+        self.assertEqual(0, lib.qcgc_arena_cell_index(lib.arena_cells(p)))
         self.assertEqual(int(ffi.cast("uint64_t", p)),
                 int(ffi.cast("uint64_t", p))
                     << lib.QCGC_ARENA_SIZE_EXP

@@ -76,8 +76,8 @@ void qcgc_mark(void) {
 }
 
 void qcgc_mark_object(object_t *object) {
-	if (qcgc_arena_get_blocktype((void *) object) != BLOCK_BLACK) {
-		qcgc_arena_set_blocktype((void *) object, BLOCK_BLACK);
+	if (qcgc_arena_get_blocktype((cell_t *) object) != BLOCK_BLACK) {
+		qcgc_arena_set_blocktype((cell_t *) object, BLOCK_BLACK);
 		qcgc_trace_cb(object, &qcgc_mark_object);
 	}
 }
