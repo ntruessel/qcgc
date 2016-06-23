@@ -41,7 +41,7 @@ void qcgc_destroy(void);
 /**
  * Allocate new memory region
  *
- * @arg	size	Desired size of the memory region
+ * @param	size	Desired size of the memory region
  * @return	Pointer to memory large enough to hold size bytes, NULL in case of
  *			errors
  */
@@ -58,7 +58,7 @@ void qcgc_collect(void);
  * This function traces an object, i.e. calls visit on every object referenced
  * by the given object. Has to be provided by the library user.
  *
- * @arg	object	The object to trace
- * @arg visit	The function to be called on the referenced objects
+ * @param	object	The object to trace
+ * @param	visit	The function to be called on the referenced objects
  */
 extern void qcgc_trace_cb(object_t *object, void (*visit)(object_t *object));
