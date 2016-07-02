@@ -7,6 +7,7 @@ ffi = FFI()
 ################################################################################
 ffi.cdef("""
         #define QCGC_ARENA_SIZE_EXP 20	// Between 16 (64kB) and 20 (1MB)
+        #define QCGC_MARK_LIST_SEGMENT_SIZE 64
         """)
 
 ################################################################################
@@ -101,6 +102,29 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# mark_list                                                                    #
+################################################################################
+ffi.cdef("""
+        typedef struct mark_list_s {
+                size_t head;
+                size_t tail;
+                size_t length;
+                size_t insert_index;
+                object_t **segments[];
+        } mark_list_t;
+
+        mark_list_t *qcgc_mark_list_create(size_t initial_size);
+        void qcgc_mark_list_destroy(mark_list_t *list);
+
+        mark_list_t *qcgc_mark_list_push(mark_list_t *list, object_t *object);
+        mark_list_t *qcgc_mark_list_push_all(mark_list_t *list,
+                        object_t **objects, size_t count);
+
+        object_t **qcgc_mark_list_get_head_segment(mark_list_t *list);
+        mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list);
+        """)
+
+################################################################################
 # utilities                                                                    #
 ################################################################################
 
@@ -124,6 +148,7 @@ ffi.set_source("support",
         #include "../qcgc.h"
         #include "../arena.h"
         #include "../bump_allocator.h"
+        #include "../mark_list.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -186,7 +211,7 @@ ffi.set_source("support",
             }
         }
 
-        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c'],
+        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c', '../mark_list.c'],
         extra_compile_args=['--coverage','-std=gnu99'], extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
