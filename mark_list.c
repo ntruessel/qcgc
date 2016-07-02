@@ -34,7 +34,7 @@ mark_list_t *qcgc_mark_list_push(mark_list_t *list, object_t *object) {
 			list = qcgc_mark_list_grow(list);
 		}
 		list->insert_index = 0;
-		list->tail++;
+		list->tail = (list->tail + 1) % list->length;
 		list->segments[list->tail] = (object_t **)
 			calloc(QCGC_MARK_LIST_SEGMENT_SIZE, sizeof(object_t *));
 	}
@@ -57,9 +57,15 @@ object_t **qcgc_mark_list_get_head_segment(mark_list_t *list) {
 }
 
 mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list) {
-	free(list->segments[list->head]);
-	list->segments[list->head] = NULL;
-	list->head++;
+	if (list->head != list->tail) {
+		free(list->segments[list->head]);
+		list->segments[list->head] = NULL;
+		list->head = (list->head + 1) % list->length;
+	} else {
+		memset(list->segments[list->head], 0,
+				sizeof(object_t *) * QCGC_MARK_LIST_SEGMENT_SIZE);
+		list->insert_index = 0;
+	}
 	return list;
 }
 
