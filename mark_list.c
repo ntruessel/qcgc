@@ -39,6 +39,7 @@ mark_list_t *qcgc_mark_list_push(mark_list_t *list, object_t *object) {
 			calloc(QCGC_MARK_LIST_SEGMENT_SIZE, sizeof(object_t *));
 	}
 	list->segments[list->tail][list->insert_index] = object;
+	list->insert_index++;
 	return list;
 }
 
