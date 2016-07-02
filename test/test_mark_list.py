@@ -11,7 +11,7 @@ class MarkListTestCase(QCGCTest):
             self.assertEqual(l.insert_index, 0)
             self.assertGreater(l.length, 0)
             self.assertNotEqual(l.segments, ffi.NULL)
-            self.assertNotEqual(l.segemnts[l.head], ffi.NULL)
+            self.assertNotEqual(l.segments[l.head], ffi.NULL)
             lib.qcgc_mark_list_destroy(l)
 
     def test_push_pop(self):
@@ -69,7 +69,7 @@ class MarkListTestCase(QCGCTest):
         while i < list_size:
             segment = lib.qcgc_mark_list_get_head_segment(l)
             self.assertNotEqual(segment, ffi.NULL)
-            for j in range(lib.QCGC_MARK_LIST_SEMGENT_SIZE):
+            for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i >= pre_fill and i < pre_fill + arr_size:
                     self.assertEqual(segment[i], ffi.cast("object_t *", i - pre_fill))
                 else:
@@ -98,7 +98,7 @@ class MarkListTestCase(QCGCTest):
         while i < list_size:
             segment = lib.qcgc_mark_list_get_head_segment(l)
             self.assertNotEqual(segment, ffi.NULL)
-            for j in range(lib.QCGC_MARK_LIST_SEMGENT_SIZE):
+            for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i >= pre_fill and i < pre_fill + arr_size:
                     self.assertEqual(segment[i], ffi.cast("object_t *", i - pre_fill))
                 else:
