@@ -6,7 +6,7 @@
 static mark_list_t *qcgc_mark_list_grow(mark_list_t *list);
 
 mark_list_t *qcgc_mark_list_create(size_t initial_size) {
-	size_t length = initial_size / QCGC_MARK_LIST_SEGMENT_SIZE;
+	size_t length = (initial_size + QCGC_MARK_LIST_SEGMENT_SIZE - 1) / QCGC_MARK_LIST_SEGMENT_SIZE;
 	length += (size_t) length == 0;
 	mark_list_t *result = (mark_list_t *)
 		malloc(sizeof(mark_list_t) + length * sizeof(object_t **));
@@ -21,10 +21,11 @@ mark_list_t *qcgc_mark_list_create(size_t initial_size) {
 
 void qcgc_mark_list_destroy(mark_list_t *list) {
 	size_t i = list->head;
-	do {
+	while (i != list->tail) {
 		free(list->segments[i]);
-		i = i + 1 % list->length;
-	} while (i != list->tail);
+		i = (i + 1) % list->length;
+	}
+	free(list->segments[list->tail]);
 	free(list);
 }
 
