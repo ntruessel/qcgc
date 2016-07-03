@@ -31,7 +31,7 @@ void qcgc_mark_list_destroy(mark_list_t *list) {
 
 mark_list_t *qcgc_mark_list_push(mark_list_t *list, object_t *object) {
 	if (list->insert_index >= QCGC_MARK_LIST_SEGMENT_SIZE) {
-		if (list->tail + 1 % list->length == list->head) {
+		if ((list->tail + 1) % list->length == list->head) {
 			list = qcgc_mark_list_grow(list);
 		}
 		list->insert_index = 0;
