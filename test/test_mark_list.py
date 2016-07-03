@@ -74,12 +74,34 @@ class MarkListTestCase(QCGCTest):
             l = lib.qcgc_mark_list_drop_head_segment(l)
         lib.qcgc_mark_list_destroy(l)
 
-    @unittest.skip("debug")
-    def test_push_all(self):
-        """Push array"""
+    def test_push_all_short(self):
+        """Push short array"""
+        arr_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE // 2
+        list_size = arr_size
+
+        arr = ffi.new('object_t *[]', arr_size)
+        l = lib.qcgc_mark_list_create(list_size)
+        for i in range(arr_size):
+            arr[i] = ffi.cast("object_t *", i)
+
+        l = lib.qcgc_mark_list_push_all(l, arr, arr_size)
+
+        i = 0
+        while i < list_size:
+            segment = lib.qcgc_mark_list_get_head_segment(l)
+            self.assertNotEqual(segment, ffi.NULL)
+            for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
+                if i < list_size:
+                    self.assertEqual(segment[j], ffi.cast("object_t *", i))
+                i += 1
+            segment = lib.qcgc_mark_list_get_head_segment(l)
+        lib.qcgc_mark_list_destroy(l)
+
+    def test_push_all_long(self):
+        """Push long array"""
         arr_size = 2 * lib.QCGC_MARK_LIST_SEGMENT_SIZE
-        list_size = arr_size + lib.QCGC_MARK_LIST_SEGMENT_SIZE
         pre_fill = lib.QCGC_MARK_LIST_SEGMENT_SIZE // 2
+        list_size = arr_size + pre_fill
 
         arr = ffi.new('object_t *[]', arr_size)
         l = lib.qcgc_mark_list_create(list_size)
@@ -91,18 +113,15 @@ class MarkListTestCase(QCGCTest):
 
         l = lib.qcgc_mark_list_push_all(l, arr, arr_size)
 
-        for i in range(list_size - arr_size - pre_fill):
-            l = lib.qcgc_mark_list_push(l,ffi.NULL)
-
         i = 0
         while i < list_size:
             segment = lib.qcgc_mark_list_get_head_segment(l)
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
-                if i >= pre_fill and i < pre_fill + arr_size:
-                    self.assertEqual(segment[i], ffi.cast("object_t *", i - pre_fill))
+                if i >= pre_fill:
+                    self.assertEqual(segment[j], ffi.cast("object_t *", i - pre_fill))
                 else:
-                    self.assertEqual(segment[i], ffi.NULL)
+                    self.assertEqual(segment[j], ffi.NULL)
                 i += 1
             segment = lib.qcgc_mark_list_get_head_segment(l)
         lib.qcgc_mark_list_destroy(l)
