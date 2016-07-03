@@ -1,16 +1,21 @@
 from support import lib,ffi
 from qcgc_test import QCGCTest
+import math
 import unittest
 
 class MarkListTestCase(QCGCTest):
     def test_create_destroy(self):
         """Lifetime management"""
         for i in range(100):
+            length = math.ceil(i / lib.QCGC_MARK_LIST_SEGMENT_SIZE)
+            if length == 0:
+                length = 1
+
             l = lib.qcgc_mark_list_create(i)
             self.assertNotEqual(l, ffi.NULL)
             self.assertEqual(l.head, l.tail)
             self.assertEqual(l.insert_index, 0)
-            self.assertGreater(l.length, 0)
+            self.assertEqual(l.length, length)
             self.assertNotEqual(l.segments, ffi.NULL)
             self.assertNotEqual(l.segments[l.head], ffi.NULL)
             lib.qcgc_mark_list_destroy(l)
@@ -33,21 +38,21 @@ class MarkListTestCase(QCGCTest):
             l = lib.qcgc_mark_list_drop_head_segment(l)
         lib.qcgc_mark_list_destroy(l)
 
-    @unittest.skip("debug")
     def test_push_pop(self):
-        """Single push and pop"""
-        l = lib.qcgc_mark_list_create(1000)
-        for i in range(1000):
+        """Push to multiple segments"""
+        list_size = 10 * lib.QCGC_MARK_LIST_SEGMENT_SIZE + lib.QCGC_MARK_LIST_SEGMENT_SIZE // 2
+        l = lib.qcgc_mark_list_create(list_size)
+        for i in range(list_size):
             l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
 
         i = 0
-        while i < 1000:
+        while i < list_size:
             segment = lib.qcgc_mark_list_get_head_segment(l)
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
-                if i < 1000:
+                if i < list_size:
                     self.assertEqual(ffi.cast("object_t *", i), segment[j])
-                    i += 1
+                i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
         lib.qcgc_mark_list_destroy(l)
 
