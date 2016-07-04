@@ -164,6 +164,7 @@ static mark_list_t *qcgc_mark_list_grow(mark_list_t *list) {
 static void qcgc_mark_list_check_invariant(mark_list_t *list) {
 	assert(list->head < list->length);
 	assert(list->tail < list->length);
+	assert(list->count == (list->tail - list->head + list->length) % list->length * QCGC_MARK_LIST_SEGMENT_SIZE + list->insert_index);
 	for (size_t i = 0; i < list->length; i++) {
 		if ((list->head <= i && i <= list->tail) || (list->tail < list->head &&
 				(i <= list->tail || i >= list->head))) {
