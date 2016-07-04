@@ -3,6 +3,9 @@ from qcgc_test import QCGCTest
 import math
 
 class MarkListTestCase(QCGCTest):
+
+    bias = 1
+
     def test_create_destroy(self):
         """Lifetime management"""
         for i in range(100):
@@ -25,7 +28,7 @@ class MarkListTestCase(QCGCTest):
         list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE + 1
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(list_size):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
             self.assertEqual(l.count, i + 1)
 
         lib.qcgc_mark_list_destroy(l)
@@ -35,7 +38,7 @@ class MarkListTestCase(QCGCTest):
         list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(list_size):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
             self.assertEqual(l.count, i + 1)
 
         i = 0
@@ -44,7 +47,7 @@ class MarkListTestCase(QCGCTest):
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
-                    self.assertEqual(ffi.cast("object_t *", i), segment[j])
+                    self.assertEqual(ffi.cast("object_t *", i + self.bias), segment[j])
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -55,7 +58,7 @@ class MarkListTestCase(QCGCTest):
         list_size = 10 * lib.QCGC_MARK_LIST_SEGMENT_SIZE + lib.QCGC_MARK_LIST_SEGMENT_SIZE // 2
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(list_size):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
             self.assertEqual(l.count, i + 1)
 
         i = 0
@@ -64,7 +67,7 @@ class MarkListTestCase(QCGCTest):
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
-                    self.assertEqual(ffi.cast("object_t *", i), segment[j])
+                    self.assertEqual(ffi.cast("object_t *", i + self.bias), segment[j])
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -75,7 +78,7 @@ class MarkListTestCase(QCGCTest):
         list_size = 20 * lib.QCGC_MARK_LIST_SEGMENT_SIZE
         l = lib.qcgc_mark_list_create(lib.QCGC_MARK_LIST_SEGMENT_SIZE)
         for i in range(list_size):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
             self.assertEqual(l.count, i + 1)
 
         self.assertEqual(l.length, 32)
@@ -86,7 +89,7 @@ class MarkListTestCase(QCGCTest):
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
-                    self.assertEqual(ffi.cast("object_t *", i), segment[j])
+                    self.assertEqual(ffi.cast("object_t *", i + self.bias), segment[j])
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -100,7 +103,7 @@ class MarkListTestCase(QCGCTest):
         arr = ffi.new('object_t *[]', arr_size)
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(arr_size):
-            arr[i] = ffi.cast("object_t *", i)
+            arr[i] = ffi.cast("object_t *", i + self.bias)
 
         l = lib.qcgc_mark_list_push_all(l, arr, arr_size)
         self.assertEqual(l.count, arr_size)
@@ -111,7 +114,7 @@ class MarkListTestCase(QCGCTest):
             self.assertNotEqual(segment, ffi.NULL)
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
-                    self.assertEqual(segment[j], ffi.cast("object_t *", i))
+                    self.assertEqual(segment[j], ffi.cast("object_t *", i + self.bias))
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -126,10 +129,10 @@ class MarkListTestCase(QCGCTest):
         arr = ffi.new('object_t *[]', arr_size)
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(arr_size):
-            arr[i] = ffi.cast("object_t *", i)
+            arr[i] = ffi.cast("object_t *", i+ self.bias)
 
         for i in range(pre_fill):
-            l = lib.qcgc_mark_list_push(l,ffi.NULL)
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", -1))
             self.assertEqual(l.count, i + 1)
 
         l = lib.qcgc_mark_list_push_all(l, arr, arr_size)
@@ -142,9 +145,9 @@ class MarkListTestCase(QCGCTest):
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
                     if i >= pre_fill:
-                        self.assertEqual(segment[j], ffi.cast("object_t *", i - pre_fill))
+                        self.assertEqual(segment[j], ffi.cast("object_t *", i - pre_fill + self.bias))
                     else:
-                        self.assertEqual(segment[j], ffi.NULL)
+                        self.assertEqual(segment[j], ffi.cast("object_t *", -1))
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -160,10 +163,10 @@ class MarkListTestCase(QCGCTest):
         arr = ffi.new('object_t *[]', arr_size)
         l = lib.qcgc_mark_list_create(init_size)
         for i in range(arr_size):
-            arr[i] = ffi.cast("object_t *", i)
+            arr[i] = ffi.cast("object_t *", i + self.bias)
 
         for i in range(pre_fill):
-            l = lib.qcgc_mark_list_push(l,ffi.NULL)
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", -1))
             self.assertEqual(l.count, i + 1)
 
         l = lib.qcgc_mark_list_push_all(l, arr, arr_size)
@@ -176,9 +179,9 @@ class MarkListTestCase(QCGCTest):
             for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
                 if i < list_size:
                     if i >= pre_fill:
-                        self.assertEqual(segment[j], ffi.cast("object_t *", i - pre_fill))
+                        self.assertEqual(segment[j], ffi.cast("object_t *", i - pre_fill + self.bias))
                     else:
-                        self.assertEqual(segment[j], ffi.NULL)
+                        self.assertEqual(segment[j], ffi.cast("object_t *", -1))
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
             self.assertEqual(l.count, max(0,list_size - i))
@@ -210,7 +213,7 @@ class MarkListTestCase(QCGCTest):
         list_size = 2 * lib.QCGC_MARK_LIST_SEGMENT_SIZE
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(partial_fill):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
 
         l = lib.qcgc_mark_list_drop_head_segment(l)
         l = lib.qcgc_mark_list_drop_head_segment(l)
@@ -241,7 +244,7 @@ class MarkListTestCase(QCGCTest):
         list_size = 10 * lib.QCGC_MARK_LIST_SEGMENT_SIZE - 1
         l = lib.qcgc_mark_list_create(initial_list_size)
         for i in range(partial_fill):
-            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + self.bias))
 
         l = lib.qcgc_mark_list_drop_head_segment(l)
         l = lib.qcgc_mark_list_drop_head_segment(l)
