@@ -1,9 +1,9 @@
 support: build_support.py
-	python3 $^
+	python $^
 
 .PHONY: test
 test: support
-	python3 test.py
+	python test.py
 
 .PHONY: clean
 clean:

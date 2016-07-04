@@ -1,13 +1,10 @@
 language: c
 
-addons:
-    apt:
-        packages:
-            - python3
-            - python3-cffi
-
 compiler:
     - gcc
+
+install:
+    - pip install --user cffi
 
 script:
     - make test
