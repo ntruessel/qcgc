@@ -159,3 +159,77 @@ class MarkListTestCase(QCGCTest):
                 i += 1
             l = lib.qcgc_mark_list_drop_head_segment(l)
         lib.qcgc_mark_list_destroy(l)
+
+    def test_partial_drop(self):
+        """Test dropping a partially filled segment"""
+        list_size = 2 * lib.QCGC_MARK_LIST_SEGMENT_SIZE
+        l = lib.qcgc_mark_list_create(list_size)
+
+        l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", 10))
+        segment = lib.qcgc_mark_list_get_head_segment(l)
+        self.assertEqual(segment[0], ffi.cast("object_t *", 10))
+        self.assertEqual(segment[1], ffi.NULL)
+        l = lib.qcgc_mark_list_drop_head_segment(l)
+
+        l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", 20))
+        segment = lib.qcgc_mark_list_get_head_segment(l)
+        self.assertEqual(segment[0], ffi.cast("object_t *", 20))
+        self.assertEqual(segment[1], ffi.NULL)
+        lib.qcgc_mark_list_destroy(l)
+
+    def test_wrap(self):
+        """Test circular wrapping"""
+        partial_fill = lib.QCGC_MARK_LIST_SEGMENT_SIZE + 1
+        list_size = 2 * lib.QCGC_MARK_LIST_SEGMENT_SIZE
+        l = lib.qcgc_mark_list_create(list_size)
+        for i in range(partial_fill):
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+
+        l = lib.qcgc_mark_list_drop_head_segment(l)
+        l = lib.qcgc_mark_list_drop_head_segment(l)
+        self.assertEqual(l.head, 1)
+        self.assertEqual(l.tail, 1)
+
+        bias = 100
+        for i in range(list_size):
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + bias))
+
+        i = 0
+        while i < list_size:
+            segment = lib.qcgc_mark_list_get_head_segment(l)
+            self.assertNotEqual(segment, ffi.NULL)
+            for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
+                if i < list_size:
+                    self.assertEqual(segment[j], ffi.cast("object_t *", i + bias))
+                i += 1
+            l = lib.qcgc_mark_list_drop_head_segment(l)
+        lib.qcgc_mark_list_destroy(l)
+
+    def test_wrap_grow(self):
+        """Test wrapping and growing"""
+        partial_fill = lib.QCGC_MARK_LIST_SEGMENT_SIZE + 1
+        initial_list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE
+        list_size = 10 * lib.QCGC_MARK_LIST_SEGMENT_SIZE - 1
+        l = lib.qcgc_mark_list_create(initial_list_size)
+        for i in range(partial_fill):
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+
+        l = lib.qcgc_mark_list_drop_head_segment(l)
+        l = lib.qcgc_mark_list_drop_head_segment(l)
+        self.assertEqual(l.head, 1)
+        self.assertEqual(l.tail, 1)
+
+        bias = 100
+        for i in range(list_size):
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i + bias))
+
+        i = 0
+        while i < list_size:
+            segment = lib.qcgc_mark_list_get_head_segment(l)
+            self.assertNotEqual(segment, ffi.NULL)
+            for j in range(lib.QCGC_MARK_LIST_SEGMENT_SIZE):
+                if i < list_size:
+                    self.assertEqual(segment[j], ffi.cast("object_t *", i + bias))
+                i += 1
+            l = lib.qcgc_mark_list_drop_head_segment(l)
+        lib.qcgc_mark_list_destroy(l)
