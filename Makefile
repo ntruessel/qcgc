@@ -18,4 +18,5 @@ doc:
 .PHONY: clean
 clean:
 	$(RM) -f *.so *.o *.gcov *.gcda *.gcno
+	$(RM) -rf doc
 	cd test && make $@
