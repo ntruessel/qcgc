@@ -71,11 +71,8 @@ class ArenaTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            if b[1] == lib.BLOCK_BLACK:
-                lib.qcgc_arena_mark_allocated(p, 1)
-                lib.qcgc_mark_object(ffi.cast("object_t *", p))
-            elif b[1] == lib.BLOCK_WHITE:
-                lib.qcgc_arena_mark_allocated(p, 1)
+            lib.qcgc_arena_mark_allocated(p, 1)
+            lib.qcgc_arena_set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
@@ -92,7 +89,7 @@ class ArenaTestCase(QCGCTest):
         lib.qcgc_arena_mark_allocated(p, 1)
         self.assertFalse(lib.qcgc_arena_is_empty(arena))
 
-        lib.qcgc_mark_object(ffi.cast("object_t *", p))
+        lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
         self.assertFalse(lib.qcgc_arena_is_empty(arena))
 
     def test_is_coalesced(self):
@@ -106,7 +103,7 @@ class ArenaTestCase(QCGCTest):
         lib.qcgc_arena_mark_allocated(p, 1)
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
-        lib.qcgc_mark_object(ffi.cast("object_t *", p))
+        lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
         lib.qcgc_arena_mark_free(p)
@@ -140,7 +137,7 @@ class ArenaTestCase(QCGCTest):
         for j in range(10):
             p = ffi.addressof(lib.arena_cells(arena)[i + j])
             lib.qcgc_arena_mark_allocated(p, 1)
-            lib.qcgc_mark_object(ffi.cast("object_t *", p))
+            lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 10)
 
@@ -165,11 +162,8 @@ class ArenaTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            if b[1] == lib.BLOCK_BLACK:
-                lib.qcgc_arena_mark_allocated(p, 1)
-                lib.qcgc_mark_object(ffi.cast("object_t *", p))
-            elif b[1] == lib.BLOCK_WHITE:
-                lib.qcgc_arena_mark_allocated(p, 1)
+            lib.qcgc_arena_mark_allocated(p, 1)
+            lib.qcgc_arena_set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)

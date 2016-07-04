@@ -126,7 +126,6 @@ ffi.cdef("""
         // qcgc.c
         object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
-        void qcgc_mark_object(object_t *object);
         void qcgc_sweep(void);
         """)
 
@@ -167,7 +166,6 @@ ffi.set_source("support",
         // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
-        void qcgc_mark_object(object_t *object);
         void qcgc_sweep(void);
 
         cell_t *arena_cells(arena_t *arena) {
@@ -219,7 +217,7 @@ ffi.set_source("support",
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c', '../mark_list.c'],
-        extra_compile_args=['--coverage','-std=gnu99'], extra_link_args=['--coverage'])
+        extra_compile_args=['--coverage','-std=gnu99','-UNDEBUG','-O0'], extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
     ffi.compile()

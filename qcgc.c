@@ -7,11 +7,13 @@
 
 object_t *qcgc_bump_allocate(size_t size);
 void qcgc_mark(void);
-void qcgc_mark_object(object_t *object);
+void qcgc_enqueue_object(object_t *object);
 void qcgc_sweep(void);
 
 void qcgc_initialize(void) {
-	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base = (object_t **) malloc(QCGC_SHADOWSTACK_SIZE); qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
+	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
+		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
+	qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
 	qcgc_state.arena_index = 0;
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
@@ -69,18 +71,36 @@ object_t *qcgc_bump_allocate(size_t size) {
  ******************************************************************************/
 
 void qcgc_mark(void) {
-	for (object_t **root = qcgc_state.shadow_stack_base;
-			root != qcgc_state.shadow_stack;
-			root++) {
-		qcgc_mark_object(*root);
+	// TODO: store capacity and reuse it
+	qcgc_state.mark_list = qcgc_mark_list_create(0);
+
+	// Push all roots
+	qcgc_state.mark_list = qcgc_mark_list_push_all(qcgc_state.mark_list,
+			qcgc_state.shadow_stack_base,
+			qcgc_state.shadow_stack - qcgc_state.shadow_stack_base);
+
+	object_t **segment;
+	while(qcgc_state.mark_list->count > 0) {
+		segment = qcgc_mark_list_get_head_segment(qcgc_state.mark_list);
+
+		for (size_t i = 0;
+				i < QCGC_MARK_LIST_SEGMENT_SIZE && i < qcgc_state.mark_list->count;
+				i++) {
+			if (qcgc_arena_get_blocktype((cell_t *) segment[i]) != BLOCK_BLACK) {
+				qcgc_arena_set_blocktype((cell_t *) segment[i], BLOCK_BLACK);
+				qcgc_trace_cb(segment[i], &qcgc_enqueue_object);
+			}
+		}
+
+		qcgc_state.mark_list = qcgc_mark_list_drop_head_segment(
+				qcgc_state.mark_list);
 	}
+
+	qcgc_mark_list_destroy(qcgc_state.mark_list);
 }
 
-void qcgc_mark_object(object_t *object) {
-	if (qcgc_arena_get_blocktype((cell_t *) object) != BLOCK_BLACK) {
-		qcgc_arena_set_blocktype((cell_t *) object, BLOCK_BLACK);
-		qcgc_trace_cb(object, &qcgc_mark_object);
-	}
+void qcgc_enqueue_object(object_t *object) {
+	qcgc_state.mark_list = qcgc_mark_list_push(qcgc_state.mark_list, object);
 }
 
 void qcgc_sweep(void) {
