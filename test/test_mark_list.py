@@ -22,7 +22,7 @@ class MarkListTestCase(QCGCTest):
 
     def test_destroy_full_list(self):
         """Destroy a non-emptied list"""
-        list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE
+        list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE + 1
         l = lib.qcgc_mark_list_create(list_size)
         for i in range(list_size):
             l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
