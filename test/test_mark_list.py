@@ -7,7 +7,7 @@ class MarkListTestCase(QCGCTest):
     def test_create_destroy(self):
         """Lifetime management"""
         for i in range(100):
-            length = math.ceil(i / lib.QCGC_MARK_LIST_SEGMENT_SIZE)
+            length = math.ceil((i * 1.0) / lib.QCGC_MARK_LIST_SEGMENT_SIZE)
             if length == 0:
                 length = 1
 

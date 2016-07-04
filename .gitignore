@@ -4,6 +4,7 @@
 *.gcno
 *.gcov
 __pycache__/
+*.pyc
 doc/
 
 test/support.c
