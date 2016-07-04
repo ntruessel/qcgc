@@ -11,7 +11,7 @@
 
 #include "object.h"
 #include "arena.h"
-#include "mark_list.h"
+#include "gray_stack.h"
 
 #define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (object_t *)(p))
 #define qcgc_shadowstack_pop(p) ((p) = *(--qcgc_state.shadow_stack))
@@ -27,7 +27,7 @@ struct qcgc_state {
 	arena_t **arenas;
 	size_t arena_index;
 	size_t current_cell_index;
-	mark_list_t *mark_list;
+	gray_stack_t *gray_stack;
 } qcgc_state;
 
 /**

@@ -132,7 +132,7 @@ ffi.cdef("""
                 arena_t **arenas;
                 size_t arena_index;
                 size_t current_cell_index;
-                mark_list_t *mark_list;
+                gray_stack_t *gray_stack;
         } qcgc_state;
 
         void qcgc_initialize(void);
