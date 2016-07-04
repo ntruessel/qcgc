@@ -8,7 +8,9 @@
 
 #include "config.h"
 
-#include "qcgc.h"
+#include <stddef.h>
+
+#include "object.h"
 
 /**
  * Mark list - circular buffer.

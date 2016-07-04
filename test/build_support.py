@@ -11,6 +11,15 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# object                                                                       #
+################################################################################
+ffi.cdef("""
+        typedef struct object_s {
+                uint32_t flags;
+        } object_t;
+        """)
+
+################################################################################
 # arena                                                                        #
 ################################################################################
 ffi.cdef(""" const size_t qcgc_arena_size;
@@ -73,35 +82,6 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# qcgc                                                                         #
-################################################################################
-ffi.cdef("""
-        // qcgc.h
-        typedef struct object_s {
-            uint32_t flags;
-        } object_t;
-
-        struct qcgc_state {
-                object_t **shadow_stack;
-                object_t **shadow_stack_base;
-                arena_t **arenas;
-                size_t arena_index;
-                size_t current_cell_index;
-        } qcgc_state;
-
-        void qcgc_initialize(void);
-        void qcgc_destroy(void);
-        object_t *qcgc_allocate(size_t size);
-        void qcgc_collect(void);
-
-        // qcgc.c
-        object_t *qcgc_bump_allocate(size_t size);
-        void qcgc_mark(void);
-        void qcgc_mark_object(object_t *object);
-        void qcgc_sweep(void);
-        """)
-
-################################################################################
 # mark_list                                                                    #
 ################################################################################
 ffi.cdef("""
@@ -126,6 +106,31 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# qcgc                                                                         #
+################################################################################
+ffi.cdef("""
+        struct qcgc_state {
+                object_t **shadow_stack;
+                object_t **shadow_stack_base;
+                arena_t **arenas;
+                size_t arena_index;
+                size_t current_cell_index;
+                mark_list_t *mark_list;
+        } qcgc_state;
+
+        void qcgc_initialize(void);
+        void qcgc_destroy(void);
+        object_t *qcgc_allocate(size_t size);
+        void qcgc_collect(void);
+
+        // qcgc.c
+        object_t *qcgc_bump_allocate(size_t size);
+        void qcgc_mark(void);
+        void qcgc_mark_object(object_t *object);
+        void qcgc_sweep(void);
+        """)
+
+################################################################################
 # utilities                                                                    #
 ################################################################################
 
@@ -146,6 +151,7 @@ ffi.cdef("""
 
 ffi.set_source("support",
         """
+        #include "../object.h"
         #include "../qcgc.h"
         #include "../arena.h"
         #include "../bump_allocator.h"

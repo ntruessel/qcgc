@@ -15,6 +15,7 @@ void qcgc_initialize(void) {
 	qcgc_state.arena_index = 0;
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
+	qcgc_state.mark_list = NULL;
 
 	qcgc_balloc_assign(
 			&(qcgc_state.arenas[qcgc_state.arena_index]
