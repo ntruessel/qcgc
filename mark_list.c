@@ -73,11 +73,11 @@ mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list) {
 static mark_list_t *qcgc_mark_list_grow(mark_list_t *list) {
 	mark_list_t *new_list = (mark_list_t *) realloc(list,
 			sizeof(mark_list_t) + 2 * list->length * sizeof(object_t **));
-	if (list->tail < list->head) {
+	if (new_list->tail < new_list->head) {
 		memcpy(new_list->segments + new_list->length,
-				list->segments, list->tail * sizeof(object_t **));
-		new_list->tail = list->length + list->tail;
+				new_list->segments, (new_list->tail + 1) * sizeof(object_t **));
+		new_list->tail = new_list->length + new_list->tail;
 	}
-	new_list->length = 2 * list->length;
+	new_list->length = 2 * new_list->length;
 	return new_list;
 }
