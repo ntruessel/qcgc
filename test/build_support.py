@@ -109,6 +109,7 @@ ffi.cdef("""
                 size_t head;
                 size_t tail;
                 size_t length;
+                size_t count;
                 size_t insert_index;
                 object_t **segments[];
         } mark_list_t;
