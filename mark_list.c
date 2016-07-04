@@ -168,7 +168,7 @@ static void qcgc_mark_list_check_invariant(mark_list_t *list) {
 		if ((list->head <= i && i <= list->tail) || (list->tail < list->head &&
 				(i <= list->tail || i >= list->head))) {
 			for (size_t j = 0; j < QCGC_MARK_LIST_SEGMENT_SIZE; j++) {
-				if (i != list->tail || i < list->insert_index) {
+				if (i != list->tail || j < list->insert_index) {
 					assert(list->segments[i][j] != NULL);
 				} else {
 					assert(list->segments[i][j] == NULL);
