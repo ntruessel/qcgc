@@ -20,6 +20,15 @@ class MarkListTestCase(QCGCTest):
             self.assertNotEqual(l.segments[l.head], ffi.NULL)
             lib.qcgc_mark_list_destroy(l)
 
+    def test_destroy_full_list(self):
+        """Destroy a non-emptied list"""
+        list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE
+        l = lib.qcgc_mark_list_create(list_size)
+        for i in range(list_size):
+            l = lib.qcgc_mark_list_push(l, ffi.cast("object_t *", i))
+
+        lib.qcgc_mark_list_destroy(l)
+
     def test_single_segment_push(self):
         """Push to single segment"""
         list_size = lib.QCGC_MARK_LIST_SEGMENT_SIZE
