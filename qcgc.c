@@ -84,7 +84,8 @@ void qcgc_mark(void) {
 	}
 
 	while(qcgc_state.gray_stack->index > 0) {
-		object_t *top = qcgc_gray_stack_pop(qcgc_state.gray_stack);
+		object_t *top = qcgc_gray_stack_top(qcgc_state.gray_stack);
+		qcgc_state.gray_stack = qcgc_gray_stack_pop(qcgc_state.gray_stack);
 		if (qcgc_arena_get_blocktype((cell_t *) top) != BLOCK_BLACK) {
 			qcgc_arena_set_blocktype((cell_t *) top, BLOCK_BLACK);
 			qcgc_trace_cb(top, &qcgc_push_object);

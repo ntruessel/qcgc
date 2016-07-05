@@ -21,8 +21,9 @@ class GrayStackTestCase(QCGCTest):
         self.assertEqual(stack.index, 1000)
 
         while pythonstack:
-            p = lib.qcgc_gray_stack_pop(stack);
+            p = lib.qcgc_gray_stack_top(stack);
             self.assertEqual(p, pythonstack.pop())
+            stack = lib.qcgc_gray_stack_pop(stack);
 
         self.assertEqual(stack.index, 0)
 
@@ -38,7 +39,39 @@ class GrayStackTestCase(QCGCTest):
         self.assertEqual(stack.index, 1000)
 
         while pythonstack:
-            p = lib.qcgc_gray_stack_pop(stack);
+            p = lib.qcgc_gray_stack_top(stack);
             self.assertEqual(p, pythonstack.pop())
+            stack = lib.qcgc_gray_stack_pop(stack);
+
+        self.assertEqual(stack.index, 0)
+
+    def test_grow_shrink(self):
+        """Test automatic growing/shrinking"""
+        stack = lib.qcgc_gray_stack_create(10)
+        pythonstack = list()
+
+        for i in range(1000):
+            stack = lib.qcgc_gray_stack_push(stack, ffi.cast("object_t *", i))
+            pythonstack.append(ffi.cast("object_t *", i))
+
+        self.assertEqual(stack.index, 1000)
+
+        while pythonstack:
+            p = lib.qcgc_gray_stack_top(stack);
+            self.assertEqual(p, pythonstack.pop())
+            stack = lib.qcgc_gray_stack_pop(stack);
+
+        self.assertEqual(stack.index, 0)
+
+        for i in range(1000):
+            stack = lib.qcgc_gray_stack_push(stack, ffi.cast("object_t *", i))
+            pythonstack.append(ffi.cast("object_t *", i))
+
+        self.assertEqual(stack.index, 1000)
+
+        while pythonstack:
+            p = lib.qcgc_gray_stack_top(stack);
+            self.assertEqual(p, pythonstack.pop())
+            stack = lib.qcgc_gray_stack_pop(stack);
 
         self.assertEqual(stack.index, 0)

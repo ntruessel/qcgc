@@ -118,7 +118,8 @@ ffi.cdef("""
         gray_stack_t *qcgc_gray_stack_create(size_t size);
 
         gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item);
-        object_t *qcgc_gray_stack_pop(gray_stack_t *stack);
+        object_t *qcgc_gray_stack_top(gray_stack_t *stack);
+        gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack);
         """)
 
 
