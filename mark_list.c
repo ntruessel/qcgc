@@ -19,7 +19,7 @@ mark_list_t *qcgc_mark_list_create(size_t initial_size) {
 	result->insert_index = 0;
 	result->count = 0;
 	result->segments[result->head] = (object_t **)
-		calloc(QCGC_MARK_LIST_SEGMENT_SIZE, sizeof(object_t **));
+		calloc(QCGC_MARK_LIST_SEGMENT_SIZE, sizeof(object_t *));
 #if CHECKED
 	qcgc_mark_list_check_invariant(result);
 #endif
