@@ -95,6 +95,7 @@ void qcgc_mark(void) {
 }
 
 void qcgc_push_object(object_t *object) {
+	// TODO: Add black test
 	qcgc_state.gray_stack = qcgc_gray_stack_push(qcgc_state.gray_stack, object);
 }
 
