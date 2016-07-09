@@ -37,6 +37,9 @@ arena_t *qcgc_arena_create(void) {
 
 	// Init bitmaps: One large free block
 	qcgc_arena_set_bitmap_entry(result->mark_bitmap, QCGC_ARENA_FIRST_CELL_INDEX, true);
+
+	// Create gray stack
+	result->gray_stack = qcgc_gray_stack_create(QCGC_GRAY_STACK_INIT_SIZE);
 	return result;
 }
 

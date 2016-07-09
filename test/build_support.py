@@ -24,6 +24,23 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# gray_stack                                                                   #
+################################################################################
+ffi.cdef("""
+        typedef struct gray_stack_s {
+                size_t index;
+                size_t size;
+                object_t *items[];
+        } gray_stack_t;
+
+        gray_stack_t *qcgc_gray_stack_create(size_t size);
+
+        gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item);
+        object_t *qcgc_gray_stack_top(gray_stack_t *stack);
+        gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack);
+        """)
+
+################################################################################
 # arena                                                                        #
 ################################################################################
 ffi.cdef(""" const size_t qcgc_arena_size;
@@ -45,6 +62,7 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         cell_t *arena_cells(arena_t *arena);
         uint8_t *arena_mark_bitmap(arena_t *arena);
         uint8_t *arena_block_bitmap(arena_t *arena);
+        gray_stack_t *arena_gray_stack(arena_t *arena);
 
         arena_t *qcgc_arena_create(void);
         void qcgc_arena_destroy(arena_t *arena);
@@ -107,23 +125,6 @@ ffi.cdef("""
 
         object_t **qcgc_mark_list_get_head_segment(mark_list_t *list);
         mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list);
-        """)
-
-################################################################################
-# gray_stack                                                                   #
-################################################################################
-ffi.cdef("""
-        typedef struct gray_stack_s {
-                size_t index;
-                size_t size;
-                object_t *items[];
-        } gray_stack_t;
-
-        gray_stack_t *qcgc_gray_stack_create(size_t size);
-
-        gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item);
-        object_t *qcgc_gray_stack_top(gray_stack_t *stack);
-        gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack);
         """)
 
 
@@ -201,6 +202,10 @@ ffi.set_source("support",
 
         uint8_t *arena_block_bitmap(arena_t *arena) {
             return arena->block_bitmap;
+        }
+
+        gray_stack_t *arena_gray_stack(arena_t *arena) {
+            return arena->gray_stack;
         }
 
         size_t qcgc_arena_sizeof(void) {
