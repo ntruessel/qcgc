@@ -17,7 +17,7 @@ void qcgc_initialize(void) {
 	qcgc_state.arena_index = 0;
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
-	qcgc_state.gray_stack = NULL;
+	qcgc_state.gray_stack_size = 0;
 
 	qcgc_balloc_assign(
 			&(qcgc_state.arenas[qcgc_state.arena_index]
@@ -71,11 +71,6 @@ object_t *qcgc_bump_allocate(size_t size) {
  ******************************************************************************/
 
 void qcgc_mark(void) {
-	// TODO: store capacity and reuse it, add macro for initial size or use
-	// some estimation
-	qcgc_state.gray_stack = qcgc_gray_stack_create(128);
-
-
 	// Push all roots
 	for (object_t **it = qcgc_state.shadow_stack_base;
 			it != qcgc_state.shadow_stack;
@@ -83,21 +78,31 @@ void qcgc_mark(void) {
 		qcgc_push_object(*it);
 	}
 
-	while(qcgc_state.gray_stack->index > 0) {
-		object_t *top = qcgc_gray_stack_top(qcgc_state.gray_stack);
-		qcgc_state.gray_stack = qcgc_gray_stack_pop(qcgc_state.gray_stack);
-		if (qcgc_arena_get_blocktype((cell_t *) top) != BLOCK_BLACK) {
-			qcgc_arena_set_blocktype((cell_t *) top, BLOCK_BLACK);
-			qcgc_trace_cb(top, &qcgc_push_object);
+	while(qcgc_state.gray_stack_size > 0) {
+		for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
+			while (qcgc_state.arenas[i]->gray_stack->index > 0) {
+				object_t *top =
+					qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
+				qcgc_state.arenas[i]->gray_stack =
+					qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
+				qcgc_state.gray_stack_size--;
+				if (qcgc_arena_get_blocktype((cell_t *) top) != BLOCK_BLACK) {
+					qcgc_arena_set_blocktype((cell_t *) top, BLOCK_BLACK);
+					qcgc_trace_cb(top, &qcgc_push_object);
+				}
+			}
 		}
 	}
-
-	free(qcgc_state.gray_stack);
 }
 
 void qcgc_push_object(object_t *object) {
-	// TODO: Add black test
-	qcgc_state.gray_stack = qcgc_gray_stack_push(qcgc_state.gray_stack, object);
+	if (object != NULL) {
+		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_WHITE) {
+			qcgc_state.gray_stack_size++;
+			arena_t *arena = qcgc_arena_addr((cell_t *) object);
+			arena->gray_stack = qcgc_gray_stack_push(arena->gray_stack, object);
+		}
+	}
 }
 
 void qcgc_sweep(void) {

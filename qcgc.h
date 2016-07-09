@@ -27,7 +27,7 @@ struct qcgc_state {
 	arena_t **arenas;
 	size_t arena_index;
 	size_t current_cell_index;
-	gray_stack_t *gray_stack;
+	size_t gray_stack_size;
 } qcgc_state;
 
 /**
