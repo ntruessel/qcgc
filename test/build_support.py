@@ -14,9 +14,13 @@ ffi.cdef("""
 # object                                                                       #
 ################################################################################
 ffi.cdef("""
+        #define QCGC_GRAY_FLAG 0x01
+
         typedef struct object_s {
                 uint32_t flags;
         } object_t;
+
+        void qcgc_write(object_t *object);
         """)
 
 ################################################################################
@@ -235,7 +239,8 @@ ffi.set_source("support",
             }
         }
 
-        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c', '../mark_list.c', '../gray_stack.c'],
+        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c',
+                '../mark_list.c', '../gray_stack.c', '../object.c'],
         extra_compile_args=['--coverage','-std=gnu99','-UNDEBUG','-O0'], extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
