@@ -130,6 +130,12 @@ ffi.cdef("""
 # qcgc                                                                         #
 ################################################################################
 ffi.cdef("""
+        typedef enum gc_state {
+                GC_PAUSE,
+                GC_MARK,
+                GC_COLLECT,
+        } gc_state_t;
+
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
@@ -137,6 +143,7 @@ ffi.cdef("""
                 size_t arena_index;
                 size_t current_cell_index;
                 size_t gray_stack_size;
+                gc_state_t state;
         } qcgc_state;
 
         void qcgc_initialize(void);
