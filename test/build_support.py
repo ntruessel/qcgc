@@ -226,6 +226,7 @@ ffi.set_source("support",
 
         void _set_type_id(object_t *obj, uint32_t id);
         uint32_t _get_type_id(object_t *obj);
+
         void _set_type_id(object_t *object, uint32_t id) {
             ((myobject_t *) object)->type_id = id;
         }
