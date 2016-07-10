@@ -31,6 +31,7 @@ class QCGCTest(unittest.TestCase):
         return ffi.cast("myobject_t *", o)
 
     def set_ref(self, obj, index, ref):
+        lib.qcgc_write(ffi.cast("object_t *", obj)) # Trigger write barrier
         fields = ffi.cast("myobject_t **", obj + 1)
         fields[index] = ref
 
