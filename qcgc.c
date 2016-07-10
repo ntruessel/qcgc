@@ -86,6 +86,7 @@ void qcgc_mark(void) {
 				qcgc_state.arenas[i]->gray_stack =
 					qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
 				qcgc_state.gray_stack_size--;
+				top->flags &= ~QCGC_GRAY_FLAG;
 				if (qcgc_arena_get_blocktype((cell_t *) top) != BLOCK_BLACK) {
 					qcgc_arena_set_blocktype((cell_t *) top, BLOCK_BLACK);
 					qcgc_trace_cb(top, &qcgc_push_object);
