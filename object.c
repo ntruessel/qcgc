@@ -10,7 +10,7 @@ void qcgc_write(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 #endif
-	if ((object->flags & QCGC_GRAY_FLAG) != 0) {
+	if ((object->flags & QCGC_GRAY_FLAG) == 0) {
 		object->flags |= QCGC_GRAY_FLAG;
 		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
 			// This was black before, push it to gray stack again
