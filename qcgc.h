@@ -41,6 +41,13 @@ void qcgc_initialize(void);
 void qcgc_destroy(void);
 
 /**
+ * Write barrier.
+ *
+ * @param	object	Object to write to
+ */
+void qcgc_write(object_t *object);
+
+/**
  * Allocate new memory region
  *
  * @param	size	Desired size of the memory region
