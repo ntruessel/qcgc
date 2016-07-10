@@ -7,8 +7,14 @@
 
 #include "bump_allocator.h"
 
+// TODO: Eventually move to own header?
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 object_t *qcgc_bump_allocate(size_t size);
 void qcgc_mark(void);
+void qcgc_mark_all(void);
+void qcgc_mark_incremental(void);
+void qcgc_pop_object(object_t *object);
 void qcgc_push_object(object_t *object);
 void qcgc_sweep(void);
 
@@ -20,6 +26,7 @@ void qcgc_initialize(void) {
 	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 	qcgc_state.gray_stack_size = 0;
+	qcgc_state.state = GC_PAUSE;
 
 	qcgc_balloc_assign(
 			&(qcgc_state.arenas[qcgc_state.arena_index]
@@ -92,6 +99,15 @@ object_t *qcgc_bump_allocate(size_t size) {
  ******************************************************************************/
 
 void qcgc_mark(void) {
+	qcgc_mark_all();
+}
+
+void qcgc_mark_all(void) {
+#if CHECKED
+	assert(qcgc_state.state == GC_PAUSE || qcgc_state.state == GC_MARK);
+#endif
+	qcgc_state.state = GC_MARK;
+
 	// Push all roots
 	for (object_t **it = qcgc_state.shadow_stack_base;
 			it != qcgc_state.shadow_stack;
@@ -106,20 +122,65 @@ void qcgc_mark(void) {
 					qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
 				qcgc_state.arenas[i]->gray_stack =
 					qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
-				qcgc_state.gray_stack_size--;
-				top->flags &= ~QCGC_GRAY_FLAG;
-				if (qcgc_arena_get_blocktype((cell_t *) top) != BLOCK_BLACK) {
-					qcgc_arena_set_blocktype((cell_t *) top, BLOCK_BLACK);
-					qcgc_trace_cb(top, &qcgc_push_object);
-				}
+				qcgc_pop_object(top);
 			}
 		}
 	}
+
+	qcgc_state.state = GC_COLLECT;
+}
+
+void qcgc_mark_incremental(void) {
+#if CHECKED
+	assert(qcgc_state.state == GC_PAUSE || qcgc_state.state == GC_MARK);
+#endif
+	qcgc_state.state = GC_MARK;
+
+	// Push all roots
+	for (object_t **it = qcgc_state.shadow_stack_base;
+			it != qcgc_state.shadow_stack;
+			it++) {
+		qcgc_push_object(*it);
+	}
+
+	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
+		arena_t *arena = qcgc_state.arenas[i];
+		size_t initial_stack_size = arena->gray_stack->index;
+		size_t to_process = MAX(initial_stack_size / 2, QCGC_INC_MARK_MIN);
+		while (to_process > 0) {
+			object_t *top =
+				qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
+			qcgc_state.arenas[i]->gray_stack =
+				qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
+			qcgc_pop_object(top);
+			to_process--;
+		}
+	}
+
+	if (qcgc_state.gray_stack_size == 0) {
+		qcgc_state.state = GC_COLLECT;
+	}
+}
+
+void qcgc_pop_object(object_t *object) {
+#if CHECKED
+	assert(object != NULL);
+	assert((object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG);
+	assert(qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK);
+#endif
+	qcgc_state.gray_stack_size--;
+	object->flags &= ~QCGC_GRAY_FLAG;
+	qcgc_trace_cb(object, &qcgc_push_object);
 }
 
 void qcgc_push_object(object_t *object) {
+#if CHECKED
+	assert(qcgc_state.state == GC_MARK);
+#endif
 	if (object != NULL) {
 		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_WHITE) {
+			object->flags |= QCGC_GRAY_FLAG;
+			qcgc_arena_set_blocktype((cell_t *) object, BLOCK_BLACK);
 			qcgc_state.gray_stack_size++;
 			arena_t *arena = qcgc_arena_addr((cell_t *) object);
 			arena->gray_stack = qcgc_gray_stack_push(arena->gray_stack, object);
@@ -128,9 +189,13 @@ void qcgc_push_object(object_t *object) {
 }
 
 void qcgc_sweep(void) {
+#if CHECKED
+	assert(qcgc_state.state == GC_COLLECT);
+#endif
 	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
 		qcgc_arena_sweep(qcgc_state.arenas[i]);
 	}
+	qcgc_state.state = GC_PAUSE;
 }
 
 void qcgc_collect(void) {

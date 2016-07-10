@@ -17,6 +17,19 @@
 #define qcgc_shadowstack_pop(p) ((p) = *(--qcgc_state.shadow_stack))
 
 /**
+ * @typedef gc_state_t
+ * Garbage collection states.
+ * - GC_PAUSE	No gc in progress
+ * - GC_MARK	Currently marking
+ * - GC_COLLECT	Currently collecting
+ */
+typedef enum gc_state {
+	GC_PAUSE,
+	GC_MARK,
+	GC_COLLECT,
+} gc_state_t;
+
+/**
  * @var qcgc_state
  *
  * Global state of the garbage collector
@@ -28,6 +41,7 @@ struct qcgc_state {
 	size_t arena_index;
 	size_t current_cell_index;
 	size_t gray_stack_size;
+	gc_state_t state;
 } qcgc_state;
 
 /**

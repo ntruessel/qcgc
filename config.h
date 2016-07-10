@@ -6,5 +6,6 @@
 #define QCGC_LARGE_ALLOC_THRESHOLD 1<<14
 #define QCGC_MARK_LIST_SEGMENT_SIZE 64		// TODO: Tune for performance
 #define QCGC_GRAY_STACK_INIT_SIZE 128		// TODO: Tune for performance
+#define QCGC_INC_MARK_MIN 64				// TODO: Tune for performance
 
 #define CHECKED 1							// Set to 0 to disable all checks
