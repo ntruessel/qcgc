@@ -9,6 +9,7 @@
 
 // TODO: Eventually move to own header?
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 object_t *qcgc_bump_allocate(size_t size);
 void qcgc_mark(void);
@@ -51,12 +52,14 @@ void qcgc_write(object_t *object) {
 #endif
 	if ((object->flags & QCGC_GRAY_FLAG) == 0) {
 		object->flags |= QCGC_GRAY_FLAG;
-		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
-			// This was black before, push it to gray stack again
-			qcgc_state.gray_stack_size++;
-			arena_t *arena = qcgc_arena_addr((cell_t *) object);
-			arena->gray_stack = qcgc_gray_stack_push(
-					arena->gray_stack, object);
+		if (qcgc_state.state != GC_PAUSE) {
+			if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
+				// This was black before, push it to gray stack again
+				qcgc_state.gray_stack_size++;
+				arena_t *arena = qcgc_arena_addr((cell_t *) object);
+				arena->gray_stack = qcgc_gray_stack_push(
+						arena->gray_stack, object);
+			}
 		}
 	}
 }
@@ -146,7 +149,8 @@ void qcgc_mark_incremental(void) {
 	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
 		arena_t *arena = qcgc_state.arenas[i];
 		size_t initial_stack_size = arena->gray_stack->index;
-		size_t to_process = MAX(initial_stack_size / 2, QCGC_INC_MARK_MIN);
+		size_t to_process = MIN(arena->gray_stack->index,
+				MAX(initial_stack_size / 2, QCGC_INC_MARK_MIN));
 		while (to_process > 0) {
 			object_t *top =
 				qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
