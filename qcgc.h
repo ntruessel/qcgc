@@ -30,6 +30,21 @@ typedef enum gc_state {
 } gc_state_t;
 
 /**
+ * @typedef mark_color
+ * Object state during collection
+ * - MARK_COLOR_WHITE		Clean and unprocessed
+ * - MARK_COLOR_LIGHT_GRAY	Dirty and unprocessed
+ * - MARK_COLOR_DARK_GRAY	Processing
+ * - MARK_COLOR_BLACK		Processed
+ */
+typedef enum mark_color {
+	MARK_COLOR_WHITE,
+	MARK_COLOR_LIGHT_GRAY,
+	MARK_COLOR_DARK_GRAY,
+	MARK_COLOR_BLACK,
+} mark_color_t;
+
+/**
  * @var qcgc_state
  *
  * Global state of the garbage collector
@@ -74,6 +89,13 @@ object_t *qcgc_allocate(size_t size);
  * Run garbage collection.
  */
 void qcgc_collect(void);
+
+/**
+ * Return color of object.
+ *
+ * @returs The color of the object, according to the mark algorithm.
+ */
+mark_color_t qcgc_get_mark_color(object_t *object);
 
 /**
  * Tracing function.

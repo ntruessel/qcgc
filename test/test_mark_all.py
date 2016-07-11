@@ -2,7 +2,7 @@ from support import lib,ffi
 from qcgc_test import QCGCTest
 import unittest
 
-class MarkTestCase(QCGCTest):
+class MarkAllTestCase(QCGCTest):
     def test_no_references(self):
         """No references"""
         roots = list()
@@ -16,7 +16,7 @@ class MarkTestCase(QCGCTest):
             p = self.allocate(3)
             garbage.append(p)
 
-        lib.qcgc_mark()
+        lib.qcgc_mark_all()
 
         for p in roots:
             self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -40,7 +40,7 @@ class MarkTestCase(QCGCTest):
             p, objs = self.gen_structure_1()
             unreachable.extend(objs)
 
-        lib.qcgc_mark()
+        lib.qcgc_mark_all()
 
         for p in reachable:
             self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -62,7 +62,7 @@ class MarkTestCase(QCGCTest):
             objects = self.gen_circular_structure(i + 1)
             unreachable.extend(objects)
 
-        lib.qcgc_mark()
+        lib.qcgc_mark_all()
 
         for p in reachable:
             self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)

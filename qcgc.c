@@ -101,6 +101,31 @@ object_t *qcgc_bump_allocate(size_t size) {
  * Collection                                                                  *
  ******************************************************************************/
 
+mark_color_t qcgc_get_mark_color(object_t *object) {
+#if CHECKED
+	assert(object != NULL);
+#endif
+	blocktype_t blocktype = qcgc_arena_get_blocktype((cell_t *) object);
+	bool gray = (object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG;
+	if (blocktype == BLOCK_WHITE) {
+		if (gray) {
+			return MARK_COLOR_LIGHT_GRAY;
+		} else {
+			return MARK_COLOR_WHITE;
+		}
+	} else if(blocktype == BLOCK_BLACK) {
+		if (gray) {
+			return MARK_COLOR_DARK_GRAY;
+		} else {
+			return MARK_COLOR_BLACK;
+		}
+	} else {
+#if CHECKED
+		assert(false);
+#endif
+	}
+}
+
 void qcgc_mark(void) {
 	qcgc_mark_all();
 }
@@ -175,10 +200,14 @@ void qcgc_pop_object(object_t *object) {
 	qcgc_state.gray_stack_size--;
 	object->flags &= ~QCGC_GRAY_FLAG;
 	qcgc_trace_cb(object, &qcgc_push_object);
+#if CHECKED
+	assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK);
+#endif
 }
 
 void qcgc_push_object(object_t *object) {
 #if CHECKED
+	size_t old_stack_size = qcgc_state.gray_stack_size;
 	assert(qcgc_state.state == GC_MARK);
 #endif
 	if (object != NULL) {
@@ -190,6 +219,18 @@ void qcgc_push_object(object_t *object) {
 			arena->gray_stack = qcgc_gray_stack_push(arena->gray_stack, object);
 		}
 	}
+#if CHECKED
+	if (object != NULL) {
+		if (old_stack_size == qcgc_state.gray_stack_size) {
+			assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK);
+		} else {
+			assert(qcgc_state.gray_stack_size == old_stack_size + 1);
+			assert(qcgc_get_mark_color(object) == MARK_COLOR_DARK_GRAY);
+		}
+	} else {
+		assert(old_stack_size == qcgc_state.gray_stack_size);
+	}
+#endif
 }
 
 void qcgc_sweep(void) {

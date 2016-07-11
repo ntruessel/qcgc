@@ -136,6 +136,13 @@ ffi.cdef("""
                 GC_COLLECT,
         } gc_state_t;
 
+        typedef enum mark_color {
+                MARK_COLOR_WHITE,
+                MARK_COLOR_LIGHT_GRAY,
+                MARK_COLOR_DARK_GRAY,
+                MARK_COLOR_BLACK,
+        } mark_color_t;
+
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
@@ -151,10 +158,13 @@ ffi.cdef("""
         void qcgc_write(object_t *object);
         object_t *qcgc_allocate(size_t size);
         void qcgc_collect(void);
+        mark_color_t qcgc_get_mark_color(object_t *object);
 
         // qcgc.c
         object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
+        void qcgc_mark_all(void);
+        void qcgc_mark_incremental(void);
         void qcgc_sweep(void);
         """)
 
@@ -196,6 +206,8 @@ ffi.set_source("support",
         // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
+        void qcgc_mark_all(void);
+        void qcgc_mark_incremental(void);
         void qcgc_sweep(void);
 
         cell_t *arena_cells(arena_t *arena) {
