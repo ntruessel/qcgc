@@ -88,6 +88,28 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         """)
 
 ################################################################################
+# gc_state                                                                     #
+################################################################################
+ffi.cdef("""
+        typedef enum gc_state {
+                GC_PAUSE,
+                GC_MARK,
+                GC_COLLECT,
+        } gc_state_t;
+
+        struct qcgc_state {
+                object_t **shadow_stack;
+                object_t **shadow_stack_base;
+                arena_t **arenas;
+                size_t arena_index;
+                size_t current_cell_index;
+                size_t gray_stack_size;
+                gc_state_t state;
+        } qcgc_state;
+
+        """)
+
+################################################################################
 # bump_allocator                                                               #
 ################################################################################
 ffi.cdef("""
@@ -130,28 +152,12 @@ ffi.cdef("""
 # qcgc                                                                         #
 ################################################################################
 ffi.cdef("""
-        typedef enum gc_state {
-                GC_PAUSE,
-                GC_MARK,
-                GC_COLLECT,
-        } gc_state_t;
-
         typedef enum mark_color {
                 MARK_COLOR_WHITE,
                 MARK_COLOR_LIGHT_GRAY,
                 MARK_COLOR_DARK_GRAY,
                 MARK_COLOR_BLACK,
         } mark_color_t;
-
-        struct qcgc_state {
-                object_t **shadow_stack;
-                object_t **shadow_stack_base;
-                arena_t **arenas;
-                size_t arena_index;
-                size_t current_cell_index;
-                size_t gray_stack_size;
-                gc_state_t state;
-        } qcgc_state;
 
         void qcgc_initialize(void);
         void qcgc_destroy(void);

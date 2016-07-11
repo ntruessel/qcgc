@@ -9,25 +9,13 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "object.h"
 #include "arena.h"
+#include "gc_state.h"
 #include "gray_stack.h"
+#include "object.h"
 
 #define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (object_t *)(p))
 #define qcgc_shadowstack_pop(p) ((p) = *(--qcgc_state.shadow_stack))
-
-/**
- * @typedef gc_state_t
- * Garbage collection states.
- * - GC_PAUSE	No gc in progress
- * - GC_MARK	Currently marking
- * - GC_COLLECT	Currently collecting
- */
-typedef enum gc_state {
-	GC_PAUSE,
-	GC_MARK,
-	GC_COLLECT,
-} gc_state_t;
 
 /**
  * @typedef mark_color
@@ -43,21 +31,6 @@ typedef enum mark_color {
 	MARK_COLOR_DARK_GRAY,
 	MARK_COLOR_BLACK,
 } mark_color_t;
-
-/**
- * @var qcgc_state
- *
- * Global state of the garbage collector
- */
-struct qcgc_state {
-	object_t **shadow_stack;
-	object_t **shadow_stack_base;
-	arena_t **arenas;
-	size_t arena_index;
-	size_t current_cell_index;
-	size_t gray_stack_size;
-	gc_state_t state;
-} qcgc_state;
 
 /**
  * Initialize the garbage collector.
