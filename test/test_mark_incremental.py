@@ -88,6 +88,22 @@ class MarkAllTestCase(QCGCTest):
 
         for o in reachable:
             self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_BLACK, lib.MARK_COLOR_DARK_GRAY])
+            if (lib.qcgc_get_mark_color(ffi.cast("object_t *", o)) == lib.MARK_COLOR_BLACK):
+                # Trigger write barrier and add object
+                p = self.allocate(1)
+                self.set_ref(o, 0, p)
+                reachable.append(o)
+                self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_DARK_GRAY)
+
+        lib.qcgc_mark_all()
+
+        for o in reachable:
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_BLACK)
+
+        lib.qcgc_sweep()
+
+        for o in reachable:
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_WHITE)
 
     def gen_structure_1(self):
         result = self.allocate_ref(6)
