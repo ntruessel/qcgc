@@ -222,7 +222,8 @@ void qcgc_push_object(object_t *object) {
 #if CHECKED
 	if (object != NULL) {
 		if (old_stack_size == qcgc_state.gray_stack_size) {
-			assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK);
+			assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK ||
+					qcgc_get_mark_color(object) == MARK_COLOR_DARK_GRAY);
 		} else {
 			assert(qcgc_state.gray_stack_size == old_stack_size + 1);
 			assert(qcgc_get_mark_color(object) == MARK_COLOR_DARK_GRAY);
