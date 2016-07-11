@@ -70,6 +70,25 @@ class MarkAllTestCase(QCGCTest):
         for p in unreachable:
             self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
+    def test_color_transitions(self):
+        """Test all possible color transitions"""
+        reachable = list()
+        unreachable = list()
+
+        for i in range(2 * lib.QCGC_INC_MARK_MIN):
+            o = self.allocate_ref(1)
+            self.push_root(o)
+            reachable.append(o)
+
+        for o in reachable:
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *",o)), lib.MARK_COLOR_LIGHT_GRAY)
+
+        lib.qcgc_mark_incremental()
+        self.assertEqual(lib.qcgc_state.state, lib.GC_MARK)
+
+        for o in reachable:
+            self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_BLACK, lib.MARK_COLOR_DARK_GRAY])
+
     def gen_structure_1(self):
         result = self.allocate_ref(6)
         result_list = [result]

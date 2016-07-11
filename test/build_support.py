@@ -8,6 +8,7 @@ ffi = FFI()
 ffi.cdef("""
         #define QCGC_ARENA_SIZE_EXP 20	// Between 16 (64kB) and 20 (1MB)
         #define QCGC_MARK_LIST_SEGMENT_SIZE 64
+        #define QCGC_INC_MARK_MIN 64	// TODO: Tune for performance
         """)
 
 ################################################################################
