@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "gc_state.h"
+
 static size_t gray_stack_size(size_t size);
 static gray_stack_t *gray_stack_grow(gray_stack_t *stack);
 static gray_stack_t *gray_stack_shrink(gray_stack_t *stack);
@@ -20,6 +22,7 @@ gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item) {
 	}
 	stack->items[stack->index] = item;
 	stack->index++;
+	qcgc_state.gray_stack_size++;
 	return stack;
 }
 
@@ -36,6 +39,7 @@ gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack) {
 		stack = gray_stack_shrink(stack);
 	}
 	stack->index--;
+	qcgc_state.gray_stack_size--;
 	return stack;
 }
 

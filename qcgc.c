@@ -55,7 +55,6 @@ void qcgc_write(object_t *object) {
 		if (qcgc_state.state != GC_PAUSE) {
 			if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
 				// This was black before, push it to gray stack again
-				qcgc_state.gray_stack_size++;
 				arena_t *arena = qcgc_arena_addr((cell_t *) object);
 				arena->gray_stack = qcgc_gray_stack_push(
 						arena->gray_stack, object);
@@ -197,7 +196,6 @@ void qcgc_pop_object(object_t *object) {
 	assert((object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG);
 	assert(qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK);
 #endif
-	qcgc_state.gray_stack_size--;
 	object->flags &= ~QCGC_GRAY_FLAG;
 	qcgc_trace_cb(object, &qcgc_push_object);
 #if CHECKED
@@ -214,7 +212,6 @@ void qcgc_push_object(object_t *object) {
 		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_WHITE) {
 			object->flags |= QCGC_GRAY_FLAG;
 			qcgc_arena_set_blocktype((cell_t *) object, BLOCK_BLACK);
-			qcgc_state.gray_stack_size++;
 			arena_t *arena = qcgc_arena_addr((cell_t *) object);
 			arena->gray_stack = qcgc_gray_stack_push(arena->gray_stack, object);
 		}
