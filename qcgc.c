@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "bump_allocator.h"
 
@@ -75,6 +76,10 @@ object_t *qcgc_allocate(size_t size) {
 	} else {
 		result = qcgc_bump_allocate(size);
 	}
+#if QCGC_INIT_ZERO
+	memset(result, 0, size);
+#endif
+	result->flags |= QCGC_GRAY_FLAG;
 	return result;
 }
 
@@ -93,9 +98,7 @@ object_t *qcgc_bump_allocate(size_t size) {
 					->cells[qcgc_state.current_cell_index]),
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 	}
-	object_t *result = (object_t *) qcgc_balloc_allocate(size_in_cells);
-	result->flags |= QCGC_GRAY_FLAG;
-	return result;
+	return (object_t *) qcgc_balloc_allocate(size_in_cells);
 }
 
 /*******************************************************************************
