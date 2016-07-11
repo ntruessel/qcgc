@@ -93,7 +93,9 @@ object_t *qcgc_bump_allocate(size_t size) {
 					->cells[qcgc_state.current_cell_index]),
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 	}
-	return (object_t *) qcgc_balloc_allocate(size_in_cells);
+	object_t *result = (object_t *) qcgc_balloc_allocate(size_in_cells);
+	result->flags |= QCGC_GRAY_FLAG;
+	return result;
 }
 
 /*******************************************************************************
