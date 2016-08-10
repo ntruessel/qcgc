@@ -23,23 +23,24 @@ void qcgc_sweep(void);
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
 		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
-	qcgc_state.arenas = (arena_t **) calloc(sizeof(arena_t *), QCGC_ARENA_COUNT);
-	qcgc_state.arena_index = 0;
-	qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
+	qcgc_state.arenas = qcgc_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
+	qcgc_bag_add(qcgc_state.arenas, qcgc_arena_create());
 	qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.state = GC_PAUSE;
 
+	// FIXME: Clean this mess up
 	qcgc_balloc_assign(
-			&(qcgc_state.arenas[qcgc_state.arena_index]
+			&(((arena_t *) qcgc_state.arenas->
+					items[qcgc_state.arenas->count - 1])
 				->cells[qcgc_state.current_cell_index]),
 			QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 }
 
 void qcgc_destroy(void) {
 	free(qcgc_state.shadow_stack_base);
-	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
-		qcgc_arena_destroy(qcgc_state.arenas[i]);
+	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
+		qcgc_arena_destroy(qcgc_state.arenas->items[i]);
 	}
 	free(qcgc_state.arenas);
 }
@@ -87,14 +88,12 @@ object_t *qcgc_bump_allocate(size_t size) {
 	size_t size_in_cells = (size + 15) / 16;
 	if (!qcgc_balloc_can_allocate(size_in_cells)) {
 		// Create a new arena and assign its memory to bump allocator
-		qcgc_state.arena_index++;
-		if (qcgc_state.arena_index >= QCGC_ARENA_COUNT) {
-			return NULL; // No more space available
-		}
-		qcgc_state.arenas[qcgc_state.arena_index] = qcgc_arena_create();
+		qcgc_bag_add(qcgc_state.arenas, qcgc_arena_create());
 		qcgc_state.current_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
+		// FIXME: Clean this mess up
 		qcgc_balloc_assign(
-				&(qcgc_state.arenas[qcgc_state.arena_index]
+				&(((arena_t *) qcgc_state.arenas->
+						items[qcgc_state.arenas->count - 1])
 					->cells[qcgc_state.current_cell_index]),
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 	}
@@ -148,12 +147,13 @@ void qcgc_mark_all(void) {
 	}
 
 	while(qcgc_state.gray_stack_size > 0) {
-		for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
-			while (qcgc_state.arenas[i]->gray_stack->index > 0) {
+		for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
+			arena_t *arena = (arena_t *) qcgc_state.arenas->items[i];
+			while (arena->gray_stack->index > 0) {
 				object_t *top =
-					qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
-				qcgc_state.arenas[i]->gray_stack =
-					qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
+					qcgc_gray_stack_top(arena->gray_stack);
+				arena->gray_stack =
+					qcgc_gray_stack_pop(arena->gray_stack);
 				qcgc_pop_object(top);
 			}
 		}
@@ -175,16 +175,16 @@ void qcgc_mark_incremental(void) {
 		qcgc_push_object(*it);
 	}
 
-	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
-		arena_t *arena = qcgc_state.arenas[i];
+	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
+		arena_t *arena = (arena_t *) qcgc_state.arenas->items[i];
 		size_t initial_stack_size = arena->gray_stack->index;
 		size_t to_process = MIN(arena->gray_stack->index,
 				MAX(initial_stack_size / 2, QCGC_INC_MARK_MIN));
 		while (to_process > 0) {
 			object_t *top =
-				qcgc_gray_stack_top(qcgc_state.arenas[i]->gray_stack);
-			qcgc_state.arenas[i]->gray_stack =
-				qcgc_gray_stack_pop(qcgc_state.arenas[i]->gray_stack);
+				qcgc_gray_stack_top(arena->gray_stack);
+			arena->gray_stack =
+				qcgc_gray_stack_pop(arena->gray_stack);
 			qcgc_pop_object(top);
 			to_process--;
 		}
@@ -240,8 +240,8 @@ void qcgc_sweep(void) {
 #if CHECKED
 	assert(qcgc_state.state == GC_COLLECT);
 #endif
-	for (size_t i = 0; i <= qcgc_state.arena_index; i++) {
-		qcgc_arena_sweep(qcgc_state.arenas[i]);
+	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
+		qcgc_arena_sweep((arena_t *)qcgc_state.arenas->items[i]);
 	}
 	qcgc_state.state = GC_PAUSE;
 }

@@ -118,8 +118,7 @@ ffi.cdef("""
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
-                arena_t **arenas;
-                size_t arena_index;
+                bag_t *arenas;
                 size_t current_cell_index;
                 size_t gray_stack_size;
                 gc_state_t state;
