@@ -28,7 +28,6 @@ struct qcgc_state {
 	object_t **shadow_stack;
 	object_t **shadow_stack_base;
 	bag_t *arenas;
-	size_t current_cell_index;
 	size_t gray_stack_size;
 	gc_state_t state;
 } qcgc_state;
