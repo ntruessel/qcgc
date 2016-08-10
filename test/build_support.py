@@ -40,6 +40,23 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# bag                                                                          #
+################################################################################
+ffi.cdef("""
+        typedef struct bag_s {
+            size_t size;
+            size_t count;
+            void *items[];
+        } bag_t;
+
+        bag_t *qcgc_bag_create(size_t size);
+
+        bag_t *qcgc_bag_add(bag_t *bag, void *item);
+        bag_t *qcgc_bag_remove(bag_t *bag, void *item);
+        bag_t *qcgc_bag_remove_index(bag_t *bag, size_t index);
+        """)
+
+################################################################################
 # arena                                                                        #
 ################################################################################
 ffi.cdef(""" const size_t qcgc_arena_size;
@@ -196,12 +213,14 @@ ffi.cdef("""
 
 ffi.set_source("support",
         """
+        #include "../config.h"
         #include "../object.h"
         #include "../qcgc.h"
         #include "../arena.h"
         #include "../bump_allocator.h"
         #include "../mark_list.h"
         #include "../gray_stack.h"
+        #include "../bag.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -271,8 +290,8 @@ ffi.set_source("support",
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c',
-                '../mark_list.c', '../gray_stack.c',],
-        extra_compile_args=['--coverage','-std=gnu99','-UNDEBUG','-O0'],
+                '../mark_list.c', '../gray_stack.c', '../bag.c'],
+        extra_compile_args=['--coverage','-std=gnu99', '-UNDEBUG', '-O0'],
         extra_link_args=['--coverage'])
 
 if __name__ == "__main__":
