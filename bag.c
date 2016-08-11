@@ -13,6 +13,9 @@ bag_t *qcgc_bag_create(size_t size) {
 	bag_t *result = (bag_t *) malloc(bag_size(size));
 	result->size = size;
 	result->count = 0;
+#if CHECKED
+	bag_check_invariant(result);
+#endif
 	return result;
 }
 
