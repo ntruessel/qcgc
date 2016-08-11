@@ -1,7 +1,6 @@
 #include "bag.h"
 
 #include <assert.h>
-#include <math.h>
 
 #define BAG_MIN_SIZE 64
 
