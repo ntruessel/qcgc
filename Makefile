@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wextra -std=gnu99 -Wmissing-declarations -Wmissing-prototypes
-SRC=qcgc.c arena.c bump_allocator.c mark_list.c gray_stack.c
+SRC=qcgc.c arena.c bump_allocator.c mark_list.c gray_stack.c bag.c
 
 lib: $(SRC)
 	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $^
