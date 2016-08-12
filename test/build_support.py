@@ -40,23 +40,6 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# bag                                                                          #
-################################################################################
-ffi.cdef("""
-        typedef struct bag_s {
-            size_t size;
-            size_t count;
-            void *items[];
-        } bag_t;
-
-        bag_t *qcgc_bag_create(size_t size);
-
-        bag_t *qcgc_bag_add(bag_t *bag, void *item);
-        bag_t *qcgc_bag_remove(bag_t *bag, void *item);
-        bag_t *qcgc_bag_remove_index(bag_t *bag, size_t index);
-        """)
-
-################################################################################
 # arena                                                                        #
 ################################################################################
 ffi.cdef(""" const size_t qcgc_arena_size;
@@ -106,6 +89,23 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         """)
 
 ################################################################################
+# bag (only arena_bag_t is tested)                                             #
+################################################################################
+ffi.cdef("""
+        typedef struct arena_bag_s {
+            size_t size;
+            size_t count;
+            arena_t *items[];
+        } arena_bag_t;
+
+        arena_bag_t *qcgc_arena_bag_create(size_t size);
+
+        arena_bag_t *qcgc_arena_bag_add(arena_bag_t *self, void *item);
+        arena_bag_t *qcgc_arena_bag_remove_index(arena_bag_t *self,
+                size_t index);
+        """)
+
+################################################################################
 # gc_state                                                                     #
 ################################################################################
 ffi.cdef("""
@@ -118,7 +118,7 @@ ffi.cdef("""
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
-                bag_t *arenas;
+                arena_bag_t *arenas;
                 size_t gray_stack_size;
                 gc_state_t state;
         } qcgc_state;

@@ -1,7 +1,7 @@
 #include "segregated_allocator.h"
 
 #include <assert.h>
-#include "free_list.h"
+#include "bag.h"
 
 static size_t free_list_index(size_t cells);
 static cell_t *simple_free_list_allocate(simple_free_list_t *l, size_t cells);
