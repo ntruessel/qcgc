@@ -109,18 +109,18 @@ ffi.cdef("""
 # gc_state                                                                     #
 ################################################################################
 ffi.cdef("""
-        typedef enum gc_state {
+        typedef enum gc_phase {
                 GC_PAUSE,
                 GC_MARK,
                 GC_COLLECT,
-        } gc_state_t;
+        } gc_phase_t;
 
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
                 arena_bag_t *arenas;
                 size_t gray_stack_size;
-                gc_state_t state;
+                gc_phase_t phase;
         } qcgc_state;
 
         """)

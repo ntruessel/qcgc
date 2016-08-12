@@ -84,7 +84,7 @@ class MarkAllTestCase(QCGCTest):
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *",o)), lib.MARK_COLOR_LIGHT_GRAY)
 
         lib.qcgc_mark_incremental()
-        self.assertEqual(lib.qcgc_state.state, lib.GC_MARK)
+        self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
 
         for o in reachable:
             self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_BLACK, lib.MARK_COLOR_DARK_GRAY])
@@ -142,7 +142,7 @@ class MarkAllTestCase(QCGCTest):
 
 def mark_all_inc():
     lib.qcgc_mark_incremental()
-    while(lib.qcgc_state.state == lib.GC_MARK):
+    while(lib.qcgc_state.phase == lib.GC_MARK):
         lib.qcgc_mark_incremental()
 
 if __name__ == "__main__":

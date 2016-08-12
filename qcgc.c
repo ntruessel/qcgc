@@ -26,7 +26,7 @@ void qcgc_initialize(void) {
 	qcgc_state.arenas = qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
 	qcgc_arena_bag_add(qcgc_state.arenas, qcgc_arena_create());
 	qcgc_state.gray_stack_size = 0;
-	qcgc_state.state = GC_PAUSE;
+	qcgc_state.phase = GC_PAUSE;
 
 	arena_t *arena = qcgc_state.arenas->items[qcgc_state.arenas->count - 1];
 	qcgc_balloc_assign(
@@ -51,7 +51,7 @@ void qcgc_write(object_t *object) {
 #endif
 	if ((object->flags & QCGC_GRAY_FLAG) == 0) {
 		object->flags |= QCGC_GRAY_FLAG;
-		if (qcgc_state.state != GC_PAUSE) {
+		if (qcgc_state.phase != GC_PAUSE) {
 			if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
 				// This was black before, push it to gray stack again
 				arena_t *arena = qcgc_arena_addr((cell_t *) object);
@@ -129,9 +129,9 @@ void qcgc_mark(void) {
 
 void qcgc_mark_all(void) {
 #if CHECKED
-	assert(qcgc_state.state == GC_PAUSE || qcgc_state.state == GC_MARK);
+	assert(qcgc_state.phase == GC_PAUSE || qcgc_state.phase == GC_MARK);
 #endif
-	qcgc_state.state = GC_MARK;
+	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
 	for (object_t **it = qcgc_state.shadow_stack_base;
@@ -153,14 +153,14 @@ void qcgc_mark_all(void) {
 		}
 	}
 
-	qcgc_state.state = GC_COLLECT;
+	qcgc_state.phase = GC_COLLECT;
 }
 
 void qcgc_mark_incremental(void) {
 #if CHECKED
-	assert(qcgc_state.state == GC_PAUSE || qcgc_state.state == GC_MARK);
+	assert(qcgc_state.phase == GC_PAUSE || qcgc_state.phase == GC_MARK);
 #endif
-	qcgc_state.state = GC_MARK;
+	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
 	for (object_t **it = qcgc_state.shadow_stack_base;
@@ -185,7 +185,7 @@ void qcgc_mark_incremental(void) {
 	}
 
 	if (qcgc_state.gray_stack_size == 0) {
-		qcgc_state.state = GC_COLLECT;
+		qcgc_state.phase = GC_COLLECT;
 	}
 }
 
@@ -205,7 +205,7 @@ void qcgc_pop_object(object_t *object) {
 void qcgc_push_object(object_t *object) {
 #if CHECKED
 	size_t old_stack_size = qcgc_state.gray_stack_size;
-	assert(qcgc_state.state == GC_MARK);
+	assert(qcgc_state.phase == GC_MARK);
 #endif
 	if (object != NULL) {
 		if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_WHITE) {
@@ -232,12 +232,12 @@ void qcgc_push_object(object_t *object) {
 
 void qcgc_sweep(void) {
 #if CHECKED
-	assert(qcgc_state.state == GC_COLLECT);
+	assert(qcgc_state.phase == GC_COLLECT);
 #endif
 	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
 		qcgc_arena_sweep(qcgc_state.arenas->items[i]);
 	}
-	qcgc_state.state = GC_PAUSE;
+	qcgc_state.phase = GC_PAUSE;
 }
 
 void qcgc_collect(void) {
