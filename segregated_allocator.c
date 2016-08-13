@@ -3,10 +3,10 @@
 #include <assert.h>
 #include "bag.h"
 
-static size_t free_list_index(size_t cells);
-static cell_t *simple_free_list_allocate(simple_free_list_t *l, size_t cells);
-static cell_t *free_list_allocate(free_list_t *l, size_t cells);
-static void salloc_add(cell_t *ptr, size_t cells);
+QCGC_STATIC size_t free_list_index(size_t cells);
+QCGC_STATIC cell_t *simple_free_list_allocate(simple_free_list_t *l, size_t cells);
+QCGC_STATIC cell_t *free_list_allocate(free_list_t *l, size_t cells);
+QCGC_STATIC void salloc_add(cell_t *ptr, size_t cells);
 
 void qcgc_salloc_initialize(void) {
 	size_t i = 0;
@@ -130,7 +130,7 @@ cell_t *qcgc_salloc_allocate(size_t cells) {
 	return NULL;
 }
 
-static size_t free_list_index(size_t cells) {
+QCGC_STATIC size_t free_list_index(size_t cells) {
 #if CHECKED
 	assert(cells > 0);
 #endif
@@ -151,7 +151,7 @@ static size_t free_list_index(size_t cells) {
 	return QCGC_LINEAR_FREE_LISTS + QCGC_EXP_FREE_LISTS;
 }
 
-static void salloc_add(cell_t *ptr, size_t cells) {
+QCGC_STATIC void salloc_add(cell_t *ptr, size_t cells) {
 	if (cells > 0) {
 		size_t index = free_list_index(cells);
 		if (index < QCGC_LINEAR_FREE_LISTS) {

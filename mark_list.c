@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static mark_list_t *qcgc_mark_list_grow(mark_list_t *list);
-static void qcgc_mark_list_check_invariant(mark_list_t *list);
+QCGC_STATIC mark_list_t *qcgc_mark_list_grow(mark_list_t *list);
+QCGC_STATIC void qcgc_mark_list_check_invariant(mark_list_t *list);
 
 mark_list_t *qcgc_mark_list_create(size_t initial_size) {
 	size_t length = (initial_size + QCGC_MARK_LIST_SEGMENT_SIZE - 1) / QCGC_MARK_LIST_SEGMENT_SIZE;
@@ -131,7 +131,7 @@ mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list) {
 	return list;
 }
 
-static mark_list_t *qcgc_mark_list_grow(mark_list_t *list) {
+QCGC_STATIC mark_list_t *qcgc_mark_list_grow(mark_list_t *list) {
 #if CHECKED
 	assert(list != NULL);
 	size_t old_length = list->length;
@@ -161,7 +161,7 @@ static mark_list_t *qcgc_mark_list_grow(mark_list_t *list) {
 	return new_list;
 }
 
-static void qcgc_mark_list_check_invariant(mark_list_t *list) {
+QCGC_STATIC void qcgc_mark_list_check_invariant(mark_list_t *list) {
 	assert(list->head < list->length);
 	assert(list->tail < list->length);
 	assert(list->count == (list->tail - list->head + list->length) % list->length * QCGC_MARK_LIST_SEGMENT_SIZE + list->insert_index);

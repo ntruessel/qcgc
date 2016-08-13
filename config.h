@@ -1,5 +1,7 @@
 #pragma once
 
+#define CHECKED 1							// Enable runtime sanity checks
+
 #define QCGC_INIT_ZERO 1					// Init new objects with zero bytes
 
 #define QCGC_SHADOWSTACK_SIZE 4096
@@ -17,5 +19,14 @@
 											// size = x cells
 #define QCGC_EXP_FREE_LISTS 6				// Amount of large free lists with
 											// size = 2^x cells
+#define QCGC_FREE_LIST_INIT_SIZE 16			// Initial size of free lists
 
-#define CHECKED 1							// Enable runtime sanity checks
+/**
+ * DO NOT MODIFY
+ */
+
+#ifdef TESTING
+#define QCGC_STATIC
+#else
+#define QCGC_STATIC static
+#endif

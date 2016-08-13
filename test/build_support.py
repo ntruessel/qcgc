@@ -118,7 +118,6 @@ ffi.cdef("""
         struct qcgc_state {
                 object_t **shadow_stack;
                 object_t **shadow_stack_base;
-                arena_bag_t *arenas;
                 size_t gray_stack_size;
                 gc_phase_t phase;
         } qcgc_state;
@@ -126,17 +125,24 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# bump_allocator                                                               #
+# allocator                                                                    #
 ################################################################################
 ffi.cdef("""
-        struct qcgc_balloc_state {
-            cell_t *bump_ptr;
-            size_t remaining_cells;
-        } qcgc_balloc_state;
+        // Access functions for state
+        arena_bag_t *arenas(void);
+        cell_t *bump_ptr(void);
+        size_t remaining_cells(void);
+        void *free_list(size_t index);
 
-        void qcgc_balloc_assign(cell_t *bump_ptr, size_t cells);
-        void *qcgc_balloc_allocate(size_t cells);
-        bool qcgc_balloc_can_allocate(size_t cells);
+        void qcgc_allocator_initialize(void);
+        void qcgc_allocator_destroy(void);
+        cell_t *qcgc_allocator_allocate(size_t bytes);
+
+        // static functions
+        void bump_allocator_assign(cell_t *ptr, size_t cells);
+        cell_t *bump_allocator_allocate(size_t cells);
+        void bump_allocator_advance(size_t cells);
+        size_t bytes_to_cells(size_t bytes);
         """)
 
 ################################################################################
@@ -183,7 +189,6 @@ ffi.cdef("""
         mark_color_t qcgc_get_mark_color(object_t *object);
 
         // qcgc.c
-        object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
         void qcgc_mark_all(void);
         void qcgc_mark_incremental(void);
@@ -215,10 +220,10 @@ ffi.set_source("support",
         #include "../object.h"
         #include "../qcgc.h"
         #include "../arena.h"
-        #include "../bump_allocator.h"
         #include "../mark_list.h"
         #include "../gray_stack.h"
         #include "../bag.h"
+        #include "../allocator.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -234,6 +239,13 @@ ffi.set_source("support",
         void qcgc_mark_incremental(void);
         void qcgc_sweep(void);
 
+        // allocator.c internals prototypes
+        void bump_allocator_assign(cell_t *ptr, size_t cells);
+        cell_t *bump_allocator_allocate(size_t cells);
+        void bump_allocator_advance(size_t cells);
+        size_t bytes_to_cells(size_t bytes);
+
+        // arena_t accessors
         cell_t *arena_cells(arena_t *arena) {
             return arena->cells;
         }
@@ -252,6 +264,23 @@ ffi.set_source("support",
 
         size_t qcgc_arena_sizeof(void) {
             return sizeof(arena_t);
+        }
+
+        // allocator state accessors
+        arena_bag_t *arenas(void) {
+            return qcgc_allocator_state.arenas;
+        }
+
+        cell_t *bump_ptr(void) {
+            return qcgc_allocator_state.bump_state.bump_ptr;
+        }
+
+        size_t remaining_cells(void) {
+            return qcgc_allocator_state.bump_state.remaining_cells;
+        }
+
+        void *free_list(size_t index) {
+            return qcgc_allocator_state.fit_state.free_lists[index];
         }
 
         // Utilites
@@ -287,9 +316,10 @@ ffi.set_source("support",
             }
         }
 
-        """, sources=['../qcgc.c', '../arena.c', '../bump_allocator.c',
+        """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
                 '../mark_list.c', '../gray_stack.c', '../bag.c'],
-        extra_compile_args=['--coverage','-std=gnu99', '-UNDEBUG', '-O0'],
+        extra_compile_args=['--coverage','-std=gnu99', '-UNDEBUG',  '-DTESTING',
+                '-O0', '-g'],
         extra_link_args=['--coverage'])
 
 if __name__ == "__main__":

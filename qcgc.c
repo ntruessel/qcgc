@@ -6,13 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bump_allocator.h"
+#include "allocator.h"
 
 // TODO: Eventually move to own header?
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
-object_t *qcgc_bump_allocate(size_t size);
 void qcgc_mark(void);
 void qcgc_mark_all(void);
 void qcgc_mark_incremental(void);
@@ -23,23 +22,14 @@ void qcgc_sweep(void);
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
 		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
-	qcgc_state.arenas = qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
-	qcgc_arena_bag_add(qcgc_state.arenas, qcgc_arena_create());
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
-
-	arena_t *arena = qcgc_state.arenas->items[qcgc_state.arenas->count - 1];
-	qcgc_balloc_assign(
-			&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
-			QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
+	qcgc_allocator_initialize();
 }
 
 void qcgc_destroy(void) {
+	qcgc_allocator_destroy();
 	free(qcgc_state.shadow_stack_base);
-	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
-		qcgc_arena_destroy(qcgc_state.arenas->items[i]);
-	}
-	free(qcgc_state.arenas);
 }
 
 /*******************************************************************************
@@ -67,31 +57,9 @@ void qcgc_write(object_t *object) {
  ******************************************************************************/
 
 object_t *qcgc_allocate(size_t size) {
-	object_t *result = NULL;
-	if (size >= QCGC_LARGE_ALLOC_THRESHOLD) {
-		// Use malloc for large objects
-		result = (object_t *) malloc(size);
-	} else {
-		result = qcgc_bump_allocate(size);
-	}
-#if QCGC_INIT_ZERO
-	memset(result, 0, size);
-#endif
+	object_t *result = (object_t *) qcgc_allocator_allocate(size);
 	result->flags |= QCGC_GRAY_FLAG;
 	return result;
-}
-
-object_t *qcgc_bump_allocate(size_t size) {
-	size_t size_in_cells = (size + 15) / 16;
-	if (!qcgc_balloc_can_allocate(size_in_cells)) {
-		// Create a new arena and assign its memory to bump allocator
-		qcgc_arena_bag_add(qcgc_state.arenas, qcgc_arena_create());
-		arena_t *arena = qcgc_state.arenas->items[qcgc_state.arenas->count - 1];
-	qcgc_balloc_assign(
-			&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
-			QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
-	}
-	return (object_t *) qcgc_balloc_allocate(size_in_cells);
 }
 
 /*******************************************************************************
@@ -141,8 +109,8 @@ void qcgc_mark_all(void) {
 	}
 
 	while(qcgc_state.gray_stack_size > 0) {
-		for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
-			arena_t *arena = qcgc_state.arenas->items[i];
+		for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
+			arena_t *arena = qcgc_allocator_state.arenas->items[i];
 			while (arena->gray_stack->index > 0) {
 				object_t *top =
 					qcgc_gray_stack_top(arena->gray_stack);
@@ -169,8 +137,8 @@ void qcgc_mark_incremental(void) {
 		qcgc_push_object(*it);
 	}
 
-	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
-		arena_t *arena = qcgc_state.arenas->items[i];
+	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
+		arena_t *arena = qcgc_allocator_state.arenas->items[i];
 		size_t initial_stack_size = arena->gray_stack->index;
 		size_t to_process = MIN(arena->gray_stack->index,
 				MAX(initial_stack_size / 2, QCGC_INC_MARK_MIN));
@@ -234,8 +202,8 @@ void qcgc_sweep(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_COLLECT);
 #endif
-	for (size_t i = 0; i < qcgc_state.arenas->count; i++) {
-		qcgc_arena_sweep(qcgc_state.arenas->items[i]);
+	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
+		qcgc_arena_sweep(qcgc_allocator_state.arenas->items[i]);
 	}
 	qcgc_state.phase = GC_PAUSE;
 }

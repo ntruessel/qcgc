@@ -6,8 +6,8 @@
 /**
  * Internal functions
  */
-static blocktype_t get_blocktype(arena_t *arena, size_t index);
-static void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
+QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index);
+QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 
 arena_t *qcgc_arena_create(void) {
 	arena_t *result;
@@ -67,7 +67,7 @@ void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value) {
 	}
 }
 
-static blocktype_t get_blocktype(arena_t *arena, size_t index) {
+QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index) {
 	uint8_t block_bit = qcgc_arena_get_bitmap_entry(arena->block_bitmap, index);
 	uint8_t mark_bit = qcgc_arena_get_bitmap_entry(arena->mark_bitmap, index);
 
@@ -93,7 +93,7 @@ blocktype_t qcgc_arena_get_blocktype(cell_t *ptr) {
 	return get_blocktype(arena, index);
 }
 
-static void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
+QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
 	switch(type) {
 		case BLOCK_EXTENT:
 			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, false);

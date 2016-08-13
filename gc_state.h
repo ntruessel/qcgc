@@ -27,8 +27,6 @@ typedef enum gc_phase {
 struct qcgc_state {
 	object_t **shadow_stack;
 	object_t **shadow_stack_base;
-	arena_bag_t *arenas;
 	size_t gray_stack_size;
 	gc_phase_t phase;
 } qcgc_state;
-
