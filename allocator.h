@@ -26,14 +26,13 @@
  *                        +-----+-----+-----+---------+
  *
  * where x is chosen such that x + 5 + 1 = QCGC_ARENA_SIZE_EXP (i.e. the next
- * bin would hold chunks that are larger than the arena size)
+ * bin would hold chunks that have the size of at least one arena size, which is
+ * impossible as an arena contains overhead)
  */
 
-#define SMALL_FREE_LISTS 31
-#define SMALL_FREE_LIST_INIT_SIZE 16
-#define LARGE_FREE_LISTS QCGC_ARENA_SIZE_EXP - 5
-#define LARGE_FREE_LIST_INIT_SIZE 4
-#define LARGE_FREE_LIST_FIRST_EXP 5
+#define QCGC_LARGE_FREE_LISTS (QCGC_ARENA_SIZE_EXP - QCGC_LARGE_FREE_LIST_FIRST_EXP)
+
+#define QCGC_SMALL_FREE_LISTS ((1<<QCGC_LARGE_FREE_LIST_FIRST_EXP) - 1)
 
 struct qcgc_allocator_state {
 	arena_bag_t *arenas;
@@ -42,8 +41,8 @@ struct qcgc_allocator_state {
 		size_t remaining_cells;
 	} bump_state;
 	struct fit_state {
-		linear_free_list_t *small_free_list[SMALL_FREE_LISTS];
-		exp_free_list_t *large_free_list[LARGE_FREE_LISTS];
+		linear_free_list_t *small_free_list[QCGC_SMALL_FREE_LISTS];
+		exp_free_list_t *large_free_list[QCGC_LARGE_FREE_LISTS];
 	} fit_state;
 } qcgc_allocator_state;
 

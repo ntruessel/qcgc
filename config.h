@@ -13,7 +13,14 @@
 #define QCGC_INC_MARK_MIN 64				// TODO: Tune for performance
 
 /**
- * DO NOT MODIFY
+ * Fit allocator
+ */
+#define QCGC_LARGE_FREE_LIST_FIRST_EXP 5	// First exponent of large free list
+#define QCGC_LARGE_FREE_LIST_INIT_SIZE 4	// Initial size for large free lists
+#define QCGC_SMALL_FREE_LIST_INIT_SIZE 16	// Initial size for small free lists
+
+/**
+ * DO NOT MODIFY BELOW HERE
  */
 
 #ifdef TESTING

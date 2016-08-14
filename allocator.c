@@ -11,6 +11,8 @@ QCGC_STATIC cell_t *bump_allocator_allocate(size_t cells);
 QCGC_STATIC void bump_allocator_advance(size_t cells);
 
 QCGC_STATIC bool is_small(size_t cells);
+QCGC_STATIC size_t small_index(size_t cells);
+QCGC_STATIC size_t large_index(size_t cells);
 
 void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.arenas =
@@ -21,24 +23,24 @@ void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.bump_state.remaining_cells = 0;
 
 	// Fit Allocator
-	for (size_t i = 0; i < SMALL_FREE_LISTS; i++) {
+	for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
 		qcgc_allocator_state.fit_state.small_free_list[i] =
-			qcgc_linear_free_list_create(SMALL_FREE_LIST_INIT_SIZE);
+			qcgc_linear_free_list_create(QCGC_SMALL_FREE_LIST_INIT_SIZE);
 	}
 
-	for (size_t i = 0; i < LARGE_FREE_LISTS; i++) {
+	for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
 		qcgc_allocator_state.fit_state.large_free_list[i] =
-			qcgc_exp_free_list_create(LARGE_FREE_LIST_INIT_SIZE);
+			qcgc_exp_free_list_create(QCGC_LARGE_FREE_LIST_INIT_SIZE);
 	}
 }
 
 void qcgc_allocator_destroy(void) {
 	// Fit Allocator
-	for (size_t i = 0; i < SMALL_FREE_LISTS; i++) {
+	for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
 		free(qcgc_allocator_state.fit_state.small_free_list[i]);
 	}
 
-	for (size_t i = 0; i < LARGE_FREE_LISTS; i++) {
+	for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
 		free(qcgc_allocator_state.fit_state.large_free_list[i]);
 	}
 
@@ -102,7 +104,7 @@ QCGC_STATIC size_t bytes_to_cells(size_t bytes) {
 }
 
 QCGC_STATIC bool is_small(size_t cells) {
-	return cells <= SMALL_FREE_LISTS;
+	return cells <= QCGC_SMALL_FREE_LISTS;
 }
 
 QCGC_STATIC size_t small_index(size_t cells) {
@@ -118,7 +120,7 @@ QCGC_STATIC size_t large_index(size_t cells) {
 #endif
 	// shift such that the meaningless part disappears, i.e. everything that
 	// belongs into the first free list will become 1.
-	cells = cells >> LARGE_FREE_LIST_FIRST_EXP;
+	cells = cells >> QCGC_LARGE_FREE_LIST_FIRST_EXP;
 
 	// calculates floor(log(cells))
 	return (8 * sizeof(unsigned long)) - __builtin_clzl(cells) - 1;

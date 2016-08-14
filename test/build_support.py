@@ -9,6 +9,9 @@ ffi.cdef("""
         #define QCGC_ARENA_SIZE_EXP 20	// Between 16 (64kB) and 20 (1MB)
         #define QCGC_MARK_LIST_SEGMENT_SIZE 64
         #define QCGC_INC_MARK_MIN 64	// TODO: Tune for performance
+        #define QCGC_LARGE_FREE_LIST_FIRST_EXP 5
+        #define QCGC_LARGE_FREE_LIST_INIT_SIZE 4
+        #define QCGC_SMALL_FREE_LIST_INIT_SIZE 16
         """)
 
 ################################################################################
@@ -156,6 +159,10 @@ ffi.cdef("""
 # allocator                                                                    #
 ################################################################################
 ffi.cdef("""
+        //
+        const size_t qcgc_small_free_lists;
+        const size_t qcgc_large_free_lists;
+
         // Access functions for state
         arena_bag_t *arenas(void);
         cell_t *bump_ptr(void);
@@ -172,6 +179,9 @@ ffi.cdef("""
         cell_t *bump_allocator_allocate(size_t cells);
         void bump_allocator_advance(size_t cells);
         size_t bytes_to_cells(size_t bytes);
+        bool is_small(size_t cells);
+        size_t small_index(size_t cells);
+        size_t large_index(size_t cells);
         """)
 
 ################################################################################
@@ -268,11 +278,18 @@ ffi.set_source("support",
         void qcgc_mark_incremental(void);
         void qcgc_sweep(void);
 
+        // allocator.h Macro replacements
+        const size_t qcgc_small_free_lists = QCGC_SMALL_FREE_LISTS;
+        const size_t qcgc_large_free_lists = QCGC_LARGE_FREE_LISTS;
+
         // allocator.c internals prototypes
         void bump_allocator_assign(cell_t *ptr, size_t cells);
         cell_t *bump_allocator_allocate(size_t cells);
         void bump_allocator_advance(size_t cells);
         size_t bytes_to_cells(size_t bytes);
+        bool is_small(size_t cells);
+        size_t small_index(size_t cells);
+        size_t large_index(size_t cells);
 
         // arena_t accessors
         cell_t *arena_cells(arena_t *arena) {
