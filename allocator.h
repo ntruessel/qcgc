@@ -25,12 +25,12 @@
  * minimal size (cells):  | 2^5 | 2^6 | ... | 2^(x+5) |
  *                        +-----+-----+-----+---------+
  *
- * where x is chosen such that x + 5 + 1 = QCGC_ARENA_SIZE_EXP (i.e. the next
- * bin would hold chunks that have the size of at least one arena size, which is
- * impossible as an arena contains overhead)
+ * where x is chosen such that x + 5 + 1 = QCGC_ARENA_SIZE_EXP - 4 (i.e. the
+ * next bin would hold chunks that have the size of at least one arena size,
+ * which is impossible as an arena contains overhead)
  */
 
-#define QCGC_LARGE_FREE_LISTS (QCGC_ARENA_SIZE_EXP - QCGC_LARGE_FREE_LIST_FIRST_EXP)
+#define QCGC_LARGE_FREE_LISTS (QCGC_ARENA_SIZE_EXP - 4 - QCGC_LARGE_FREE_LIST_FIRST_EXP)
 
 #define QCGC_SMALL_FREE_LISTS ((1<<QCGC_LARGE_FREE_LIST_FIRST_EXP) - 1)
 
