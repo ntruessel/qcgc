@@ -12,6 +12,7 @@ class FitAllocatorTest(QCGCTest):
         for i in range(1, lib.qcgc_small_free_lists + 1):
             self.assertTrue(lib.is_small(i))
             self.assertEqual(lib.small_index(i), i - 1);
+            self.assertTrue(lib.small_index_to_cells(i - 1), i);
 
     def test_large_free_list_index(self):
         index = -1;
