@@ -1,3 +1,4 @@
+import unittest
 from support import lib,ffi
 from qcgc_test import QCGCTest
 
@@ -48,3 +49,6 @@ class FitAllocatorTest(QCGCTest):
 
     def test_add_large(self):
         pass
+
+if __name__ == "__main__":
+    unittest.main()
