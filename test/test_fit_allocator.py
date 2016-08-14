@@ -33,3 +33,18 @@ class FitAllocatorTest(QCGCTest):
         self.assertFalse(lib.valid_block(first, 8));
         self.assertFalse(lib.valid_block(first + 1, 9));
         self.assertFalse(lib.valid_block(first + 1, 8));
+
+    def test_add_small(self):
+        blocks = list()
+        for i in range(1, lib.qcgc_small_free_lists + 1):
+            p = lib.bump_allocator_allocate(i)
+            blocks.append(p)
+            lib.qcgc_fit_allocator_add(p, i)
+
+        for i in range(lib.qcgc_small_free_lists):
+            l = lib.small_free_list(i)
+            self.assertEqual(l.count, 1)
+            self.assertEqual(blocks[i], l.items[i])
+
+    def test_add_large(self):
+        pass
