@@ -11,8 +11,8 @@ class FitAllocatorTest(QCGCTest):
     def test_small_free_list_index(self):
         for i in range(1, lib.qcgc_small_free_lists + 1):
             self.assertTrue(lib.is_small(i))
-            self.assertEqual(lib.small_index(i), i - 1);
-            self.assertTrue(lib.small_index_to_cells(i - 1), i);
+            self.assertEqual(lib.small_index(i), i - 1)
+            self.assertTrue(lib.small_index_to_cells(i - 1), i)
 
     def test_large_free_list_index(self):
         index = -1;
@@ -21,4 +21,15 @@ class FitAllocatorTest(QCGCTest):
                 # Check for power of two
                 index = index + 1
             self.assertFalse(lib.is_small(i))
-            self.assertEqual(index, lib.large_index(i));
+            self.assertEqual(index, lib.large_index(i))
+
+    def test_block_validity_check(self):
+        arena = lib.qcgc_arena_create()
+        first = ffi.addressof(lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index])
+        lib.qcgc_arena_mark_allocated(first, 10);
+        self.assertFalse(lib.valid_block(first, 10));
+        lib.qcgc_arena_set_blocktype(first, lib.BLOCK_FREE);
+        self.assertTrue(lib.valid_block(first, 10));
+        self.assertFalse(lib.valid_block(first, 8));
+        self.assertFalse(lib.valid_block(first + 1, 9));
+        self.assertFalse(lib.valid_block(first + 1, 8));
