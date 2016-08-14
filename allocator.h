@@ -64,3 +64,12 @@ void qcgc_allocator_destroy(void);
  *			errors, already zero initialized if QCGC_INIT_ZERO is set
  */
 cell_t *qcgc_allocator_allocate(size_t bytes);
+
+
+/**
+ * Add memory to free lists
+ *
+ * @param	ptr		Pointer to memory region
+ * @param	cells	Size of memory region in cells
+ */
+void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
