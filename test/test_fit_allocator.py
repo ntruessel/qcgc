@@ -45,7 +45,7 @@ class FitAllocatorTest(QCGCTest):
         for i in range(lib.qcgc_small_free_lists):
             l = lib.small_free_list(i)
             self.assertEqual(l.count, 1)
-            self.assertEqual(blocks[i], l.items[i])
+            self.assertEqual(blocks[i], l.items[0])
 
     def test_add_large(self):
         pass
