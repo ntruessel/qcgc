@@ -13,15 +13,6 @@
 #define QCGC_INC_MARK_MIN 64				// TODO: Tune for performance
 
 /**
- * Segregated allocator
- */
-#define QCGC_LINEAR_FREE_LISTS 16			// Amount of small free lists with
-											// size = x cells
-#define QCGC_EXP_FREE_LISTS 6				// Amount of large free lists with
-											// size = 2^x cells
-#define QCGC_FREE_LIST_INIT_SIZE 16			// Initial size of free lists
-
-/**
  * DO NOT MODIFY
  */
 

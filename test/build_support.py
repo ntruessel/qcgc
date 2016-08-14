@@ -99,10 +99,38 @@ ffi.cdef("""
         } arena_bag_t;
 
         arena_bag_t *qcgc_arena_bag_create(size_t size);
-
-        arena_bag_t *qcgc_arena_bag_add(arena_bag_t *self, void *item);
+        arena_bag_t *qcgc_arena_bag_add(arena_bag_t *self, arena_t *item);
         arena_bag_t *qcgc_arena_bag_remove_index(arena_bag_t *self,
                 size_t index);
+
+        typedef struct linear_free_list_s {
+            size_t size;
+            size_t count;
+            cell_t *items[];
+        } linear_free_list_t;
+
+        linear_free_list_t *qcgc_linear_free_list_create(size_t size);
+        linear_free_list_t *qcgc_linear_free_list_add(linear_free_list_t *self,
+                cell_t *item);
+        linear_free_list_t *qcgc_linear_free_list_remove_index(
+                linear_free_list_t *self, size_t index);
+
+        struct exp_free_list_item_s {
+                cell_t *ptr;
+                size_t size;
+        };
+
+        typedef struct exp_free_list_s {
+            size_t size;
+            size_t count;
+            struct exp_free_list_item_s items[];
+        } exp_free_list_t;
+
+        exp_free_list_t *qcgc_exp_free_list_create(size_t size);
+        exp_free_list_t *qcgc_exp_free_list_add(exp_free_list_t *self,
+                struct exp_free_list_item_s item);
+        exp_free_list_t *qcgc_exp_free_list_remove_index(
+                exp_free_list_t *self, size_t index);
         """)
 
 ################################################################################
@@ -132,7 +160,8 @@ ffi.cdef("""
         arena_bag_t *arenas(void);
         cell_t *bump_ptr(void);
         size_t remaining_cells(void);
-        void *free_list(size_t index);
+        linear_free_list_t *small_free_list(size_t index);
+        exp_free_list_t *large_free_list(size_t index);
 
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
@@ -279,8 +308,12 @@ ffi.set_source("support",
             return qcgc_allocator_state.bump_state.remaining_cells;
         }
 
-        void *free_list(size_t index) {
-            return qcgc_allocator_state.fit_state.free_lists[index];
+        linear_free_list_t *small_free_list(size_t index) {
+            return qcgc_allocator_state.fit_state.small_free_list[index];
+        }
+
+        exp_free_list_t *large_free_list(size_t index) {
+            return qcgc_allocator_state.fit_state.large_free_list[index];
         }
 
         // Utilites

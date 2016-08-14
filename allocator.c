@@ -1,12 +1,16 @@
 #include "allocator.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
+
+QCGC_STATIC size_t bytes_to_cells(size_t bytes);
 
 QCGC_STATIC void bump_allocator_assign(cell_t *ptr, size_t cells);
 QCGC_STATIC cell_t *bump_allocator_allocate(size_t cells);
 QCGC_STATIC void bump_allocator_advance(size_t cells);
-QCGC_STATIC size_t bytes_to_cells(size_t bytes);
+
+QCGC_STATIC bool is_small(size_t cells);
 
 void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.arenas =
@@ -17,24 +21,25 @@ void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.bump_state.remaining_cells = 0;
 
 	// Fit Allocator
-	size_t index = 0;
-	while (index < QCGC_LINEAR_FREE_LISTS) {
-		qcgc_allocator_state.fit_state.free_lists[index] =
-			qcgc_simple_free_list_create(QCGC_FREE_LIST_INIT_SIZE);
-		index++;
+	for (size_t i = 0; i < SMALL_FREE_LISTS; i++) {
+		qcgc_allocator_state.fit_state.small_free_list[i] =
+			qcgc_linear_free_list_create(SMALL_FREE_LIST_INIT_SIZE);
 	}
 
-	while (index <= QCGC_LINEAR_FREE_LISTS + QCGC_EXP_FREE_LISTS) {
-		qcgc_allocator_state.fit_state.free_lists[index] =
-			qcgc_free_list_create(QCGC_FREE_LIST_INIT_SIZE);
-		index++;
+	for (size_t i = 0; i < LARGE_FREE_LISTS; i++) {
+		qcgc_allocator_state.fit_state.large_free_list[i] =
+			qcgc_exp_free_list_create(LARGE_FREE_LIST_INIT_SIZE);
 	}
 }
 
 void qcgc_allocator_destroy(void) {
 	// Fit Allocator
-	for (size_t i = 0; i <= QCGC_LINEAR_FREE_LISTS + QCGC_EXP_FREE_LISTS; i++) {
-		free(qcgc_allocator_state.fit_state.free_lists[i]);
+	for (size_t i = 0; i < SMALL_FREE_LISTS; i++) {
+		free(qcgc_allocator_state.fit_state.small_free_list[i]);
+	}
+
+	for (size_t i = 0; i < LARGE_FREE_LISTS; i++) {
+		free(qcgc_allocator_state.fit_state.large_free_list[i]);
 	}
 
 	// Arenas
@@ -48,6 +53,10 @@ void qcgc_allocator_destroy(void) {
 
 cell_t *qcgc_allocator_allocate(size_t bytes) {
 	size_t size_in_cells = bytes_to_cells(bytes);
+#if CHECKED
+	assert(size_in_cells > 0);
+	assert(size_in_cells <= QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
+#endif
 	cell_t *result;
 
 	// TODO: Implement switch for bump/fit allocator
@@ -75,9 +84,6 @@ QCGC_STATIC void bump_allocator_advance(size_t cells) {
 }
 
 QCGC_STATIC cell_t *bump_allocator_allocate(size_t cells) {
-#if CHECKED
-	assert(cells <= QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
-#endif
 	if (cells > qcgc_allocator_state.bump_state.remaining_cells) {
 		// Grab a new arena
 		arena_t *arena = qcgc_arena_create();
@@ -93,4 +99,27 @@ QCGC_STATIC cell_t *bump_allocator_allocate(size_t cells) {
 
 QCGC_STATIC size_t bytes_to_cells(size_t bytes) {
 	return (bytes + sizeof(cell_t) - 1) / sizeof(cell_t);
+}
+
+QCGC_STATIC bool is_small(size_t cells) {
+	return cells <= SMALL_FREE_LISTS;
+}
+
+QCGC_STATIC size_t small_index(size_t cells) {
+#if CHECKED
+	assert(is_small(cells));
+#endif
+	return cells - 1;
+}
+
+QCGC_STATIC size_t large_index(size_t cells) {
+#if CHECKED
+	assert(!is_small(cells));
+#endif
+	// shift such that the meaningless part disappears, i.e. everything that
+	// belongs into the first free list will become 1.
+	cells = cells >> LARGE_FREE_LIST_FIRST_EXP;
+
+	// calculates floor(log(cells))
+	return (8 * sizeof(unsigned long)) - __builtin_clzl(cells) - 1;
 }

@@ -73,11 +73,11 @@ QCGC_STATIC size_t name##_size(size_t size) {									\
 	return sizeof(name##_t) + size * sizeof(type);							\
 }
 
-struct free_list_item_s {
+struct exp_free_list_item_s {
 	cell_t *ptr;
 	size_t size;
 };
 
 DECLARE_BAG(arena_bag, arena_t *);
-DECLARE_BAG(simple_free_list, cell_t *);
-DECLARE_BAG(free_list, struct free_list_item_s);
+DECLARE_BAG(linear_free_list, cell_t *);
+DECLARE_BAG(exp_free_list, struct exp_free_list_item_s);
