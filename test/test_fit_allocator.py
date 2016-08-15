@@ -41,6 +41,7 @@ class FitAllocatorTest(QCGCTest):
         blocks = list()
         for i in range(1, lib.qcgc_small_free_lists + 1):
             p = self.bump_allocate(i)
+            lib.qcgc_arena_mark_free(p)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, i)
 
@@ -54,6 +55,7 @@ class FitAllocatorTest(QCGCTest):
         for i in range(lib.qcgc_large_free_lists):
             size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
             p = self.bump_allocate(size)
+            lib.qcgc_arena_mark_free(p)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, size)
 
@@ -100,7 +102,7 @@ class FitAllocatorTest(QCGCTest):
         self.assertEqual(old_bump_ptr, q)
 
     def test_allocate_block_splitting(self):
-        "Test alloation when blocks have to be split"
+        "Test allocation when blocks have to be split"
         # Small block
         size = lib.qcgc_small_free_lists
         p = self.bump_allocate(size)

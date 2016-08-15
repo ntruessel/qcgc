@@ -17,6 +17,7 @@ QCGC_STATIC size_t small_index_to_cells(size_t index);
 
 QCGC_STATIC cell_t *fit_allocator_allocate(size_t cells);
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells);
+QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells);
 QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells);
 
 QCGC_STATIC bool valid_block(cell_t *ptr, size_t cells);
@@ -132,10 +133,7 @@ QCGC_STATIC cell_t *fit_allocator_allocate(size_t cells) {
 		result = fit_allocator_small_first_fit(index, cells);
 	} else {
 		size_t index = large_index(cells);
-		if (cells > 1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP)) {
-			index++;
-		}
-		result = fit_allocator_large_first_fit(index, cells);
+		result = fit_allocator_large_fit(index, cells);
 	}
 
 	if (result == NULL) {
@@ -178,6 +176,50 @@ QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
 	return fit_allocator_large_first_fit(0, cells);
 }
 
+QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells) {
+#if CHECKED
+	assert(1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP) <= cells);
+	assert(1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP + 1) > cells);
+#endif
+	exp_free_list_t *free_list =
+		qcgc_allocator_state.fit_state.large_free_list[index];
+	size_t best_fit_index = free_list->count;
+
+	cell_t *result = NULL;
+	size_t best_fit_cells = SIZE_MAX;
+	size_t i = 0;
+	while (i < free_list->count) {
+		if (valid_block(free_list->items[i].ptr, free_list->items[i].size)) {
+			if (free_list->items[i].size >= cells &&
+					free_list->items[i].size < best_fit_cells) {
+				result = free_list->items[i].ptr;
+				best_fit_cells = free_list->items[i].size;
+				best_fit_index = i;
+			}
+			i++;
+		} else {
+			free_list = qcgc_exp_free_list_remove_index(free_list, i);
+			// NO i++ !
+		}
+
+		if (best_fit_cells == cells) {
+			break;
+		}
+	}
+
+	if (result != NULL) {
+		// Best fit was found
+		assert(best_fit_index < free_list->count);
+		free_list = qcgc_exp_free_list_remove_index(free_list, best_fit_index);
+		qcgc_fit_allocator_add(result + cells, best_fit_cells - cells);
+	} else {
+		// No best fit, go for first fit
+		result = fit_allocator_large_first_fit(index + 1, cells);
+	}
+	qcgc_allocator_state.fit_state.large_free_list[index] = free_list;
+	return result;
+}
+
 QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
 #if CHECKED
 	assert(1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP) >= cells);
@@ -194,7 +236,7 @@ QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
 
 			// Check whether block is still valid
 			if (valid_block(item.ptr, item.size)) {
-				qcgc_fit_allocator_add(item.ptr + item.size, item.size - cells);
+				qcgc_fit_allocator_add(item.ptr + cells, item.size - cells);
 				result = item.ptr;
 				break;
 			}
