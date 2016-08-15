@@ -86,5 +86,18 @@ class FitAllocatorTest(QCGCTest):
             q = lib.fit_allocator_allocate(size)
             self.assertEqual(p, q)
 
+    def test_allocate_no_block(self):
+        "Test allocate when no block is available"
+
+        p = lib.bump_allocator_allocate(1)
+        lib.qcgc_arena_mark_allocated(p, 1)
+        lib.qcgc_arena_mark_free(p)
+        lib.qcgc_fit_allocator_add(p, 1)
+
+        old_bump_ptr = lib.bump_ptr()
+        q = lib.fit_allocator_allocate(2)
+        self.assertEqual(old_bump_ptr, q)
+
+
 if __name__ == "__main__":
     unittest.main()
