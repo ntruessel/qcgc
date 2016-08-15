@@ -132,6 +132,9 @@ QCGC_STATIC cell_t *fit_allocator_allocate(size_t cells) {
 		result = fit_allocator_small_first_fit(index, cells);
 	} else {
 		size_t index = large_index(cells);
+		if (cells > 1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP)) {
+			index++;
+		}
 		result = fit_allocator_large_first_fit(index, cells);
 	}
 

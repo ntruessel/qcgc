@@ -40,7 +40,7 @@ class FitAllocatorTest(QCGCTest):
     def test_add_small(self):
         blocks = list()
         for i in range(1, lib.qcgc_small_free_lists + 1):
-            p = lib.bump_allocator_allocate(i)
+            p = self.bump_allocate(i)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, i)
 
@@ -53,7 +53,7 @@ class FitAllocatorTest(QCGCTest):
         blocks = list()
         for i in range(lib.qcgc_large_free_lists):
             size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-            p = lib.bump_allocator_allocate(size)
+            p = self.bump_allocate(size)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, size)
 
@@ -69,42 +69,76 @@ class FitAllocatorTest(QCGCTest):
 
         # Small first fit
         for i in range(1, lib.qcgc_small_free_lists + 1):
-            p = lib.bump_allocator_allocate(i)
-            lib.qcgc_arena_mark_allocated(p, i)
+            p = self.bump_allocate(i)
             lib.qcgc_arena_mark_free(p)
             lib.qcgc_fit_allocator_add(p, i)
-            q = lib.fit_allocator_allocate(i)
+            q = self.fit_allocate(i)
             self.assertEqual(p, q)
+            q = self.fit_allocate(i)
+            self.assertNotEqual(p, q)
 
         # Large first fit
         for i in range(lib.qcgc_large_free_lists):
             size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-            p = lib.bump_allocator_allocate(size)
-            lib.qcgc_arena_mark_allocated(p, size)
+            p = self.bump_allocate(size)
             lib.qcgc_arena_mark_free(p)
             lib.qcgc_fit_allocator_add(p, size)
-            q = lib.fit_allocator_allocate(size)
+            q = self.fit_allocate(size)
             self.assertEqual(p, q)
+            q = self.fit_allocate(size)
+            self.assertNotEqual(p, q)
 
     def test_allocate_no_block(self):
         "Test allocate when no block is available"
 
-        p = lib.bump_allocator_allocate(1)
-        lib.qcgc_arena_mark_allocated(p, 1)
+        p = self.bump_allocate(1)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, 1)
 
         old_bump_ptr = lib.bump_ptr()
-        q = lib.fit_allocator_allocate(2)
+        q = self.fit_allocate(2)
         self.assertEqual(old_bump_ptr, q)
 
+    @unittest.skip("")
     def test_allocate_block_splitting(self):
         "Test alloation when blocks have to be split"
-        pass
+        # Small block
+        size = lib.qcgc_small_free_lists
+        p = self.bump_allocate(size)
+        lib.qcgc_arena_mark_free(p)
+        lib.qcgc_fit_allocator_add(p, size)
+
+        q = self.fit_allocate(1)
+        self.assertEqual(q, p)
+        q = self.fit_allocate(size - 1)
+        self.assertEqual(q, p + 1)
+
+        # Large block
+        size = 2**(1 + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        p = self.bump_allocate(size)
+        lib.qcgc_arena_mark_free(p)
+        lib.qcgc_fit_allocator_add(p, size)
+
+        q = self.fit_allocate(1)
+        self.assertEqual(q, p)
+        q = self.fit_allocate(size - 2)
+        self.assertEqual(q, p + 1)
+        q = self.fit_allocate(1)
+        self.assertEqual(q, p + size - 1)
 
     def test_allocate_coalesced_block(self):
         "Test allocation when there are invalid blocks in the free lists"
         pass
+
+    def fit_allocate(self, size):
+        p = lib.fit_allocator_allocate(size)
+        lib.qcgc_arena_mark_allocated(p, size)
+        return p
+
+    def bump_allocate(self, size):
+        p = lib.bump_allocator_allocate(size)
+        lib.qcgc_arena_mark_allocated(p, size)
+        return p
 
 
 if __name__ == "__main__":
