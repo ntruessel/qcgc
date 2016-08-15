@@ -145,6 +145,24 @@ class FitAllocatorTest(QCGCTest):
         s = self.fit_allocate(1)
         self.assertEqual(s, r)
 
+        # Large block
+        p = self.bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        lib.qcgc_arena_mark_free(p)
+        lib.qcgc_fit_allocator_add(p, 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+
+        q = self.bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        lib.qcgc_arena_mark_free(q)
+        lib.qcgc_fit_allocator_add(q, 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+
+        r = self.bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        lib.qcgc_arena_mark_free(r)
+        lib.qcgc_fit_allocator_add(r, 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+
+        lib.qcgc_arena_set_blocktype(q, lib.BLOCK_EXTENT)
+
+        s = self.fit_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        self.assertEqual(s, r)
+
     def fit_allocate(self, size):
         p = lib.fit_allocator_allocate(size)
         lib.qcgc_arena_mark_allocated(p, size)
