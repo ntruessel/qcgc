@@ -76,5 +76,15 @@ class FitAllocatorTest(QCGCTest):
             q = lib.fit_allocator_allocate(i)
             self.assertEqual(p, q)
 
+        # Large first fit
+        for i in range(lib.qcgc_large_free_lists):
+            size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+            p = lib.bump_allocator_allocate(size)
+            lib.qcgc_arena_mark_allocated(p, size)
+            lib.qcgc_arena_mark_free(p)
+            lib.qcgc_fit_allocator_add(p, size)
+            q = lib.fit_allocator_allocate(size)
+            self.assertEqual(p, q)
+
 if __name__ == "__main__":
     unittest.main()
