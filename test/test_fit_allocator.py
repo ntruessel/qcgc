@@ -98,6 +98,14 @@ class FitAllocatorTest(QCGCTest):
         q = lib.fit_allocator_allocate(2)
         self.assertEqual(old_bump_ptr, q)
 
+    def test_allocate_block_splitting(self):
+        "Test alloation when blocks have to be split"
+        pass
+
+    def test_allocate_coalesced_block(self):
+        "Test allocation when there are invalid blocks in the free lists"
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()
