@@ -64,5 +64,17 @@ class FitAllocatorTest(QCGCTest):
             self.assertEqual(blocks[i], l.items[0].ptr)
             self.assertEqual(size, l.items[0].size)
 
+    def test_allocate_exact(self):
+        "Test allocate when there is always exactly the size needed"
+
+        # Small first fit
+        for i in range(1, lib.qcgc_small_free_lists + 1):
+            p = lib.bump_allocator_allocate(i)
+            lib.qcgc_arena_mark_allocated(p, i)
+            lib.qcgc_arena_mark_free(p)
+            lib.qcgc_fit_allocator_add(p, i)
+            q = lib.fit_allocator_allocate(i)
+            self.assertEqual(p, q)
+
 if __name__ == "__main__":
     unittest.main()
