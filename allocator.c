@@ -144,6 +144,9 @@ QCGC_STATIC cell_t *fit_allocator_allocate(size_t cells) {
 }
 
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
+#if CHECKED
+	assert(small_index_to_cells(index) >= cells);
+#endif
 	cell_t *result = NULL;
 	for ( ; index < QCGC_SMALL_FREE_LISTS; index++) {
 		linear_free_list_t *free_list =
@@ -173,6 +176,9 @@ QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
 }
 
 QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
+#if CHECKED
+	assert(1u<<(index + QCGC_LARGE_FREE_LIST_FIRST_EXP) >= cells);
+#endif
 	cell_t *result = NULL;
 	for ( ; index < QCGC_LARGE_FREE_LISTS; index++) {
 		exp_free_list_t *free_list =
