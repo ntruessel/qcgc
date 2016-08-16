@@ -15,6 +15,23 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# event_logger                                                                 #
+################################################################################
+ffi.cdef("""
+        enum event_e {
+                EVENT_START_LOG,
+                EVENT_STOP_LOG,
+        };
+
+        void qcgc_event_logger_initialize(void);
+        void qcgc_event_logger_destroy(void);
+        void qcgc_event_logger_log(enum event_e event,
+                        uint32_t additional_data_size,
+                        uint8_t *additional_data);
+        """)
+
+
+################################################################################
 # object                                                                       #
 ################################################################################
 ffi.cdef("""
@@ -273,6 +290,7 @@ ffi.set_source("support",
         #include "../gray_stack.h"
         #include "../bag.h"
         #include "../allocator.h"
+        #include "../event_logger.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -386,7 +404,8 @@ ffi.set_source("support",
         }
 
         """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
-                '../mark_list.c', '../gray_stack.c', '../bag.c'],
+                '../mark_list.c', '../gray_stack.c', '../bag.c',
+                '../event_logger.c'],
         extra_compile_args=['--coverage','-std=gnu99', '-UNDEBUG',  '-DTESTING',
                 '-O0', '-g'],
         extra_link_args=['--coverage'])
