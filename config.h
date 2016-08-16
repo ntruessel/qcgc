@@ -4,6 +4,8 @@
 
 #define QCGC_INIT_ZERO 1					// Init new objects with zero bytes
 
+#define EVENT_LOG 1							// Enable event log
+
 #define QCGC_SHADOWSTACK_SIZE 4096
 #define QCGC_ARENA_BAG_INIT_SIZE 16			// Initial size of the arena bag
 #define QCGC_ARENA_SIZE_EXP 20				// Between 16 (64kB) and 20 (1MB)
