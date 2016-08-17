@@ -3,6 +3,7 @@
 *.gcda
 *.gcno
 *.gcov
+*.log
 __pycache__/
 *.pyc
 doc/
