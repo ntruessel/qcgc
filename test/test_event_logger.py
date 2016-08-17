@@ -1,11 +1,12 @@
 from support import lib,ffi
-from qcgc_test import QCGCTest
+import unittest
 
-class EventLoggerTestCase(QCGCTest):
+class EventLoggerTestCase(unittest.TestCase):
     def test_minimal(self):
         "Create and destroy event log"
-        # Creation happens automatically (in set_up)
-        # Destruction happens automatically (in tear_down)
+        lib.qcgc_initialize()
+        lib.qcgc_destroy()
+
         try:
             logfile = open(ffi.string(lib.logfile), "rb")
 
