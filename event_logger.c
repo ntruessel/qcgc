@@ -13,7 +13,7 @@ static struct {
 
 void qcgc_event_logger_initialize(void) {
 #if EVENT_LOG
-	event_logger_state.logfile = fopen("./qcgc_events.log", "w");
+	event_logger_state.logfile = fopen(LOGFILE, "w");
 	qcgc_event_logger_log(EVENT_START_LOG, 0, NULL);
 
 	if (event_logger_state.logfile == NULL)  {

@@ -4,7 +4,11 @@
 
 #define QCGC_INIT_ZERO 1					// Init new objects with zero bytes
 
+/**
+ * Event logger
+ */
 #define EVENT_LOG 1							// Enable event log
+#define LOGFILE "./qcgc_events.log"			// Default logfile
 
 #define QCGC_SHADOWSTACK_SIZE 4096
 #define QCGC_ARENA_BAG_INIT_SIZE 16			// Initial size of the arena bag

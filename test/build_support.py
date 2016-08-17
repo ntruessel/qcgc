@@ -18,6 +18,8 @@ ffi.cdef("""
 # event_logger                                                                 #
 ################################################################################
 ffi.cdef("""
+        const char *logfile;
+
         enum event_e {
                 EVENT_START_LOG,
                 EVENT_STOP_LOG,
@@ -299,6 +301,9 @@ ffi.set_source("support",
         const size_t qcgc_arena_cells_count = QCGC_ARENA_CELLS_COUNT;
         const size_t qcgc_arena_first_cell_index = QCGC_ARENA_FIRST_CELL_INDEX;
 
+        // event_logger.h - Macro replacements
+        const char *logfile = LOGFILE;
+
         // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t size);
         void qcgc_mark(void);
@@ -306,7 +311,7 @@ ffi.set_source("support",
         void qcgc_mark_incremental(void);
         void qcgc_sweep(void);
 
-        // allocator.h Macro replacements
+        // allocator.h - Macro replacements
         const size_t qcgc_small_free_lists = QCGC_SMALL_FREE_LISTS;
         const size_t qcgc_large_free_lists = QCGC_LARGE_FREE_LISTS;
 
