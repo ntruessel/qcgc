@@ -4,7 +4,6 @@ import sys
 from logutils.iterator import LogIterator
 
 def decode_logfile(filename):
-    print("Decoding {}".format(filename))
     log = LogIterator(filename)
     for event in log:
         print(event)

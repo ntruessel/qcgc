@@ -18,6 +18,10 @@ class LogIterator:
                 result = LogStartEvent(sec, nsec, eventID)
             elif (eventID == 1):
                 result = LogStopEvent(sec, nsec, eventID)
+            elif (eventID == 2):
+                result = SweepStartEvent(sec, nsec, eventID)
+            elif (eventID == 3):
+                result = SweepDoneEvent(sec, nsec, eventID)
             else:
                 result = UnknownEvent(sec, nsec, eventID)
 
