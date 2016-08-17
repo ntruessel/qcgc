@@ -9,6 +9,8 @@
  */
 #define EVENT_LOG 1							// Enable event log
 #define LOGFILE "./qcgc_events.log"			// Default logfile
+#define LOG_ALLOCATION 0					// Enable allocation log (warning:
+											// significant performance impact)
 
 #define QCGC_SHADOWSTACK_SIZE 4096
 #define QCGC_ARENA_BAG_INIT_SIZE 16			// Initial size of the arena bag

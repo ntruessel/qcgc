@@ -15,13 +15,17 @@ class LogIterator:
             sec, nsec, eventID, additional_bytes = struct.unpack(fmt, buf);
 
             if (eventID == 0):
-                result = LogStartEvent(sec, nsec, eventID)
+                result = LogStartEvent(sec, nsec)
             elif (eventID == 1):
-                result = LogStopEvent(sec, nsec, eventID)
+                result = LogStopEvent(sec, nsec)
             elif (eventID == 2):
-                result = SweepStartEvent(sec, nsec, eventID)
+                result = SweepStartEvent(sec, nsec)
             elif (eventID == 3):
-                result = SweepDoneEvent(sec, nsec, eventID)
+                result = SweepDoneEvent(sec, nsec)
+            elif (eventID == 4):
+                result = AllocateStartEvent(sec, nsec)
+            elif (eventID == 5):
+                result = AllocateDoneEvent(sec, nsec)
             else:
                 result = UnknownEvent(sec, nsec, eventID)
 

@@ -60,8 +60,18 @@ void qcgc_write(object_t *object) {
  ******************************************************************************/
 
 object_t *qcgc_allocate(size_t size) {
+#if LOG_ALLOCATION
+	qcgc_event_logger_log(EVENT_ALLOCATE_START, sizeof(size_t),
+			(uint8_t *) &size);
+#endif
+
 	object_t *result = (object_t *) qcgc_allocator_allocate(size);
 	result->flags |= QCGC_GRAY_FLAG;
+
+#if LOG_ALLOCATION
+	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
+			(uint8_t *) &result);
+#endif
 	return result;
 }
 
