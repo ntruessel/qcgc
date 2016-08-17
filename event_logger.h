@@ -9,8 +9,11 @@
  * All events
  */
 enum event_e {
-	EVENT_START_LOG,
-	EVENT_STOP_LOG,
+	EVENT_LOG_START,
+	EVENT_LOG_STOP,
+
+	EVENT_SWEEP_START,
+	EVENT_SWEEP_DONE,
 };
 
 /**

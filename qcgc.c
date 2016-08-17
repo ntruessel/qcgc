@@ -205,10 +205,19 @@ void qcgc_sweep(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_COLLECT);
 #endif
+	struct {
+		unsigned arena_count;
+	} __attribute__ ((packed)) sweep_info;
+	sweep_info.arena_count = qcgc_allocator_state.arenas->count;
+	qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(sweep_info),
+			(uint8_t *) &sweep_info);
+
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 		qcgc_arena_sweep(qcgc_allocator_state.arenas->items[i]);
 	}
 	qcgc_state.phase = GC_PAUSE;
+
+	qcgc_event_logger_log(EVENT_SWEEP_DONE, 0, NULL);
 }
 
 void qcgc_collect(void) {

@@ -14,7 +14,7 @@ static struct {
 void qcgc_event_logger_initialize(void) {
 #if EVENT_LOG
 	event_logger_state.logfile = fopen(LOGFILE, "w");
-	qcgc_event_logger_log(EVENT_START_LOG, 0, NULL);
+	qcgc_event_logger_log(EVENT_LOG_START, 0, NULL);
 
 	if (event_logger_state.logfile == NULL)  {
 		fprintf(stderr, "%s\n", "Failed to create logfile.");
@@ -24,7 +24,7 @@ void qcgc_event_logger_initialize(void) {
 
 void qcgc_event_logger_destroy(void) {
 #if EVENT_LOG
-	qcgc_event_logger_log(EVENT_STOP_LOG, 0, NULL);
+	qcgc_event_logger_log(EVENT_LOG_STOP, 0, NULL);
 
 	if (event_logger_state.logfile != NULL) {
 		fflush(event_logger_state.logfile);

@@ -21,8 +21,11 @@ ffi.cdef("""
         const char *logfile;
 
         enum event_e {
-                EVENT_START_LOG,
-                EVENT_STOP_LOG,
+                EVENT_LOG_START,
+                EVENT_LOG_STOP,
+
+                EVENT_SWEEP_START,
+                EVENT_SWEEP_DONE,
         };
 
         void qcgc_event_logger_initialize(void);
