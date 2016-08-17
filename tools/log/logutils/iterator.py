@@ -1,5 +1,5 @@
 import struct
-from .logevent import *
+from .event import *
 
 class LogIterator:
     def __init__(self, filename):
@@ -13,7 +13,14 @@ class LogIterator:
         buf = self.f.read(struct.calcsize(fmt))
         if (len(buf) == struct.calcsize(fmt)):
             sec, nsec, eventID, additional_bytes = struct.unpack(fmt, buf);
-            result = UnknownLogEvent(sec, nsec, eventID)
+
+            if (eventID == 0):
+                result = LogStartEvent(sec, nsec, eventID)
+            elif (eventID == 1):
+                result = LogStopEvent(sec, nsec, eventID)
+            else:
+                result = UnknownEvent(sec, nsec, eventID)
+
             result.parse_additional_data(self.f, additional_bytes)
             return result
         else:

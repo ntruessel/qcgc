@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from utils.logiterator import LogIterator
+from logutils.iterator import LogIterator
 
 def decode_logfile(filename):
     print("Decoding {}".format(filename))
