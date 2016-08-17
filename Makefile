@@ -1,8 +1,9 @@
 CFLAGS=-Wall -Wextra -std=gnu99 -Wmissing-declarations -Wmissing-prototypes
 SRC=qcgc.c arena.c allocator.c bag.c event_logger.c gray_stack.c
+LDFLAGS=-lrt
 
 lib: $(SRC)
-	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $^
+	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $^ $(LDFLAGS)
 
 support:
 	cd test && make $@
