@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "allocator.h"
+#include "event_logger.h"
 
 // TODO: Eventually move to own header?
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -25,9 +26,11 @@ void qcgc_initialize(void) {
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_allocator_initialize();
+	qcgc_event_logger_initialize();
 }
 
 void qcgc_destroy(void) {
+	qcgc_event_logger_destroy();
 	qcgc_allocator_destroy();
 	free(qcgc_state.shadow_stack_base);
 }
