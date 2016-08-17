@@ -7,7 +7,7 @@ class EventLoggerTestCase(QCGCTest):
         # Creation happens automatically (in set_up)
         # Destruction happens automatically (in tear_down)
         try:
-            logfile = open(ffi.string(lib.logfile))
+            logfile = open(ffi.string(lib.logfile), "rb")
 
             try:
                 pass
