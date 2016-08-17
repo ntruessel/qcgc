@@ -1,20 +1,22 @@
+sudo:
+    required
+
 language: c
 
 compiler:
     - gcc
 
 before_install:
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 50
+    - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-5 50
     - pip install --user codecov
     - pip install --user cffi
-
-before_script:
-    - export CC="gcc-5"
 
 script:
     - make test
 
 after_success:
-    - codecov --gcov-exec gcov-5
+    - codecov
 
 addons:
     apt:
