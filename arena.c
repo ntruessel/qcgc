@@ -1,5 +1,6 @@
 #include "arena.h"
 
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -44,6 +45,7 @@ arena_t *qcgc_arena_create(void) {
 }
 
 void qcgc_arena_destroy(arena_t *arena) {
+	free(arena->gray_stack);
 	munmap((void *) arena, QCGC_ARENA_SIZE);
 }
 
