@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import sys
+from utils.logiterator import LogIterator
+
+def decode_logfile(filename):
+    print("Decoding {}".format(filename))
+    log = LogIterator(filename)
+    for event in log:
+        print(event)
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        decode_logfile(filename)
