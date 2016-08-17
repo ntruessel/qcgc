@@ -1,4 +1,4 @@
-class BasicLogEvent:
+class UnknownLogEvent:
     def __init__(self, sec, nsec, eventID):
         self.sec = sec
         self.nsec = nsec
@@ -8,4 +8,4 @@ class BasicLogEvent:
         _ = f.read(size)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] {}".format(self.sec, self.nsec, self.eventID)
+        return "[{: 4d}.{:09d}] Unknown event (event id = {})".format(self.sec, self.nsec, self.eventID)

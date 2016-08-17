@@ -13,7 +13,7 @@ class LogIterator:
         buf = self.f.read(struct.calcsize(fmt))
         if (len(buf) == struct.calcsize(fmt)):
             sec, nsec, eventID, additional_bytes = struct.unpack(fmt, buf);
-            result = BasicLogEvent(sec, nsec, eventID)
+            result = UnknownLogEvent(sec, nsec, eventID)
             result.parse_additional_data(self.f, additional_bytes)
             return result
         else:
