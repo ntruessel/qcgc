@@ -3,15 +3,18 @@ language: c
 compiler:
     - gcc
 
-install:
-    - export CC="gcc-5"
+before_install:
+    - pip install --user codecov
     - pip install --user cffi
+
+before_script:
+    - export CC="gcc-5"
 
 script:
     - make test
 
 after_success:
-    - bash <(curl -s https://codecov.io/bash)
+    - codecov --gcov-exec gcov-5
 
 addons:
     apt:
