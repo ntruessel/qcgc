@@ -406,9 +406,9 @@ ffi.set_source("support",
         """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
                 '../mark_list.c', '../gray_stack.c', '../bag.c',
                 '../event_logger.c'],
-        extra_compile_args=['--coverage','-std=gnu99', '-UNDEBUG',  '-DTESTING',
+        extra_compile_args=['--coverage', '-std=gnu99', '-UNDEBUG', '-DTESTING',
                 '-O0', '-g'],
-        extra_link_args=['--coverage'])
+        extra_link_args=['--coverage', '-lrt'])
 
 if __name__ == "__main__":
     ffi.compile()
