@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "allocator.h"
 #include "event_logger.h"
 
 /**
@@ -164,6 +165,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 #endif
 	bool free = true;
 	bool coalesce = false;
+	size_t last_free_cell;
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
@@ -173,6 +175,8 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			case BLOCK_FREE:
 				if (coalesce) {
 					set_blocktype(arena, cell, BLOCK_EXTENT);
+				} else {
+					last_free_cell = cell;
 				}
 				coalesce = true;
 				break;
@@ -181,6 +185,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 					set_blocktype(arena, cell, BLOCK_EXTENT);
 				} else {
 					set_blocktype(arena, cell, BLOCK_FREE);
+					last_free_cell = cell;
 				}
 				coalesce = true;
 				break;
@@ -188,6 +193,8 @@ bool qcgc_arena_sweep(arena_t *arena) {
 				free = false;
 				coalesce = false;
 				set_blocktype(arena, cell, BLOCK_WHITE);
+				qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
+						cell - last_free_cell);
 				break;
 		}
 	}
