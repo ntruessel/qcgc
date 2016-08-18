@@ -54,4 +54,8 @@ class AllocateDoneEvent(EventBase):
     def __str__(self):
         return "[{: 4d}.{:09d}] Allocation done, ptr = 0x{:x}".format(self.sec, self.nsec, self.ptr)
 
+class NewArenaEvent(EventBase):
+    def __str__(self):
+        return "[{: 4d}.{:09d}] New arena created".format(self.sec, self.nsec)
+
 del EventBase

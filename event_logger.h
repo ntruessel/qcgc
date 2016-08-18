@@ -17,6 +17,8 @@ enum event_e {
 
 	EVENT_ALLOCATE_START,
 	EVENT_ALLOCATE_DONE,
+
+	EVENT_NEW_ARENA,
 };
 
 /**

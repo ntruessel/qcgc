@@ -26,6 +26,8 @@ class LogIterator:
                 result = AllocateStartEvent(sec, nsec)
             elif (eventID == 5):
                 result = AllocateDoneEvent(sec, nsec)
+            elif (eventID == 6):
+                result = NewArenaEvent(sec, nsec)
             else:
                 result = UnknownEvent(sec, nsec, eventID)
 

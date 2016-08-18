@@ -4,6 +4,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "event_logger.h"
+
 /**
  * Internal functions
  */
@@ -11,6 +13,8 @@ QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index);
 QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 
 arena_t *qcgc_arena_create(void) {
+	qcgc_event_logger_log(EVENT_NEW_ARENA, 0, NULL);
+
 	arena_t *result;
 	// Linux: MAP_ANONYMOUS is initialized to zero
 	cell_t *mem = (cell_t *) mmap(0, 2 * QCGC_ARENA_SIZE,
