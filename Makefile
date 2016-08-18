@@ -23,4 +23,6 @@ doc:
 clean:
 	$(RM) -f *.so *.o *.gcov *.gcda *.gcno
 	$(RM) -rf doc
+	$(RM) perf.data*
+	find . -name "qcgc_events.log" -type f -delete
 	cd test && make $@
