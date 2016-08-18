@@ -8,5 +8,6 @@ __pycache__/
 *.pyc
 doc/
 demo/demo_list
+perf.data*
 
 test/support.c
