@@ -112,6 +112,8 @@ void qcgc_mark_all(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_PAUSE || qcgc_state.phase == GC_MARK);
 #endif
+	qcgc_event_logger_log(EVENT_MARK_START, 0, NULL);
+
 	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
@@ -135,12 +137,18 @@ void qcgc_mark_all(void) {
 	}
 
 	qcgc_state.phase = GC_COLLECT;
+
+	qcgc_event_logger_log(EVENT_MARK_DONE, 0, NULL);
 }
 
 void qcgc_mark_incremental(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_PAUSE || qcgc_state.phase == GC_MARK);
 #endif
+	unsigned long gray_stack_size = qcgc_state.gray_stack_size;
+	qcgc_event_logger_log(EVENT_INCMARK_START, sizeof(gray_stack_size),
+			(uint8_t *) &gray_stack_size);
+
 	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
@@ -168,6 +176,10 @@ void qcgc_mark_incremental(void) {
 	if (qcgc_state.gray_stack_size == 0) {
 		qcgc_state.phase = GC_COLLECT;
 	}
+
+	gray_stack_size = qcgc_state.gray_stack_size;
+	qcgc_event_logger_log(EVENT_INCMARK_START, sizeof(gray_stack_size),
+			(uint8_t *) &gray_stack_size);
 }
 
 void qcgc_pop_object(object_t *object) {
@@ -215,12 +227,10 @@ void qcgc_sweep(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_COLLECT);
 #endif
-	struct {
-		unsigned arena_count;
-	} __attribute__ ((packed)) sweep_info;
-	sweep_info.arena_count = qcgc_allocator_state.arenas->count;
-	qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(sweep_info),
-			(uint8_t *) &sweep_info);
+	unsigned long arena_count;
+	arena_count = qcgc_allocator_state.arenas->count;
+	qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(arena_count),
+			(uint8_t *) &arena_count);
 
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 		qcgc_arena_sweep(qcgc_allocator_state.arenas->items[i]);

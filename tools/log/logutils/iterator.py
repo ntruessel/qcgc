@@ -28,6 +28,12 @@ class LogIterator:
                 result = AllocateDoneEvent(sec, nsec)
             elif (eventID == 6):
                 result = NewArenaEvent(sec, nsec)
+            elif (eventID == 7):
+                result = MarkStartEvent(sec, nsec)
+            elif (eventID == 8):
+                result = IncmarkStartEvent(sec, nsec)
+            elif (eventID == 9):
+                result = MarkDoneEvent(sec, nsec)
             else:
                 result = UnknownEvent(sec, nsec, eventID)
 
