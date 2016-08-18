@@ -165,7 +165,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 #endif
 	bool free = true;
 	bool coalesce = false;
-	size_t last_free_cell;
+	size_t last_free_cell = QCGC_ARENA_FIRST_CELL_INDEX;
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
