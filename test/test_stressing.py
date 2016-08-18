@@ -3,6 +3,7 @@ from qcgc_test import QCGCTest
 import random, time, unittest
 
 class StressTestCase(QCGCTest):
+    output = False
 
     def push_all_roots(self):
         # use before operations that may cause collections
@@ -81,13 +82,15 @@ class StressTestCase(QCGCTest):
         shadow_objs = self._collect_shadow_objs()
         real_objs = self._collect_real_objs()
         self.assertEqual(shadow_objs, real_objs)
-        print("objs alive: {}".format(len(real_objs)))
+        if self.output:
+            print("objs alive: {}".format(len(real_objs)))
 
         # purge all non-found/reachable objs from shadow_objs
         for o in list(self.shadow_objs):
             if o not in shadow_objs:
                 del self.shadow_objs[o]
 
+    @unittest.skip("Takes forever (>1000s)")
     def test_stress(self):
         random.seed(42)
 
@@ -105,7 +108,8 @@ class StressTestCase(QCGCTest):
             if i % 30 == 0:
                 t = time.time()
                 lib.qcgc_collect()
-                print("collect time: {}".format(time.time() - t))
+                if self.output:
+                    print("collect time: {}".format(time.time() - t))
             self.check()
 
 if __name__ == "__main__":

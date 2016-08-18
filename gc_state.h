@@ -2,9 +2,7 @@
 
 #include <stddef.h>
 
-#include "arena.h"
-#include "bag.h"
-#include "object.h"
+#include "shadow_stack.h"
 
 /**
  * @typedef gc_state_t
@@ -25,8 +23,7 @@ typedef enum gc_phase {
  * Global state of the garbage collector
  */
 struct qcgc_state {
-	object_t **shadow_stack;
-	object_t **shadow_stack_base;
+	shadow_stack_t *shadow_stack;
 	size_t gray_stack_size;
 	gc_phase_t phase;
 } qcgc_state;

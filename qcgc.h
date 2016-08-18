@@ -14,9 +14,6 @@
 #include "gray_stack.h"
 #include "object.h"
 
-#define qcgc_shadowstack_push(p) (*(qcgc_state.shadow_stack++) = (object_t *)(p))
-#define qcgc_shadowstack_pop(p) ((p) = *(--qcgc_state.shadow_stack))
-
 /**
  * @typedef mark_color
  * Object state during collection
@@ -69,6 +66,20 @@ void qcgc_collect(void);
  * @returs The color of the object, according to the mark algorithm.
  */
 mark_color_t qcgc_get_mark_color(object_t *object);
+
+/**
+ * Add object to shadow stack
+ *
+ * @param	object	The object to push
+ */
+void qcgc_shadowstack_push(object_t *object);
+
+/**
+ * Pop object from shadow stack
+ *
+ * @return	Top element of the shadowstack
+ */
+object_t *qcgc_shadowstack_pop(void);
 
 /**
  * Tracing function.

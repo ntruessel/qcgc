@@ -65,6 +65,25 @@ ffi.cdef("""
         """)
 
 ################################################################################
+# shadow_stack                                                                 #
+################################################################################
+ffi.cdef("""
+        typedef struct shadow_stack_s {
+                size_t count;
+                size_t size;
+                object_t *items[];
+        } shadow_stack_t;
+
+        shadow_stack_t *qcgc_shadow_stack_create(size_t size);
+
+        shadow_stack_t *qcgc_shadow_stack_push(shadow_stack_t *stack,
+                    object_t *item);
+        object_t *qcgc_shadow_stack_top(shadow_stack_t *stack);
+        shadow_stack_t *qcgc_shadow_stack_pop(shadow_stack_t *stack);
+        """)
+
+
+################################################################################
 # arena                                                                        #
 ################################################################################
 ffi.cdef(""" const size_t qcgc_arena_size;
@@ -169,8 +188,7 @@ ffi.cdef("""
         } gc_phase_t;
 
         struct qcgc_state {
-                object_t **shadow_stack;
-                object_t **shadow_stack_base;
+                shadow_stack_t *shadow_stack;
                 size_t gray_stack_size;
                 gc_phase_t phase;
         } qcgc_state;
@@ -259,6 +277,9 @@ ffi.cdef("""
         void qcgc_collect(void);
         mark_color_t qcgc_get_mark_color(object_t *object);
 
+        void qcgc_shadowstack_push(object_t *object);
+        object_t *qcgc_shadowstack_pop(void);
+
         // qcgc.c
         void qcgc_mark(void);
         void qcgc_mark_all(void);
@@ -296,6 +317,7 @@ ffi.set_source("support",
         #include "../bag.h"
         #include "../allocator.h"
         #include "../event_logger.h"
+        #include "../shadow_stack.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -413,7 +435,7 @@ ffi.set_source("support",
 
         """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
                 '../mark_list.c', '../gray_stack.c', '../bag.c',
-                '../event_logger.c'],
+                '../event_logger.c', '../shadow_stack.c'],
         extra_compile_args=['--coverage', '-std=gnu99', '-UNDEBUG', '-DTESTING',
                 '-O0', '-g'],
         extra_link_args=['--coverage', '-lrt'])

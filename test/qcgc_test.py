@@ -11,12 +11,10 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_destroy()
 
     def push_root(self, o):
-        lib.qcgc_state.shadow_stack[0] = ffi.cast("void *", o)
-        lib.qcgc_state.shadow_stack += 1
+        lib.qcgc_shadowstack_push(ffi.cast("object_t *", o))
 
     def pop_root(self):
-        lib.qcgc_state.shadow_stack -= 1
-        return ffi.cast("void *", lib.qcgc_state.shadow_stack[0])
+        return lib.qcgc_shadowstack_pop()
 
     def allocate(self, size):
         assert size < 2**16
@@ -40,4 +38,4 @@ class QCGCTest(unittest.TestCase):
         return fields[index]
 
     def ss_size(self):
-        return lib.qcgc_state.shadow_stack - lib.qcgc_state.shadow_stack_base
+        return lib.qcgc_state.shadow_stack.count;

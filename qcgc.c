@@ -21,8 +21,7 @@ void qcgc_push_object(object_t *object);
 void qcgc_sweep(void);
 
 void qcgc_initialize(void) {
-	qcgc_state.shadow_stack = qcgc_state.shadow_stack_base =
-		(object_t **) malloc(QCGC_SHADOWSTACK_SIZE);
+	qcgc_state.shadow_stack = qcgc_shadow_stack_create(QCGC_SHADOWSTACK_SIZE);
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_allocator_initialize();
@@ -32,7 +31,21 @@ void qcgc_initialize(void) {
 void qcgc_destroy(void) {
 	qcgc_event_logger_destroy();
 	qcgc_allocator_destroy();
-	free(qcgc_state.shadow_stack_base);
+	free(qcgc_state.shadow_stack);
+}
+
+/**
+ * Shadow stack
+ */
+void qcgc_shadowstack_push(object_t *object) {
+	qcgc_state.shadow_stack =
+		qcgc_shadow_stack_push(qcgc_state.shadow_stack, object);
+}
+
+object_t *qcgc_shadowstack_pop(void) {
+	object_t *result = qcgc_shadow_stack_top(qcgc_state.shadow_stack);
+	qcgc_state.shadow_stack = qcgc_shadow_stack_pop(qcgc_state.shadow_stack);
+	return result;
 }
 
 /*******************************************************************************
@@ -117,10 +130,8 @@ void qcgc_mark_all(void) {
 	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
-	for (object_t **it = qcgc_state.shadow_stack_base;
-			it != qcgc_state.shadow_stack;
-			it++) {
-		qcgc_push_object(*it);
+	for (size_t i = 0; i < qcgc_state.shadow_stack->count; i++) {
+		qcgc_push_object(qcgc_state.shadow_stack->items[i]);
 	}
 
 	while(qcgc_state.gray_stack_size > 0) {
@@ -152,10 +163,8 @@ void qcgc_mark_incremental(void) {
 	qcgc_state.phase = GC_MARK;
 
 	// Push all roots
-	for (object_t **it = qcgc_state.shadow_stack_base;
-			it != qcgc_state.shadow_stack;
-			it++) {
-		qcgc_push_object(*it);
+	for (size_t i = 0; i < qcgc_state.shadow_stack->count; i++) {
+		qcgc_push_object(qcgc_state.shadow_stack->items[i]);
 	}
 
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
