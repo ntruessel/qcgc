@@ -62,7 +62,9 @@ void qcgc_event_logger_log(enum event_e event, uint32_t additional_data_size,
 				event_logger_state.logfile);
 		if (result != 1) {
 			fprintf(stderr, "%s\n", "Failed to write log entry.");
-			qcgc_event_logger_destroy();
+			fflush(event_logger_state.logfile);
+			fclose(event_logger_state.logfile);
+			event_logger_state.logfile = NULL;
 			return;
 		}
 		if (additional_data_size > 0) {
@@ -71,7 +73,9 @@ void qcgc_event_logger_log(enum event_e event, uint32_t additional_data_size,
 
 			if (result != 1) {
 				fprintf(stderr, "%s\n", "Failed to write additional data.");
-				qcgc_event_logger_destroy();
+				fflush(event_logger_state.logfile);
+				fclose(event_logger_state.logfile);
+				event_logger_state.logfile = NULL;
 				return;
 			}
 		}
