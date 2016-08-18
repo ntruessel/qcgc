@@ -6,7 +6,7 @@ typedef struct node_s node_t;
 
 struct node_s {
 	object_t hdr;
-	int value;
+	size_t value;
 	node_t *next;
 };
 
@@ -21,7 +21,7 @@ int main(void) {
 	list->value = 0;
 	list->next = NULL;
 
-	qcgc_shadowstack_push(list);
+	qcgc_shadowstack_push((object_t *)list);
 	node_t *last = list;
 	for (size_t i = 1; i < 1<<22; i++) { // 4+ arenas of memory
 		last->next = (node_t *) qcgc_allocate(sizeof(node_t));
