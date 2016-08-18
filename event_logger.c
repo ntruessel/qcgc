@@ -57,12 +57,11 @@ void qcgc_event_logger_log(enum event_e event, uint32_t additional_data_size,
 		log_entry.additional_data_size = additional_data_size;
 
 		// The size and nmemb fields are flipped intentionally
-		size_t result = 0;
+		int result = 0;
 		result = fwrite(&log_entry, sizeof(log_entry), 1,
 				event_logger_state.logfile);
 		if (result != 1) {
 			fprintf(stderr, "%s\n", "Failed to write log entry.");
-			fflush(event_logger_state.logfile);
 			fclose(event_logger_state.logfile);
 			event_logger_state.logfile = NULL;
 			return;
@@ -73,7 +72,6 @@ void qcgc_event_logger_log(enum event_e event, uint32_t additional_data_size,
 
 			if (result != 1) {
 				fprintf(stderr, "%s\n", "Failed to write additional data.");
-				fflush(event_logger_state.logfile);
 				fclose(event_logger_state.logfile);
 				event_logger_state.logfile = NULL;
 				return;
