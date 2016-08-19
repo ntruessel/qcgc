@@ -1,5 +1,6 @@
 from support import lib,ffi
 from qcgc_test import QCGCTest
+import unittest
 
 class ArenaTestCase(QCGCTest):
     ############################################################################
@@ -129,6 +130,11 @@ class ArenaTestCase(QCGCTest):
 
         self.assertTrue(lib.qcgc_arena_is_empty(arena))
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
+        for i in range(lib.qcgc_small_free_lists):
+            self.assertEqual(0, lib.small_free_list(i).count)
+
+        for i in range(lib.qcgc_large_free_lists):
+            self.assertEqual(0, lib.large_free_list(i).count)
 
     def test_arena_sweep_black(self):
         arena = lib.qcgc_arena_create()
@@ -147,6 +153,16 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
 
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
+        for i in range(lib.qcgc_small_free_lists):
+            self.assertEqual(0, lib.small_free_list(i).count)
+
+        for i in range(lib.qcgc_large_free_lists):
+            if (i == lib.large_index(lib.qcgc_arena_cells_count - 10)):
+                self.assertEqual(1, lib.large_free_list(i).count)
+                self.assertEqual(lib.large_free_list(i).items[0].size,
+                        lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index - 10)
+            else:
+                self.assertEqual(0, lib.large_free_list(i).count)
 
     def test_arena_sweep_mixed(self):
         arena = lib.qcgc_arena_create()
@@ -188,3 +204,6 @@ class ArenaTestCase(QCGCTest):
                     << lib.QCGC_ARENA_SIZE_EXP
                     >> lib.QCGC_ARENA_SIZE_EXP)
         self.assertEqual(lib.BLOCK_FREE, lib.qcgc_arena_get_blocktype(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
+
+if __name__ == "__main__":
+    unittest.main()

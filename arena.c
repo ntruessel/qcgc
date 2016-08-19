@@ -190,13 +190,19 @@ bool qcgc_arena_sweep(arena_t *arena) {
 				coalesce = true;
 				break;
 			case BLOCK_BLACK:
+				set_blocktype(arena, cell, BLOCK_WHITE);
+				if (coalesce) {
+					qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
+							cell - last_free_cell);
+				}
 				free = false;
 				coalesce = false;
-				set_blocktype(arena, cell, BLOCK_WHITE);
-				qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
-						cell - last_free_cell);
 				break;
 		}
+	}
+	if (coalesce && !free) {
+		qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
+							QCGC_ARENA_CELLS_COUNT - last_free_cell);
 	}
 	return free;
 }
