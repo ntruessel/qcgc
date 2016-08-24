@@ -15,3 +15,7 @@ class AllocatorTest(QCGCTest):
         for i in range(lib.qcgc_large_free_lists):
             l = lib.large_free_list(i)
             self.assertNotEqual(ffi.NULL, l)
+
+    def test_large_allocate(self):
+        p = self.allocate(2**22)
+        self.assertNotEqual(ffi.NULL, p)

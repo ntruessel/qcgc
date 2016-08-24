@@ -17,7 +17,6 @@ class QCGCTest(unittest.TestCase):
         return lib.qcgc_shadowstack_pop()
 
     def allocate(self, size):
-        assert size < 2**16
         o = lib.qcgc_allocate(self.header_size + size)
         lib._set_type_id(o, size)
         return ffi.cast("myobject_t *", o)
