@@ -18,12 +18,14 @@ class QCGCTest(unittest.TestCase):
 
     def allocate(self, size):
         o = lib.qcgc_allocate(self.header_size + size)
+        self.assertNotEqual(o, ffi.NULL)
         lib._set_type_id(o, size)
         return ffi.cast("myobject_t *", o)
 
     def allocate_ref(self, size):
         assert size < 2**16
         o = lib.qcgc_allocate(self.header_size + size * ffi.sizeof("myobject_t *"))
+        self.assertNotEqual(o, ffi.NULL)
         lib._set_type_id(o, size + 2**16)
         return ffi.cast("myobject_t *", o)
 

@@ -213,14 +213,15 @@ ffi.cdef("""
 
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
-        cell_t *qcgc_allocator_allocate(size_t bytes);
+        object_t *qcgc_fit_allocate(size_t bytes);
+        object_t *qcgc_bump_allocate(size_t bytes);
+        object_t *qcgc_large_allocate(size_t bytes);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
 
         // static functions
         size_t bytes_to_cells(size_t bytes);
 
         void bump_allocator_assign(cell_t *ptr, size_t cells);
-        cell_t *bump_allocator_allocate(size_t cells);
         void bump_allocator_advance(size_t cells);
 
         bool is_small(size_t cells);
@@ -228,8 +229,8 @@ ffi.cdef("""
         size_t large_index(size_t cells);
         size_t small_index_to_cells(size_t index);
 
-        cell_t *fit_allocator_allocate(size_t cells);
         cell_t *fit_allocator_small_first_fit(size_t index, size_t cells);
+        cell_t *fit_allocator_large_fit(size_t index, size_t cells);
         cell_t *fit_allocator_large_first_fit(size_t index, size_t cells);
 
         bool valid_block(cell_t *ptr, size_t cells);
@@ -345,7 +346,6 @@ ffi.set_source("support",
         size_t bytes_to_cells(size_t bytes);
 
         void bump_allocator_assign(cell_t *ptr, size_t cells);
-        cell_t *bump_allocator_allocate(size_t cells);
         void bump_allocator_advance(size_t cells);
 
         bool is_small(size_t cells);
@@ -353,8 +353,8 @@ ffi.set_source("support",
         size_t large_index(size_t cells);
         size_t small_index_to_cells(size_t index);
 
-        cell_t *fit_allocator_allocate(size_t cells);
         cell_t *fit_allocator_small_first_fit(size_t index, size_t cells);
+        cell_t *fit_allocator_large_fit(size_t index, size_t cells);
         cell_t *fit_allocator_large_first_fit(size_t index, size_t cells);
 
         bool valid_block(cell_t *ptr, size_t cells);

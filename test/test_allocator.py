@@ -1,3 +1,4 @@
+import unittest
 from support import lib,ffi
 from qcgc_test import QCGCTest
 
@@ -19,3 +20,6 @@ class AllocatorTest(QCGCTest):
     def test_large_allocate(self):
         p = self.allocate(2**22)
         self.assertNotEqual(ffi.NULL, p)
+
+if __name__ == "__main__":
+    unittest.main()

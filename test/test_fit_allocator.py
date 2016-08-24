@@ -97,9 +97,8 @@ class FitAllocatorTest(QCGCTest):
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, 1)
 
-        old_bump_ptr = lib.bump_ptr()
         q = self.fit_allocate(2)
-        self.assertEqual(old_bump_ptr, q)
+        self.assertEqual(ffi.NULL, q)
 
     def test_allocate_block_splitting(self):
         "Test allocation when blocks have to be split"
@@ -191,15 +190,13 @@ class FitAllocatorTest(QCGCTest):
         q = self.fit_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         self.assertEqual(p, q)
 
-    def fit_allocate(self, size):
-        p = lib.fit_allocator_allocate(size)
-        lib.qcgc_arena_mark_allocated(p, size)
-        return p
+    def fit_allocate(self, cells):
+        p = lib.qcgc_fit_allocate(cells * 16)
+        return ffi.cast("cell_t *", p)
 
-    def bump_allocate(self, size):
-        p = lib.bump_allocator_allocate(size)
-        lib.qcgc_arena_mark_allocated(p, size)
-        return p
+    def bump_allocate(self, cells):
+        p = lib.qcgc_bump_allocate(cells * 16)
+        return ffi.cast("cell_t *", p)
 
 
 if __name__ == "__main__":

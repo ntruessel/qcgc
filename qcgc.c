@@ -81,9 +81,23 @@ object_t *qcgc_allocate(size_t size) {
 	qcgc_event_logger_log(EVENT_ALLOCATE_START, sizeof(size_t),
 			(uint8_t *) &size);
 #endif
+	object_t *result;
+	if (size <= QCGC_LARGE_ALLOC_THRESHOLD) {
+		// Use bump / fit allocator
+		if (true) { // FIXME: Implement reasonable switch
+			result = qcgc_bump_allocate(size);
+		} else {
+			result = qcgc_fit_allocate(size);
 
-	object_t *result = (object_t *) qcgc_allocator_allocate(size);
-	result->flags |= QCGC_GRAY_FLAG;
+			// Fallback to bump allocator
+			if (result == NULL) {
+				result = qcgc_bump_allocate(size);
+			}
+		}
+	} else {
+		// Use huge block allocator
+		result = qcgc_large_allocate(size);
+	}
 
 #if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
