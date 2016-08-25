@@ -29,6 +29,22 @@ class QCGCTest(unittest.TestCase):
         lib._set_type_id(o, size + 2**16)
         return ffi.cast("myobject_t *", o)
 
+    def allocate_prebuilt(self, size):
+        o = ffi.cast("object_t *", ffi.new("char[]", self.header_size + size))
+        self.assertNotEqual(o, ffi.NULL)
+        lib._set_type_id(o, size)
+        o.flags = lib.QCGC_PREBUILT_OBJECT
+        lib.qcgc_write(o) # Register object
+        return ffi.cast("myobject_t *", o)
+
+    def allocate_prebuilt_ref(self, size):
+        o = ffi.cast("object_t *", ffi.new("char[]", self.header_size + size * ffi.sizeof("myobject_t *")))
+        self.assertNotEqual(o, ffi.NULL)
+        lib._set_type_id(o, size + 2 ** 16)
+        o.flags = lib.QCGC_PREBUILT_OBJECT
+        lib.qcgc_write(o) # Register object
+        return ffi.cast("myobject_t *", o)
+
     def set_ref(self, obj, index, ref):
         lib.qcgc_write(ffi.cast("object_t *", obj)) # Trigger write barrier
         fields = ffi.cast("myobject_t **", obj + 1)

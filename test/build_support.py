@@ -40,7 +40,8 @@ ffi.cdef("""
 # object                                                                       #
 ################################################################################
 ffi.cdef("""
-        #define QCGC_GRAY_FLAG 0x01
+        #define QCGC_GRAY_FLAG 0x1
+        #define QCGC_PREBUILT_OBJECT 0x2
 
         typedef struct object_s {
                 uint32_t flags;
