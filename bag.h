@@ -77,6 +77,12 @@ struct exp_free_list_item_s {
 	size_t size;
 };
 
+struct hbtable_entry_s {
+	object_t *object;
+	bool mark_flag;
+};
+
 DECLARE_BAG(arena_bag, arena_t *);
 DECLARE_BAG(linear_free_list, cell_t *);
 DECLARE_BAG(exp_free_list, struct exp_free_list_item_s);
+DECLARE_BAG(hbbucket, struct hbtable_entry_s);

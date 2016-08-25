@@ -176,6 +176,43 @@ ffi.cdef("""
                 struct exp_free_list_item_s item);
         exp_free_list_t *qcgc_exp_free_list_remove_index(
                 exp_free_list_t *self, size_t index);
+
+        struct hbtable_entry_s {
+            object_t *object;
+            bool mark_flag;
+        };
+
+        typedef struct hbbucket_s {
+            size_t size;
+            size_t count;
+            struct hbtable_entry_s items[];
+        } hbbucket_t;
+
+        hbbucket_t *qcgc_hbbucket_create(size_t size);
+        hbbucket_t *qcgc_hbbucket_add(hbbucket_t *self,
+                struct hbtable_entry_s item);
+        hbbucket_t *qcgc_hbbucket_remove_index(
+                hbbucket_t *self, size_t index);
+
+        """)
+
+################################################################################
+# hugeblocktable                                                               #
+################################################################################
+ffi.cdef("""
+        #define QCGC_HBTABLE_BUCKETS 61
+
+        struct hbtable_s {
+                bool mark_flag_ref;
+                hbbucket_t *bucket[QCGC_HBTABLE_BUCKETS];
+        } hbtable;
+
+        void qcgc_hbtable_initialize(void);
+        void qcgc_hbtable_destroy(void);
+        void qcgc_hbtable_insert(object_t *object);
+        void qcgc_hbtable_mark(object_t *object);
+        void qcgc_hbtable_sweep(void);
+        size_t bucket(object_t *object);
         """)
 
 ################################################################################
@@ -321,6 +358,7 @@ ffi.set_source("support",
         #include "../allocator.h"
         #include "../event_logger.h"
         #include "../shadow_stack.h"
+        #include "../hugeblocktable.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -331,6 +369,9 @@ ffi.set_source("support",
 
         // event_logger.h - Macro replacements
         const char *logfile = LOGFILE;
+
+        // hugeblocktable.c prototyes
+        size_t bucket(object_t *object);
 
         // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t size);
@@ -437,7 +478,8 @@ ffi.set_source("support",
 
         """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
                 '../mark_list.c', '../gray_stack.c', '../bag.c',
-                '../event_logger.c', '../shadow_stack.c'],
+                '../event_logger.c', '../shadow_stack.c',
+                '../hugeblocktable.c'],
         extra_compile_args=['--coverage', '-std=gnu99', '-UNDEBUG', '-DTESTING',
                 '-O0', '-g'],
         extra_link_args=['--coverage', '-lrt'])
