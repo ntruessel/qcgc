@@ -11,7 +11,7 @@
 struct hbtable_s {
 	bool mark_flag_ref;
 	hbbucket_t *bucket[QCGC_HBTABLE_BUCKETS];
-} hbtable;
+} qcgc_hbtable;
 
 void qcgc_hbtable_initialize(void);
 void qcgc_hbtable_destroy(void);

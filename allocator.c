@@ -149,7 +149,6 @@ object_t *qcgc_fit_allocate(size_t bytes) {
  * - Aligned to arena size
  * - Multiple of arena size
  * - No header, metadata stored in hash-map
- * - Flag QCGC_HUGE_BLOCK has to be set (by design decision)
  */
 object_t *qcgc_large_allocate(size_t bytes) {
 	return NULL;
