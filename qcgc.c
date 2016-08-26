@@ -161,6 +161,15 @@ void qcgc_mark_all(void) {
 	}
 
 	while(qcgc_state.gray_stack_size > 0) {
+		// Huge blocks
+		while (qcgc_hbtable.gray_stack->index > 0) {
+			object_t *top =
+				qcgc_gray_stack_top(qcgc_hbtable.gray_stack);
+			qcgc_hbtable.gray_stack =
+				qcgc_gray_stack_pop(qcgc_hbtable.gray_stack);
+			qcgc_pop_object(top);
+		}
+
 		for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 			arena_t *arena = qcgc_allocator_state.arenas->items[i];
 			while (arena->gray_stack->index > 0) {
@@ -198,6 +207,18 @@ void qcgc_mark_incremental(void) {
 		qcgc_trace_cb(qcgc_state.prebuilt_objects->items[i], &qcgc_push_object);
 	}
 
+	// Huge blocks
+	size_t to_process = MIN(qcgc_hbtable.gray_stack->index,
+			MAX(qcgc_hbtable.gray_stack->index / 2, QCGC_INC_MARK_MIN));
+	while (to_process > 0) {
+		object_t *top =
+			qcgc_gray_stack_top(qcgc_hbtable.gray_stack);
+		qcgc_hbtable.gray_stack =
+			qcgc_gray_stack_pop(qcgc_hbtable.gray_stack);
+		qcgc_pop_object(top);
+		to_process--;
+	}
+
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 		arena_t *arena = qcgc_allocator_state.arenas->items[i];
 		size_t initial_stack_size = arena->gray_stack->index;
@@ -226,7 +247,9 @@ void qcgc_pop_object(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 	assert((object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG);
-	assert(qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK);
+	if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
+		assert(qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK);
+	}
 #endif
 	object->flags &= ~QCGC_GRAY_FLAG;
 	qcgc_trace_cb(object, &qcgc_push_object);
@@ -241,6 +264,11 @@ void qcgc_push_object(object_t *object) {
 	assert(qcgc_state.phase == GC_MARK);
 #endif
 	if (object != NULL) {
+		if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
+			object->flags |= QCGC_GRAY_FLAG;
+			qcgc_hbtable_mark(object);
+			return; // Skip tests
+		}
 		if ((object->flags & QCGC_PREBUILT_OBJECT) != 0) {
 			return;
 		}
@@ -275,6 +303,7 @@ void qcgc_sweep(void) {
 	qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(arena_count),
 			(uint8_t *) &arena_count);
 
+	qcgc_hbtable_sweep();
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 		qcgc_arena_sweep(qcgc_allocator_state.arenas->items[i]);
 	}
