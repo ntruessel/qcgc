@@ -4,6 +4,7 @@
 
 #include "bag.h"
 #include "object.h"
+#include "gray_stack.h"
 
 // Choosing a prime number, hoping for good results
 #define QCGC_HBTABLE_BUCKETS 61
@@ -11,6 +12,7 @@
 struct hbtable_s {
 	bool mark_flag_ref;
 	hbbucket_t *bucket[QCGC_HBTABLE_BUCKETS];
+	gray_stack_t *gray_stack;
 } qcgc_hbtable;
 
 void qcgc_hbtable_initialize(void);

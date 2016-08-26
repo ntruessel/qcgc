@@ -31,6 +31,9 @@ class HugeBlockTableTestCase(QCGCTest):
         lib.qcgc_hbtable_mark(o)
         p = ffi.cast("object_t *", self.allocate(1))
         lib.qcgc_hbtable_insert(p)
+        #
+        lib.qcgc_gray_stack_pop(lib.qcgc_hbtable.gray_stack)
+        #
         lib.qcgc_hbtable_sweep()
         #
         b = lib.bucket(o)
@@ -49,8 +52,15 @@ class HugeBlockTableTestCase(QCGCTest):
         b = lib.bucket(o)
         for i in range(lib.qcgc_hbtable.bucket[b].count):
             if (lib.qcgc_hbtable.bucket[b].items[i].object == o):
-                return (lib.qcgc_hbtable.bucket[b].items[i].mark_flag == lib.qcgc_hbtable.mark_flag_ref)
+                if (lib.qcgc_hbtable.bucket[b].items[i].mark_flag == lib.qcgc_hbtable.mark_flag_ref):
+                    self.assertTrue(self.hbtable_gray_stack_has(o))
+                    return True
         return False
+
+    def hbtable_gray_stack_has(self, o):
+        for i in range(lib.qcgc_hbtable.gray_stack.index):
+            if (lib.qcgc_hbtable.gray_stack.items[i] == o):
+                return True
 
 if __name__ == "__main__":
     unittest.main()

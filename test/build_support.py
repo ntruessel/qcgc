@@ -205,6 +205,7 @@ ffi.cdef("""
         struct hbtable_s {
                 bool mark_flag_ref;
                 hbbucket_t *bucket[QCGC_HBTABLE_BUCKETS];
+                gray_stack_t *gray_stack;
         } qcgc_hbtable;
 
         void qcgc_hbtable_initialize(void);
