@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 QCGC_STATIC size_t bytes_to_cells(size_t bytes);
@@ -151,7 +152,7 @@ object_t *qcgc_fit_allocate(size_t bytes) {
  * - No header, metadata stored in hash-map
  */
 object_t *qcgc_large_allocate(size_t bytes) {
-	return NULL;
+	return aligned_alloc(QCGC_ARENA_SIZE, bytes);
 }
 
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {

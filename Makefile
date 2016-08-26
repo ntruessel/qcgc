@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -std=gnu99 -Wmissing-declarations -Wmissing-prototypes -g -O0
+CFLAGS=-Wall -Wextra -std=gnu11 -Wmissing-declarations -Wmissing-prototypes -g -O0
 SRC=qcgc.c arena.c allocator.c bag.c event_logger.c gray_stack.c shadow_stack.c
 LDFLAGS=-lrt
 
