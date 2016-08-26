@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hugeblocktable.h"
+
 QCGC_STATIC size_t bytes_to_cells(size_t bytes);
 
 QCGC_STATIC void bump_allocator_assign(cell_t *ptr, size_t cells);
@@ -152,7 +154,9 @@ object_t *qcgc_fit_allocate(size_t bytes) {
  * - No header, metadata stored in hash-map
  */
 object_t *qcgc_large_allocate(size_t bytes) {
-	return aligned_alloc(QCGC_ARENA_SIZE, bytes);
+	object_t *result = aligned_alloc(QCGC_ARENA_SIZE, bytes);
+	qcgc_hbtable_insert(result);
+	return result;
 }
 
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {

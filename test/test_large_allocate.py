@@ -2,40 +2,12 @@ import unittest
 from support import lib,ffi
 from qcgc_test import QCGCTest
 
-class HugeBlockTableTestCase(QCGCTest):
-    def test_create_destroy(self):
-        for i in range(lib.QCGC_HBTABLE_BUCKETS):
-            self.assertNotEqual(ffi.NULL, lib.qcgc_hbtable.bucket[i])
-
-    def test_add(self):
-        o = lib.qcgc_large_allocate(1)
-        #
-        b = lib.bucket(o)
+class LargeAllocateTestCase(QCGCTest):
+    def test_arena_size_allocation(self):
+        o = lib.qcgc_allocate(lib.qcgc_arena_size)
+        self.assertNotEqual(ffi.NULL, o)
         self.assertTrue(self.hbtable_has(o))
         self.assertFalse(self.hbtable_marked(o))
-
-    def test_mark(self):
-        o = lib.qcgc_large_allocate(1)
-        lib.qcgc_hbtable_mark(o)
-        #
-        b = lib.bucket(o)
-        self.assertTrue(self.hbtable_has(o))
-        self.assertTrue(self.hbtable_marked(o))
-        pass
-
-    def test_sweep(self):
-        o = lib.qcgc_large_allocate(1)
-        lib.qcgc_hbtable_mark(o)
-        p = lib.qcgc_large_allocate(1)
-        #
-        lib.qcgc_gray_stack_pop(lib.qcgc_hbtable.gray_stack)
-        #
-        lib.qcgc_hbtable_sweep()
-        #
-        b = lib.bucket(o)
-        self.assertTrue(self.hbtable_has(o))
-        self.assertFalse(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_has(p))
 
     def hbtable_has(self, o):
         b = lib.bucket(o)
