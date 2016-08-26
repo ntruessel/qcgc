@@ -247,14 +247,16 @@ void qcgc_pop_object(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 	assert((object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG);
-	if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
+	if ((object_t *) qcgc_arena_addr((cell_t *) object) != object) {
 		assert(qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK);
 	}
 #endif
 	object->flags &= ~QCGC_GRAY_FLAG;
 	qcgc_trace_cb(object, &qcgc_push_object);
 #if CHECKED
-	assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK);
+	if ((object_t *) qcgc_arena_addr((cell_t *) object) != object) {
+		assert(qcgc_get_mark_color(object) == MARK_COLOR_BLACK);
+	}
 #endif
 }
 
