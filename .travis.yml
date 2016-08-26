@@ -1,5 +1,5 @@
-sudo:
-    required
+sudo: required
+dist: trusty
 
 language: c
 
@@ -24,5 +24,7 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
             - gcc-5
+            - g++-5
+            - libc6
 notifications:
     email: false
