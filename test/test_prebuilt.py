@@ -21,3 +21,6 @@ class PrebuiltObjectTestCase(QCGCTest):
         lib.qcgc_collect()
         self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", r)) == lib.BLOCK_WHITE)
         self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", s)) == lib.BLOCK_WHITE)
+
+if __name__ == "__main__":
+    unittest.main()
