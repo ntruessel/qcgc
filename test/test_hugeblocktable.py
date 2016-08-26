@@ -8,7 +8,7 @@ class HugeBlockTableTestCase(QCGCTest):
             self.assertNotEqual(ffi.NULL, lib.qcgc_hbtable.bucket[i])
 
     def test_add(self):
-        o = ffi.cast("object_t *", self.allocate(1))
+        o = lib.qcgc_large_allocate(1)
         lib.qcgc_hbtable_insert(o)
         #
         b = lib.bucket(o)
@@ -16,7 +16,7 @@ class HugeBlockTableTestCase(QCGCTest):
         self.assertFalse(self.hbtable_marked(o))
 
     def test_mark(self):
-        o = ffi.cast("object_t *", self.allocate(1))
+        o = lib.qcgc_large_allocate(1)
         lib.qcgc_hbtable_insert(o)
         lib.qcgc_hbtable_mark(o)
         #
@@ -26,10 +26,10 @@ class HugeBlockTableTestCase(QCGCTest):
         pass
 
     def test_sweep(self):
-        o = ffi.cast("object_t *", self.allocate(1))
+        o = lib.qcgc_large_allocate(1)
         lib.qcgc_hbtable_insert(o)
         lib.qcgc_hbtable_mark(o)
-        p = ffi.cast("object_t *", self.allocate(1))
+        p = lib.qcgc_large_allocate(1)
         lib.qcgc_hbtable_insert(p)
         #
         lib.qcgc_gray_stack_pop(lib.qcgc_hbtable.gray_stack)

@@ -54,8 +54,7 @@ void qcgc_hbtable_sweep(void) {
 		while(j < b->count) {
 			if (b->items[j].mark_flag != qcgc_hbtable.mark_flag_ref) {
 				// White object
-				// FIXME: Leaks object (currently not clear how it will
-				// be allocated)
+				free(b->items[j].object);
 				b = qcgc_hbbucket_remove_index(b, j);
 			} else {
 				// Black object
