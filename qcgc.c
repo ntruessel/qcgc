@@ -59,6 +59,8 @@ void qcgc_write(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 #endif
+	bool triggered = false;
+
 	if ((object->flags & QCGC_GRAY_FLAG) == 0) {
 		object->flags |= QCGC_GRAY_FLAG;
 		if ((object->flags & QCGC_PREBUILT_OBJECT) != 0) {
@@ -73,6 +75,7 @@ void qcgc_write(object_t *object) {
 							qcgc_hbtable.gray_stack, object);
 				}
 				qcgc_state.phase = GC_MARK;
+				triggered = true;
 			} else if (qcgc_arena_get_blocktype((cell_t *) object) ==
 					BLOCK_BLACK) {
 				// This was black before, push it to gray stack again
@@ -80,9 +83,14 @@ void qcgc_write(object_t *object) {
 				arena->gray_stack = qcgc_gray_stack_push(
 						arena->gray_stack, object);
 				qcgc_state.phase = GC_MARK;
+				triggered = true;
 			}
 		}
 	}
+#if CHECKED
+	assert((triggered && (qcgc_state.phase != GC_PAUSE)) ==
+			(qcgc_state.phase == GC_MARK));
+#endif
 }
 
 /*******************************************************************************
