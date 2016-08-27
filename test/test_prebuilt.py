@@ -22,5 +22,24 @@ class PrebuiltObjectTestCase(QCGCTest):
         self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", r)) == lib.BLOCK_WHITE)
         self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", s)) == lib.BLOCK_WHITE)
 
+    def test_incremental(self):
+        o = self.allocate_prebuilt_ref(2)
+        p = self.allocate(1)
+        q = self.allocate(2)
+        self.set_ref(o, 0, p)
+        #
+        lib.qcgc_mark_incremental()
+        #
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", q)), lib.BLOCK_WHITE)
+        #
+        self.set_ref(o, 1, q)
+        #
+        lib.qcgc_mark_incremental()
+        #
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", q)), lib.BLOCK_BLACK)
+        
+
 if __name__ == "__main__":
     unittest.main()
