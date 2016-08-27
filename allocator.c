@@ -155,6 +155,9 @@ object_t *qcgc_fit_allocate(size_t bytes) {
  */
 object_t *qcgc_large_allocate(size_t bytes) {
 	object_t *result = aligned_alloc(QCGC_ARENA_SIZE, bytes);
+#if QCGC_INIT_ZERO
+	memset(result, 0, bytes);
+#endif
 	qcgc_hbtable_insert(result);
 	return result;
 }
