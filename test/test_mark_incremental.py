@@ -105,6 +105,34 @@ class MarkAllTestCase(QCGCTest):
         for o in reachable:
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_WHITE)
 
+    def test_root_changes_while_marking(self):
+        reachable = list()
+        for _ in range(10):
+            p, objs = self.gen_structure_1()
+            self.push_root(p)
+            reachable.extend(objs)
+        #
+        unreachable = list()
+        for _ in range(10):
+            p, objs = self.gen_structure_1()
+            unreachable.extend(objs)
+        #
+        lib.qcgc_mark_incremental()
+        #
+        # Generate new roots
+        objects = self.gen_circular_structure(100)
+        self.push_root(objects[0])
+        reachable.extend(objects)
+
+        mark_all_inc()
+
+        for p in reachable:
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
+
+        for p in unreachable:
+            self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
+
+
     def gen_structure_1(self):
         result = self.allocate_ref(6)
         result_list = [result]

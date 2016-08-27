@@ -37,8 +37,15 @@ class PrebuiltObjectTestCase(QCGCTest):
         #
         lib.qcgc_mark_incremental()
         #
+        r = self.allocate_prebuilt_ref(1)
+        s = self.allocate(2)
+        self.set_ref(r, 0, s)
+        #
+        lib.qcgc_mark_incremental()
+        #
         self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
         self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", q)), lib.BLOCK_BLACK)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", s)), lib.BLOCK_BLACK)
         
 
 if __name__ == "__main__":
