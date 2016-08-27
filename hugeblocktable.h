@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include <stdbool.h>
+
 #include "bag.h"
 #include "object.h"
 #include "gray_stack.h"
@@ -19,4 +21,5 @@ void qcgc_hbtable_initialize(void);
 void qcgc_hbtable_destroy(void);
 void qcgc_hbtable_insert(object_t *object);
 void qcgc_hbtable_mark(object_t *object);
+bool qcgc_hbtable_is_marked(object_t *object);
 void qcgc_hbtable_sweep(void);

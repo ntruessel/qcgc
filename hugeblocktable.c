@@ -34,7 +34,8 @@ void qcgc_hbtable_mark(object_t *object) {
 		if (b->items[i].object == object) {
 			if (b->items[i].mark_flag != qcgc_hbtable.mark_flag_ref) {
 				b->items[i].mark_flag = qcgc_hbtable.mark_flag_ref;
-				qcgc_gray_stack_push(qcgc_hbtable.gray_stack, object);
+				qcgc_hbtable.gray_stack = qcgc_gray_stack_push(
+						qcgc_hbtable.gray_stack, object);
 			}
 			return;
 		}
@@ -42,6 +43,17 @@ void qcgc_hbtable_mark(object_t *object) {
 #if CHECKED
 	assert(false);
 #endif
+}
+
+bool qcgc_hbtable_is_marked(object_t *object) {
+	hbbucket_t *b = qcgc_hbtable.bucket[bucket(object)];
+	size_t count = b->count;
+	for (size_t i = 0; i < count; i++) {
+		if (b->items[i].object == object) {
+			return b->items[i].mark_flag == qcgc_hbtable.mark_flag_ref;
+		}
+	}
+	return false;
 }
 
 void qcgc_hbtable_sweep(void) {

@@ -65,11 +65,20 @@ void qcgc_write(object_t *object) {
 			// Save prebuilt object into list
 			qcgc_shadow_stack_push(qcgc_state.prebuilt_objects, object);
 		} else if (qcgc_state.phase != GC_PAUSE) {
-			if (qcgc_arena_get_blocktype((cell_t *) object) == BLOCK_BLACK) {
+			if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
+				// Huge block
+				if (qcgc_hbtable_is_marked(object)) {
+					qcgc_hbtable.gray_stack = qcgc_gray_stack_push(
+							qcgc_hbtable.gray_stack, object);
+				}
+				qcgc_state.phase = GC_MARK;
+			} else if (qcgc_arena_get_blocktype((cell_t *) object) ==
+					BLOCK_BLACK) {
 				// This was black before, push it to gray stack again
 				arena_t *arena = qcgc_arena_addr((cell_t *) object);
 				arena->gray_stack = qcgc_gray_stack_push(
 						arena->gray_stack, object);
+				qcgc_state.phase = GC_MARK;
 			}
 		}
 	}
