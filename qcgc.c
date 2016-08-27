@@ -137,10 +137,6 @@ object_t *qcgc_allocate(size_t size) {
 		result = qcgc_large_allocate(size);
 	}
 
-	if (qcgc_state.phase == GC_COLLECT) {
-		qcgc_state.phase = GC_MARK;
-	}
-
 #if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
 			(uint8_t *) &result);
