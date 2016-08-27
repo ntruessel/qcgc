@@ -14,13 +14,23 @@ typedef struct name##_s {													\
 	type items[];															\
 } name##_t;																	\
 																			\
+__attribute__ ((warn_unused_result))										\
 name##_t *qcgc_##name##_create(size_t size);								\
+																			\
+__attribute__ ((warn_unused_result))										\
 name##_t *qcgc_##name##_add(name##_t *self, type item);						\
+																			\
+__attribute__ ((warn_unused_result))										\
 name##_t *qcgc_##name##_remove_index(name##_t *self, size_t index);
 
 #define DEFINE_BAG(name, type)												\
+																			\
 QCGC_STATIC size_t name##_size(size_t size);								\
+																			\
+__attribute__ ((warn_unused_result))										\
 QCGC_STATIC name##_t *name##_grow(name##_t *self);							\
+																			\
+__attribute__ ((warn_unused_result))										\
 QCGC_STATIC name##_t *name##_shrink(name##_t *self);						\
 																			\
 name##_t *qcgc_##name##_create(size_t size) {								\

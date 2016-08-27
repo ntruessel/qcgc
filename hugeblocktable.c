@@ -34,8 +34,9 @@ void qcgc_hbtable_mark(object_t *object) {
 		if (b->items[i].object == object) {
 			if (b->items[i].mark_flag != qcgc_hbtable.mark_flag_ref) {
 				b->items[i].mark_flag = qcgc_hbtable.mark_flag_ref;
-				qcgc_hbtable.gray_stack = qcgc_gray_stack_push(
-						qcgc_hbtable.gray_stack, object);
+				//qcgc_hbtable.gray_stack = qcgc_gray_stack_push(
+				//		qcgc_hbtable.gray_stack, object);
+				qcgc_gray_stack_push(qcgc_hbtable.gray_stack, object);
 			}
 			return;
 		}
