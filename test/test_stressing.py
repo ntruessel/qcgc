@@ -90,7 +90,6 @@ class StressTestCase(QCGCTest):
             if o not in shadow_objs:
                 del self.shadow_objs[o]
 
-    @unittest.skip("Takes forever (>1000s)")
     def test_stress(self):
         random.seed(42)
 
@@ -101,7 +100,7 @@ class StressTestCase(QCGCTest):
         # all shadow objs (some may be dead)
         self.shadow_objs = {}
 
-        for i in range(10000):
+        for i in range(1000):
             self.allocate()
             self.mutate()
             self.forget()

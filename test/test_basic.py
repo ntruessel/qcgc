@@ -17,19 +17,3 @@ class BasicTestCase(QCGCTest):
         self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 0)
         p = self.allocate_ref(1)
         self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 1)
-
-    def test_shadow_stack(self):
-        p = ffi.cast("void *", 0x0123456789abcdef)
-        q = ffi.cast("void *", 0xfedcba9876543210)
-
-        self.push_root(p)
-        self.assertEqual(self.ss_size(), 1)
-
-        self.push_root(q)
-        self.assertEqual(self.ss_size(), 2)
-
-        self.assertEqual(self.pop_root(), q)
-        self.assertEqual(self.ss_size(), 1)
-
-        self.assertEqual(self.pop_root(), p)
-        self.assertEqual(self.ss_size(), 0)

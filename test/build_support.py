@@ -205,13 +205,13 @@ ffi.cdef("""
         struct hbtable_s {
                 bool mark_flag_ref;
                 hbbucket_t *bucket[QCGC_HBTABLE_BUCKETS];
-                gray_stack_t *gray_stack;
         } qcgc_hbtable;
 
         void qcgc_hbtable_initialize(void);
         void qcgc_hbtable_destroy(void);
         void qcgc_hbtable_insert(object_t *object);
-        void qcgc_hbtable_mark(object_t *object);
+        bool qcgc_hbtable_mark(object_t *object);
+        bool qcgc_hbtable_is_marked(object_t *object);
         void qcgc_hbtable_sweep(void);
         size_t bucket(object_t *object);
         """)
@@ -229,7 +229,7 @@ ffi.cdef("""
         struct qcgc_state {
                 shadow_stack_t *shadow_stack;
                 shadow_stack_t *prebuilt_objects;
-                gray_stack_t *prebuilt_gray_stack;
+                gray_stack_t *gp_gray_stack;
                 size_t gray_stack_size;
                 gc_phase_t phase;
         } qcgc_state;
@@ -323,9 +323,7 @@ ffi.cdef("""
         object_t *qcgc_shadowstack_pop(void);
 
         // qcgc.c
-        void qcgc_mark(void);
-        void qcgc_mark_all(void);
-        void qcgc_mark_incremental(void);
+        bool qcgc_mark(bool incremental);
         void qcgc_sweep(void);
         """)
 
@@ -334,6 +332,10 @@ ffi.cdef("""
 ################################################################################
 
 ffi.cdef("""
+        // Old api
+        void qcgc_mark_all(void);
+        void qcgc_mark_incremental(void);
+
         // object
         typedef struct myobject_s myobject_t;
 
@@ -380,9 +382,7 @@ ffi.set_source("support",
 
         // qcgc.c prototoypes
         object_t *qcgc_bump_allocate(size_t size);
-        void qcgc_mark(void);
-        void qcgc_mark_all(void);
-        void qcgc_mark_incremental(void);
+        bool qcgc_mark(bool incremental);
         void qcgc_sweep(void);
 
         // allocator.h - Macro replacements
@@ -449,6 +449,15 @@ ffi.set_source("support",
         }
 
         // Utilites
+
+        void qcgc_mark_all(void) {
+            qcgc_mark(false);
+        }
+
+        void qcgc_mark_incremental(void) {
+            qcgc_mark(true);
+        }
+
         typedef struct myobject_s myobject_t;
         struct myobject_s {
             object_t hdr;

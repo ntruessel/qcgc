@@ -7,8 +7,8 @@ class LargeAllocateTestCase(QCGCTest):
         o = lib.qcgc_allocate(lib.qcgc_arena_size)
         self.assertNotEqual(ffi.NULL, o)
         self.assertTrue(self.hbtable_has(o))
-        self.assertFalse(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_gray_stack_has(o))
+        self.assertFalse(lib.qcgc_hbtable_is_marked(o))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
 
     def test_mark_large(self):
         o = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
@@ -29,19 +29,19 @@ class LargeAllocateTestCase(QCGCTest):
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_gray_stack_has(o))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertTrue(self.hbtable_has(p))
         self.assertTrue(self.hbtable_marked(p))
-        self.assertFalse(self.hbtable_gray_stack_has(p))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertTrue(self.hbtable_has(q))
         self.assertTrue(self.hbtable_marked(q))
-        self.assertFalse(self.hbtable_gray_stack_has(q))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertTrue(self.hbtable_has(t))
         self.assertFalse(self.hbtable_marked(t))
-        self.assertFalse(self.hbtable_gray_stack_has(t))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertEqual(lib.qcgc_arena_get_blocktype(
             ffi.cast("cell_t *", s)), lib.BLOCK_BLACK)
@@ -52,19 +52,19 @@ class LargeAllocateTestCase(QCGCTest):
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertFalse(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_gray_stack_has(o))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertTrue(self.hbtable_has(p))
         self.assertFalse(self.hbtable_marked(p))
-        self.assertFalse(self.hbtable_gray_stack_has(p))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertTrue(self.hbtable_has(q))
         self.assertFalse(self.hbtable_marked(q))
-        self.assertFalse(self.hbtable_gray_stack_has(q))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertFalse(self.hbtable_has(t))
         self.assertFalse(self.hbtable_marked(t))
-        self.assertFalse(self.hbtable_gray_stack_has(t))
+        self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
         self.assertEqual(lib.qcgc_arena_get_blocktype(
             ffi.cast("cell_t *", s)), lib.BLOCK_WHITE)
@@ -82,7 +82,7 @@ class LargeAllocateTestCase(QCGCTest):
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_gray_stack_has(o))
+        self.assertFalse(self.gp_gray_stack_has(o))
         #
         self.assertEqual(lib.qcgc_arena_get_blocktype(
             ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -90,13 +90,13 @@ class LargeAllocateTestCase(QCGCTest):
             ffi.cast("cell_t *", q)), lib.BLOCK_WHITE)
         #
         self.set_ref(o, 1, q)
-        self.assertTrue(self.hbtable_gray_stack_has(o))
+        self.assertTrue(self.gp_gray_stack_has(o))
         #
         lib.qcgc_mark_incremental()
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
-        self.assertFalse(self.hbtable_gray_stack_has(o))
+        self.assertFalse(self.gp_gray_stack_has(o))
         #
         self.assertEqual(lib.qcgc_arena_get_blocktype(
             ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -115,12 +115,6 @@ class LargeAllocateTestCase(QCGCTest):
         for i in range(lib.qcgc_hbtable.bucket[b].count):
             if (lib.qcgc_hbtable.bucket[b].items[i].object == o):
                 return (lib.qcgc_hbtable.bucket[b].items[i].mark_flag == lib.qcgc_hbtable.mark_flag_ref)
-        return False
-
-    def hbtable_gray_stack_has(self, o):
-        for i in range(lib.qcgc_hbtable.gray_stack.index):
-            if (lib.qcgc_hbtable.gray_stack.items[i] == o):
-                return True
         return False
 
 if __name__ == "__main__":
