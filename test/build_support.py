@@ -334,10 +334,13 @@ ffi.cdef("""
 
 ffi.cdef("""
         // object
-        typedef struct {
+        typedef struct myobject_s myobject_t;
+
+        struct myobject_s {
             object_t hdr;
             uint32_t type_id;
-        } myobject_t;
+            myobject_t *refs[];
+        };
 
         void _set_type_id(object_t *obj, uint32_t id);
         uint32_t _get_type_id(object_t *obj);
@@ -445,10 +448,12 @@ ffi.set_source("support",
         }
 
         // Utilites
-        typedef struct {
+        typedef struct myobject_s myobject_t;
+        struct myobject_s {
             object_t hdr;
             uint32_t type_id;
-        } myobject_t;
+            myobject_t *refs[];
+        };
 
         void _set_type_id(object_t *obj, uint32_t id);
         uint32_t _get_type_id(object_t *obj);
@@ -463,17 +468,8 @@ ffi.set_source("support",
 
         void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {
             myobject_t *o = (myobject_t *) object;
-            if (o->type_id < 1<<16) {
-                // Default object, no references
-                return;
-            } else {
-                // Object containing only references
-                object_t **members = (object_t **) o + 1;
-                size_t fields = o->type_id - (1<<16);
-                for (size_t i = 0; i < fields; i++) {
-                    object_t *ref = members[i];
-                    visit(ref);
-                }
+            for (size_t i = 0; i < o->type_id; i++) {
+                visit((object_t *)o->refs[i]);
             }
         }
 

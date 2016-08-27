@@ -14,9 +14,9 @@ class BasicTestCase(QCGCTest):
 
     def test_self_allocate(self):
         p = self.allocate(1)
-        self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 1)
+        self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 0)
         p = self.allocate_ref(1)
-        self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 2**16 + 1)
+        self.assertEqual(lib._get_type_id(ffi.cast("object_t *", p)), 1)
 
     def test_shadow_stack(self):
         p = ffi.cast("void *", 0x0123456789abcdef)
