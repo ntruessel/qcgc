@@ -63,7 +63,8 @@ void qcgc_write(object_t *object) {
 		object->flags |= QCGC_GRAY_FLAG;
 		if ((object->flags & QCGC_PREBUILT_OBJECT) != 0) {
 			// Save prebuilt object into list
-			qcgc_shadow_stack_push(qcgc_state.prebuilt_objects, object);
+			qcgc_state.prebuilt_objects = qcgc_shadow_stack_push(
+					qcgc_state.prebuilt_objects, object);
 		} else if (qcgc_state.phase != GC_PAUSE) {
 			if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
 				// Huge block

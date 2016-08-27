@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wextra -std=gnu11 -Wmissing-declarations -Wmissing-prototypes -g -O0
-SRC=qcgc.c arena.c allocator.c bag.c event_logger.c gray_stack.c shadow_stack.c
+SRC=qcgc.c arena.c allocator.c bag.c event_logger.c gray_stack.c shadow_stack.c hugeblocktable.c
 LDFLAGS=-lrt
 
 lib: $(SRC)

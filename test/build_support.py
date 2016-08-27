@@ -477,8 +477,8 @@ ffi.set_source("support",
                 '../mark_list.c', '../gray_stack.c', '../bag.c',
                 '../event_logger.c', '../shadow_stack.c',
                 '../hugeblocktable.c'],
-        extra_compile_args=['--coverage', '-std=gnu11', '-UNDEBUG', '-DTESTING',
-                '-O0', '-g'],
+        extra_compile_args=['-Wall', '-Wextra', '--coverage', '-std=gnu11',
+                '-UNDEBUG', '-DTESTING', '-O0', '-g'],
         extra_link_args=['--coverage', '-lrt'])
 
 if __name__ == "__main__":
