@@ -11,12 +11,65 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertFalse(self.hbtable_gray_stack_has(o))
 
     def test_mark_large(self):
-        o = lib.qcgc_allocate(lib.qcgc_arena_size)
+        o = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        p = ffi.cast("object_t *", self.allocate_ref(lib.qcgc_arena_size // ffi.sizeof("myobject_t *")))
+        q = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        r = ffi.cast("object_t *", self.allocate(1))
+        s = ffi.cast("object_t *", self.allocate_ref(1))
+        t = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        self.set_ref(p, 0, q)
+        self.set_ref(p, 1, r)
+        self.set_ref(p, 2, s)
+        self.set_ref(s, 0, p)
+        #
         lib.qcgc_shadowstack_push(o)
+        lib.qcgc_shadowstack_push(s)
+        #
         lib.qcgc_mark_all()
+        #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
         self.assertFalse(self.hbtable_gray_stack_has(o))
+        #
+        self.assertTrue(self.hbtable_has(p))
+        self.assertTrue(self.hbtable_marked(p))
+        self.assertFalse(self.hbtable_gray_stack_has(p))
+        #
+        self.assertTrue(self.hbtable_has(q))
+        self.assertTrue(self.hbtable_marked(q))
+        self.assertFalse(self.hbtable_gray_stack_has(q))
+        #
+        self.assertTrue(self.hbtable_has(t))
+        self.assertFalse(self.hbtable_marked(t))
+        self.assertFalse(self.hbtable_gray_stack_has(t))
+        #
+        self.assertEqual(lib.qcgc_arena_get_blocktype(
+            ffi.cast("cell_t *", s)), lib.BLOCK_BLACK)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(
+            ffi.cast("cell_t *", r)), lib.BLOCK_BLACK)
+        #
+        lib.qcgc_sweep()
+        #
+        self.assertTrue(self.hbtable_has(o))
+        self.assertFalse(self.hbtable_marked(o))
+        self.assertFalse(self.hbtable_gray_stack_has(o))
+        #
+        self.assertTrue(self.hbtable_has(p))
+        self.assertFalse(self.hbtable_marked(p))
+        self.assertFalse(self.hbtable_gray_stack_has(p))
+        #
+        self.assertTrue(self.hbtable_has(q))
+        self.assertFalse(self.hbtable_marked(q))
+        self.assertFalse(self.hbtable_gray_stack_has(q))
+        #
+        self.assertFalse(self.hbtable_has(t))
+        self.assertFalse(self.hbtable_marked(t))
+        self.assertFalse(self.hbtable_gray_stack_has(t))
+        #
+        self.assertEqual(lib.qcgc_arena_get_blocktype(
+            ffi.cast("cell_t *", s)), lib.BLOCK_WHITE)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(
+            ffi.cast("cell_t *", r)), lib.BLOCK_WHITE)
 
     def hbtable_has(self, o):
         b = lib.bucket(o)
