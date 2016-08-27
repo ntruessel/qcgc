@@ -21,7 +21,6 @@ class HugeBlockTableTestCase(QCGCTest):
         b = lib.bucket(o)
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(lib.qcgc_hbtable_is_marked(o))
-        pass
 
     def test_sweep(self):
         o = lib.qcgc_large_allocate(1)
@@ -33,6 +32,13 @@ class HugeBlockTableTestCase(QCGCTest):
         b = lib.bucket(o)
         self.assertTrue(self.hbtable_has(o))
         self.assertFalse(lib.qcgc_hbtable_is_marked(o))
+
+    def test_mark_twice(self):
+        o = lib.qcgc_large_allocate(1)
+        self.assertFalse(lib.qcgc_hbtable_is_marked(o))
+        self.assertTrue(lib.qcgc_hbtable_mark(o))
+        self.assertFalse(lib.qcgc_hbtable_mark(o))
+        self.assertTrue(lib.qcgc_hbtable_is_marked(o))
 
     def hbtable_has(self, o):
         b = lib.bucket(o)
