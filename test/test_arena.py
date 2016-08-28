@@ -188,7 +188,7 @@ class ArenaTestCase(QCGCTest):
 
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
-    def test_arena_sweep_no_double_freelist_entry(self):
+    def test_arena_sweep_mixed_2(self):
         arena = lib.qcgc_arena_create()
         i = lib.qcgc_arena_first_cell_index
 
@@ -210,6 +210,54 @@ class ArenaTestCase(QCGCTest):
         lib.qcgc_arena_sweep(arena)
 
         have_elems = [5,19]
+
+        for i in range(lib.qcgc_small_free_lists):
+            if (i in have_elems):
+                self.assertEqual(1, lib.small_free_list(i).count)
+            else:
+                self.assertEqual(0, lib.small_free_list(i).count)
+
+        for i in range(lib.qcgc_large_free_lists):
+            self.assertEqual(0, lib.large_free_list(i).count)
+
+    def test_arena_sweep_no_double_add(self):
+        arena = lib.qcgc_arena_create()
+        i = lib.qcgc_arena_first_cell_index
+
+        layout = [ (0, lib.BLOCK_BLACK)
+                 , (1, lib.BLOCK_WHITE)
+                 , (2, lib.BLOCK_BLACK)
+                 ]
+
+        for b in layout:
+            p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
+            lib.qcgc_arena_set_blocktype(p, b[1])
+
+        lib.qcgc_arena_sweep(arena)
+
+        have_elems = [0]
+
+        for i in range(lib.qcgc_small_free_lists):
+            if (i in have_elems):
+                self.assertEqual(1, lib.small_free_list(i).count)
+            else:
+                self.assertEqual(0, lib.small_free_list(i).count)
+
+        for i in range(lib.qcgc_large_free_lists):
+            self.assertEqual(0, lib.large_free_list(i).count)
+
+        # Now mark the black blocks black again
+        layout = [ (0, lib.BLOCK_BLACK)
+                 , (2, lib.BLOCK_BLACK)
+                 ]
+
+        for b in layout:
+            p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
+            lib.qcgc_arena_set_blocktype(p, b[1])
+
+        lib.qcgc_arena_sweep(arena)
+
+        have_elems = [0]
 
         for i in range(lib.qcgc_small_free_lists):
             if (i in have_elems):
