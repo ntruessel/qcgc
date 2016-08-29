@@ -28,6 +28,7 @@ class FitAllocatorTest(QCGCTest):
     def test_block_validity_check(self):
         arena = lib.qcgc_arena_create()
         first = ffi.addressof(lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index])
+        self.assertTrue(lib.valid_block(first, lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index))
         lib.qcgc_arena_mark_allocated(first, 10);
         self.assertFalse(lib.valid_block(first, 10));
         lib.qcgc_arena_set_blocktype(first, lib.BLOCK_FREE);

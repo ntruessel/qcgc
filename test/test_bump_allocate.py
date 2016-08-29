@@ -16,9 +16,9 @@ class BumpAllocatorTest(QCGCTest):
         self.assertEqual(ffi.addressof(first_cell), p)
         self.assertEqual(size - 1, lib.remaining_cells())
 
-        q = lib.qcgc_bump_allocate((size - 1) * 16)
+        q = lib.qcgc_bump_allocate((2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP))
         self.assertEqual(ffi.addressof(lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index + 1]), q)
-        self.assertEqual(0, lib.remaining_cells())
+        self.assertEqual(size - 1 - 2**(lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP - 4), lib.remaining_cells())
 
     def test_many_small_allocations(self):
         objects = set()
@@ -34,10 +34,6 @@ class BumpAllocatorTest(QCGCTest):
         self.assertFalse(ffi.NULL in objects)
         self.assertEqual(len(objects), 1001)
 
-    def test_large_alloc_overlap(self):
-        p = lib.qcgc_bump_allocate(2**19)
-        q = lib.qcgc_bump_allocate(2**19)
-        self.assertNotEqual(lib.qcgc_arena_addr(ffi.cast("cell_t *", p)), lib.qcgc_arena_addr(ffi.cast("cell_t *", q)))
-
 if __name__ == "__main__":
     unittest.main()
+
