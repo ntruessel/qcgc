@@ -247,6 +247,7 @@ ffi.cdef("""
 
         // Access functions for state
         arena_bag_t *arenas(void);
+        arena_bag_t *free_arenas(void);
         cell_t *bump_ptr(void);
         size_t remaining_cells(void);
         linear_free_list_t *small_free_list(size_t index);
@@ -432,6 +433,10 @@ ffi.set_source("support",
         // allocator state accessors
         arena_bag_t *arenas(void) {
             return qcgc_allocator_state.arenas;
+        }
+
+        arena_bag_t *free_arenas(void) {
+            return qcgc_allocator_state.free_arenas;
         }
 
         cell_t *bump_ptr(void) {
