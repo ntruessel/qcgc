@@ -5,6 +5,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#if DEBUG_ZERO_ON_SWEEP
+#include <string.h>
+#endif
+
 #include "allocator.h"
 #include "event_logger.h"
 
@@ -164,6 +168,9 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	assert(arena != NULL);
 	assert(qcgc_arena_is_coalesced(arena));
 #endif
+#if DEBUG_ZERO_ON_SWEEP
+	bool zero = true;
+#endif
 	bool free = true;
 	bool coalesce = false;
 	bool add_to_free_list = false;
@@ -173,6 +180,11 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			cell++) {
 		switch (qcgc_arena_get_blocktype(arena->cells + cell)) {
 			case BLOCK_EXTENT:
+#if DEBUG_ZERO_ON_SWEEP
+				if (zero) {
+					memset(&arena->cells[cell], 0, sizeof(cell_t));
+				}
+#endif
 				break;
 			case BLOCK_FREE:
 				if (coalesce) {
@@ -181,6 +193,10 @@ bool qcgc_arena_sweep(arena_t *arena) {
 					last_free_cell = cell;
 				}
 				coalesce = true;
+#if DEBUG_ZERO_ON_SWEEP
+				zero = true;
+				memset(&arena->cells[cell], 0, sizeof(cell_t));
+#endif
 				break;
 			case BLOCK_WHITE:
 				if (coalesce) {
@@ -191,6 +207,10 @@ bool qcgc_arena_sweep(arena_t *arena) {
 				}
 				coalesce = true;
 				add_to_free_list = true;
+#if DEBUG_ZERO_ON_SWEEP
+				zero = true;
+				memset(&arena->cells[cell], 0, sizeof(cell_t));
+#endif
 				break;
 			case BLOCK_BLACK:
 				set_blocktype(arena, cell, BLOCK_WHITE);
@@ -201,6 +221,9 @@ bool qcgc_arena_sweep(arena_t *arena) {
 				free = false;
 				coalesce = false;
 				add_to_free_list = false;
+#if DEBUG_ZERO_ON_SWEEP
+				zero = false;
+#endif
 				break;
 		}
 	}
@@ -210,6 +233,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	}
 #if CHECKED
 	assert(qcgc_arena_is_coalesced(arena));
+	assert(free == qcgc_arena_is_empty(arena));
 #endif
 	return free;
 }
