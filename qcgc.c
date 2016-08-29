@@ -319,6 +319,13 @@ void qcgc_sweep(void) {
 					qcgc_allocator_state.arenas, i);
 			qcgc_allocator_state.free_arenas = qcgc_arena_bag_add(
 					qcgc_allocator_state.free_arenas, arena);
+
+			if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) ==
+					arena) {
+				// Reset bump allocator if it uses the free arena
+				qcgc_allocator_state.bump_state.bump_ptr = NULL;
+				qcgc_allocator_state.bump_state.remaining_cells = 0;
+			}
 			// NO i++
 		} else {
 			// Not free
