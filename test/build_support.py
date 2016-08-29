@@ -311,6 +311,7 @@ ffi.cdef("""
                 MARK_COLOR_LIGHT_GRAY,
                 MARK_COLOR_DARK_GRAY,
                 MARK_COLOR_BLACK,
+                MARK_COLOR_INVALID,
         } mark_color_t;
 
         void qcgc_initialize(void);

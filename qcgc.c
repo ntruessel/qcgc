@@ -134,9 +134,6 @@ object_t *qcgc_allocate(size_t size) {
 	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
 			(uint8_t *) &result);
 #endif
-#if CHECKED
-	assert(qcgc_state.phase != GC_COLLECT);
-#endif
 	return result;
 }
 
@@ -163,9 +160,7 @@ mark_color_t qcgc_get_mark_color(object_t *object) {
 			return MARK_COLOR_BLACK;
 		}
 	} else {
-#if CHECKED
-		assert(false);
-#endif
+		return MARK_COLOR_INVALID;
 	}
 }
 
@@ -315,8 +310,20 @@ void qcgc_sweep(void) {
 			(uint8_t *) &arena_count);
 
 	qcgc_hbtable_sweep();
-	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
-		qcgc_arena_sweep(qcgc_allocator_state.arenas->items[i]);
+	size_t i = 0;
+	while (i < qcgc_allocator_state.arenas->count) {
+		arena_t *arena = qcgc_allocator_state.arenas->items[i];
+		if (qcgc_arena_sweep(arena)) {
+			// Free
+			qcgc_allocator_state.arenas = qcgc_arena_bag_remove_index(
+					qcgc_allocator_state.arenas, i);
+			qcgc_allocator_state.free_arenas = qcgc_arena_bag_add(
+					qcgc_allocator_state.free_arenas, arena);
+			// NO i++
+		} else {
+			// Not free
+			i++;
+		}
 	}
 	qcgc_state.phase = GC_PAUSE;
 

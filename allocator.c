@@ -26,6 +26,7 @@ QCGC_STATIC bool valid_block(cell_t *ptr, size_t cells);
 void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.arenas =
 		qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
+	qcgc_allocator_state.free_arenas = qcgc_arena_bag_create(4); // XXX
 
 	// Bump Allocator
 	qcgc_allocator_state.bump_state.bump_ptr = NULL;
@@ -59,7 +60,13 @@ void qcgc_allocator_destroy(void) {
 		qcgc_arena_destroy(qcgc_allocator_state.arenas->items[i]);
 	}
 
+	arena_count = qcgc_allocator_state.free_arenas->count;
+	for (size_t i = 0; i < arena_count; i++) {
+		qcgc_arena_destroy(qcgc_allocator_state.free_arenas->items[i]);
+	}
+
 	free(qcgc_allocator_state.arenas);
+	free(qcgc_allocator_state.free_arenas);
 }
 
 void qcgc_fit_allocator_add(cell_t *ptr, size_t cells) {

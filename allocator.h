@@ -39,6 +39,7 @@
 
 struct qcgc_allocator_state {
 	arena_bag_t *arenas;
+	arena_bag_t *free_arenas;
 	struct bump_state {
 		cell_t *bump_ptr;
 		size_t remaining_cells;
