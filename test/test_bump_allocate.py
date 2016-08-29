@@ -34,6 +34,15 @@ class BumpAllocatorTest(QCGCTest):
         self.assertFalse(ffi.NULL in objects)
         self.assertEqual(len(objects), 1001)
 
+    def test_reuse_old_free_space(self):
+        arena = lib.qcgc_arena_create()
+        first_cell = lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index]
+        size = lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index
+        lib.qcgc_fit_allocator_add(ffi.addressof(first_cell), size)
+
+        p = lib.qcgc_bump_allocate(16)
+        self.assertEqual(ffi.addressof(first_cell), p)
+
 if __name__ == "__main__":
     unittest.main()
 
