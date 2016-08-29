@@ -6,8 +6,7 @@ class FitAllocatorTest(QCGCTest):
     def test_macro_consistency(self):
         self.assertEqual(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP, lib.qcgc_small_free_lists + 1)
         last_exp = lib.QCGC_LARGE_FREE_LIST_FIRST_EXP + lib.qcgc_large_free_lists - 1
-        self.assertLess(2**last_exp, 2**lib.QCGC_ARENA_SIZE_EXP)
-        self.assertEqual(2**(last_exp + 1), lib.qcgc_arena_cells_count)
+        self.assertEqual(2**last_exp * 16, 2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
 
     def test_small_free_list_index(self):
         for i in range(1, lib.qcgc_small_free_lists + 1):
@@ -18,7 +17,7 @@ class FitAllocatorTest(QCGCTest):
 
     def test_large_free_list_index(self):
         index = -1;
-        for i in range(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP, lib.qcgc_arena_cells_count):
+        for i in range(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP, 2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP // 16):
             if (i & (i - 1) == 0):
                 # Check for power of two
                 index = index + 1

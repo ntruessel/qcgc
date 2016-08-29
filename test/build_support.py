@@ -12,6 +12,7 @@ ffi.cdef("""
         #define QCGC_LARGE_FREE_LIST_FIRST_EXP 5
         #define QCGC_LARGE_FREE_LIST_INIT_SIZE 4
         #define QCGC_SMALL_FREE_LIST_INIT_SIZE 16
+        #define QCGC_LARGE_ALLOC_THRESHOLD_EXP 14
         """)
 
 ################################################################################

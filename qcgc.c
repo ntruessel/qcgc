@@ -113,7 +113,7 @@ object_t *qcgc_allocate(size_t size) {
 			(uint8_t *) &size);
 #endif
 	object_t *result;
-	if (size <= QCGC_LARGE_ALLOC_THRESHOLD) {
+	if (size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP) {
 		// Use bump / fit allocator
 		if (true) { // FIXME: Implement reasonable switch
 			result = qcgc_bump_allocate(size);

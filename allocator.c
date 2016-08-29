@@ -291,7 +291,7 @@ QCGC_STATIC size_t large_index(size_t cells) {
 	cells = cells >> QCGC_LARGE_FREE_LIST_FIRST_EXP;
 
 	// calculates floor(log(cells))
-	return MIN((8 * sizeof(unsigned long)) - __builtin_clzl(cells) - 1, QCGC_LARGE_FREE_LISTS);
+	return MIN((8 * sizeof(unsigned long)) - __builtin_clzl(cells) - 1, QCGC_LARGE_FREE_LISTS - 1);
 }
 
 QCGC_STATIC size_t small_index_to_cells(size_t index) {
