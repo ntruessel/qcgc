@@ -10,10 +10,6 @@
 #include "hugeblocktable.h"
 #include "event_logger.h"
 
-// TODO: Eventually move to own header?
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define MIN(a,b) (((a)<(b))?(a):(b))
-
 void qcgc_mark(bool incremental);
 void qcgc_pop_object(object_t *object);
 void qcgc_push_object(object_t *object);

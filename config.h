@@ -37,3 +37,6 @@
 #else
 #define QCGC_STATIC static
 #endif
+
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define MIN(a,b) (((a)<(b))?(a):(b))
