@@ -268,6 +268,15 @@ class ArenaTestCase(QCGCTest):
         for i in range(lib.qcgc_large_free_lists):
             self.assertEqual(0, lib.large_free_list(i).count)
 
+    def test_arena_sweep_no_bump_ptr_coalescing(self):
+        p = lib.qcgc_bump_allocate(16)
+        arena = lib.qcgc_arena_addr(ffi.cast("cell_t *", p))
+
+        lib.qcgc_arena_sweep(arena)
+
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", lib.bump_ptr())), lib.BLOCK_FREE)
+
+
 
     ############################################################################
     # Misc                                                                     #
