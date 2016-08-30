@@ -195,6 +195,12 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			case BLOCK_FREE:
 				if (coalesce) {
 					set_blocktype(arena, cell, BLOCK_EXTENT);
+
+					// This might be the bump pointer. Fix it
+					if (arena->cells + cell ==
+							qcgc_allocator_state.bump_state.bump_ptr) {
+						qcgc_bump_allocator_rewind(cell - last_free_cell);
+					}
 				} else {
 					last_free_cell = cell;
 				}
@@ -221,7 +227,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			case BLOCK_BLACK:
 				set_blocktype(arena, cell, BLOCK_WHITE);
 				if (add_to_free_list) {
-					qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
+					qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							cell - last_free_cell);
 				}
 				free = false;
@@ -234,7 +240,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 		}
 	}
 	if (add_to_free_list && !free) {
-		qcgc_fit_allocator_add(&(arena->cells[last_free_cell]),
+		qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							QCGC_ARENA_CELLS_COUNT - last_free_cell);
 	}
 #if CHECKED

@@ -134,6 +134,25 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	return result;
 }
 
+void qcgc_bump_allocator_rewind(size_t cells) {
+#if CHECKED
+	assert(cells > 0);
+	assert(qcgc_arena_get_blocktype(qcgc_allocator_state.bump_state.bump_ptr) ==
+			BLOCK_EXTENT);
+#endif
+	qcgc_allocator_state.bump_state.bump_ptr -= cells;
+	qcgc_allocator_state.bump_state.remaining_cells += cells;
+#if CHECKED
+	assert(qcgc_arena_get_blocktype(qcgc_allocator_state.bump_state.bump_ptr) ==
+			BLOCK_FREE);
+	for (size_t i = 1; i < cells; i++) {
+		assert(qcgc_arena_get_blocktype(
+					qcgc_allocator_state.bump_state.bump_ptr + i) ==
+				BLOCK_EXTENT);
+	}
+#endif
+}
+
 QCGC_STATIC void bump_allocator_renew_block(void) {
 #if CHECKED
 	if (qcgc_allocator_state.bump_state.remaining_cells > 0) {

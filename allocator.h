@@ -80,6 +80,13 @@ object_t *qcgc_fit_allocate(size_t bytes);
 object_t *qcgc_bump_allocate(size_t bytes);
 
 /**
+ * Rewind bump allocator (in case it became invalid)
+ *
+ * @param	cells	Amount of cells to rewind
+ */
+void qcgc_bump_allocator_rewind(size_t cells);
+
+/**
  * Allocate new memory region using huge block allocator
  *
  * @param	bytes	Desired size of the memory region in bytes
