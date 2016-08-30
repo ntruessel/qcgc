@@ -70,7 +70,6 @@ class MarkAllTestCase(QCGCTest):
         for p in unreachable:
             self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
-    @unittest.skip("")
     def test_color_transitions(self):
         """Test all possible color transitions"""
         reachable = list()

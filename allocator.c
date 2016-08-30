@@ -125,7 +125,8 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 
 QCGC_STATIC void bump_allocator_renew_block(void) {
 #if CHECKED
-	if (qcgc_allocator_state.bump_state.bump_ptr != NULL) {
+	if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) !=
+			(arena_t *) qcgc_allocator_state.bump_state.bump_ptr) {
 		assert(qcgc_arena_get_blocktype(
 					qcgc_allocator_state.bump_state.bump_ptr) == BLOCK_FREE);
 		for (size_t i = 1; i < qcgc_allocator_state.bump_state.remaining_cells;
