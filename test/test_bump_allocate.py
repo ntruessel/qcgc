@@ -20,6 +20,19 @@ class BumpAllocatorTest(QCGCTest):
         self.assertEqual(ffi.addressof(lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index + 1]), q)
         self.assertEqual(size - 1 - 2**(lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP - 4), lib.remaining_cells())
 
+    def test_alloc_full_arena(self):
+        size = 16 * (lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index)
+        i = 0
+        while (size > 2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP):
+            i = (i + 16) % (2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+            if i == 0:
+                i += 16
+            p = lib.qcgc_bump_allocate(i)
+            self.assertNotEqual(p, ffi.NULL)
+            size -= i
+        lib.qcgc_bump_allocate(size)
+        lib.qcgc_bump_allocate(size)
+
     def test_many_small_allocations(self):
         objects = set()
         p = lib.qcgc_bump_allocate(16)
