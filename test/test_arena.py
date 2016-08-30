@@ -63,21 +63,22 @@ class ArenaTestCase(QCGCTest):
         i = lib.qcgc_arena_first_cell_index
 
         layout = [ (0, lib.BLOCK_WHITE)
+                 , (2, lib.BLOCK_FREE)
                  , (20, lib.BLOCK_BLACK)
                  , (32, lib.BLOCK_BLACK)
                  , (42, lib.BLOCK_BLACK)
                  , (43, lib.BLOCK_WHITE)
                  , (44, lib.BLOCK_WHITE)
+                 , (45, lib.BLOCK_FREE)
                  ]
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_mark_allocated(p, 1)
             lib.qcgc_arena_set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
-        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 4)
+        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 2)
 
     def test_is_empty(self):
         arena = lib.qcgc_arena_create()
@@ -175,7 +176,6 @@ class ArenaTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_mark_allocated(p, 1)
             lib.qcgc_arena_set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
@@ -184,7 +184,7 @@ class ArenaTestCase(QCGCTest):
         self.assertFalse(lib.qcgc_arena_sweep(arena))
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
-        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 4)
+        self.assertEqual(lib.qcgc_arena_free_blocks(arena), 2)
 
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
