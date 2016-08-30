@@ -150,6 +150,12 @@ void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type) {
 void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
+#if CHECKED
+	assert(get_blocktype(arena, index) == BLOCK_FREE);
+	for (size_t i = 1; i < cells; i++) {
+		assert(get_blocktype(arena, index + i) == BLOCK_EXTENT);
+	}
+#endif
 	set_blocktype(arena, index, BLOCK_WHITE);
 	size_t index_of_next_block = index + cells;
 	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT &&
