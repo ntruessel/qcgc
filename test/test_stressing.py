@@ -106,7 +106,9 @@ class StressTestCase(QCGCTest):
             self.forget()
             if i % 30 == 0:
                 t = time.time()
+                self.push_all_roots()
                 lib.qcgc_collect()
+                self.pop_all_roots()
                 if self.output:
                     print("collect time: {}".format(time.time() - t))
             self.check()
