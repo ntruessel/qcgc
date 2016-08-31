@@ -121,7 +121,8 @@ class StressTestCase(QCGCTest):
             self.allocate()
             self.mutate()
             self.forget()
-            if i % 30 == 0:
+            #if i % 30 == 0:
+            if True:
                 t = time.time()
                 self.push_all_roots()
                 lib.qcgc_collect()
