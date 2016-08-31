@@ -43,6 +43,7 @@ class StressTestCase(QCGCTest):
             self.set_ref(o1, 0, o2)
             self.shadow_root_set[o1][0] = o2
             assert self.shadow_objs[o1][0] == o2
+            assert self.get_ref(o1, 0) == o2
 
     def forget(self):
         # forget a few root objs
@@ -55,6 +56,9 @@ class StressTestCase(QCGCTest):
             # not from self.shadow_objs yet, as they may survive indirectly
 
 
+    def _valid_gc_object(self, obj):
+        return lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", obj)) in [
+                lib.BLOCK_WHITE, lib.BLOCK_BLACK]
     def _collect_shadow_objs(self):
         found = set()
         todo = set(self.shadow_root_set.keys())
@@ -78,9 +82,22 @@ class StressTestCase(QCGCTest):
 
     def check(self):
         # compare tracing through shadow_root_set and root_set
+        for o in self.root_set:
+            self.assertTrue(self._valid_gc_object(o))
+        for o in self.shadow_root_set.keys():
+            self.assertTrue(self._valid_gc_object(o))
+        #
         self.assertEqual(len(self.root_set), len(self.shadow_root_set))
+        self.assertSetEqual(set(self.root_set), set(self.shadow_root_set.keys()))
+        #
         shadow_objs = self._collect_shadow_objs()
         real_objs = self._collect_real_objs()
+        #
+        for o in shadow_objs:
+            self.assertTrue(self._valid_gc_object(o))
+        for o in real_objs:
+            self.assertTrue(self._valid_gc_object(o))
+        #
         self.assertEqual(shadow_objs, real_objs)
         if self.output:
             print("objs alive: {}".format(len(real_objs)))
