@@ -44,6 +44,8 @@ class QCGCTest(unittest.TestCase):
 
     def set_ref(self, obj, index, ref):
         lib.qcgc_write(ffi.cast("object_t *", obj)) # Trigger write barrier
+        assert index >= 0
+        assert ffi.cast("myobject_t *", obj).type_id > index
         ffi.cast("myobject_t *", obj).refs[index] = ffi.cast("myobject_t *", ref)
 
     def gp_gray_stack_has(self, obj):
