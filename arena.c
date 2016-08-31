@@ -188,6 +188,12 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	bool coalesce = false;
 	bool add_to_free_list = false;
 	size_t last_free_cell = QCGC_ARENA_FIRST_CELL_INDEX;
+
+	if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) == arena) {
+		// Skip the arena with the bump pointer
+		return false;
+	}
+
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
@@ -202,12 +208,6 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			case BLOCK_FREE:
 				if (coalesce) {
 					set_blocktype(arena, cell, BLOCK_EXTENT);
-
-					// This might be the bump pointer. Fix it
-					if (arena->cells + cell ==
-							qcgc_allocator_state.bump_state.bump_ptr) {
-						qcgc_bump_allocator_rewind(cell - last_free_cell);
-					}
 				} else {
 					last_free_cell = cell;
 				}

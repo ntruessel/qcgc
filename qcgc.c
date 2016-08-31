@@ -313,6 +313,7 @@ void qcgc_sweep(void) {
 	size_t i = 0;
 	while (i < qcgc_allocator_state.arenas->count) {
 		arena_t *arena = qcgc_allocator_state.arenas->items[i];
+		// The arena that contains the bump pointer is autmatically skipped
 		if (qcgc_arena_sweep(arena)) {
 			// Free
 			qcgc_allocator_state.arenas = qcgc_arena_bag_remove_index(
@@ -320,12 +321,6 @@ void qcgc_sweep(void) {
 			qcgc_allocator_state.free_arenas = qcgc_arena_bag_add(
 					qcgc_allocator_state.free_arenas, arena);
 
-			if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) ==
-					arena) {
-				// Reset bump allocator if it uses the free arena
-				qcgc_allocator_state.bump_state.bump_ptr = NULL;
-				qcgc_allocator_state.bump_state.remaining_cells = 0;
-			}
 			// NO i++
 		} else {
 			// Not free

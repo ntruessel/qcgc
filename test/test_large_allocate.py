@@ -48,6 +48,7 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_arena_get_blocktype(
             ffi.cast("cell_t *", r)), lib.BLOCK_BLACK)
         #
+        lib.bump_ptr_reset()
         lib.qcgc_sweep()
         #
         self.assertTrue(self.hbtable_has(o))

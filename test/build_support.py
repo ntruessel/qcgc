@@ -253,6 +253,8 @@ ffi.cdef("""
         linear_free_list_t *small_free_list(size_t index);
         exp_free_list_t *large_free_list(size_t index);
 
+        void bump_ptr_reset(void);
+
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
         object_t *qcgc_fit_allocate(size_t bytes);
@@ -338,6 +340,9 @@ ffi.cdef("""
         // Old api
         void qcgc_mark_all(void);
         void qcgc_mark_incremental(void);
+
+        // prebuilt
+        object_t *allocate_prebuilt(size_t bytes);
 
         // object
         typedef struct myobject_s myobject_t;
@@ -455,6 +460,11 @@ ffi.set_source("support",
             return qcgc_allocator_state.fit_state.large_free_list[index];
         }
 
+        void bump_ptr_reset(void) {
+            qcgc_allocator_state.bump_state.bump_ptr = NULL;
+            qcgc_allocator_state.bump_state.remaining_cells = 0;
+        }
+
         // Utilites
 
         void qcgc_mark_all(void) {
@@ -463,6 +473,12 @@ ffi.set_source("support",
 
         void qcgc_mark_incremental(void) {
             qcgc_mark(true);
+        }
+
+        object_t *allocate_prebuilt(size_t bytes) {
+            object_t *result = (object_t *) calloc(bytes, sizeof(char));
+            result->flags = QCGC_PREBUILT_OBJECT;
+            return result;
         }
 
         typedef struct myobject_s myobject_t;

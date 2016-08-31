@@ -18,9 +18,10 @@ class PrebuiltObjectTestCase(QCGCTest):
         self.set_ref(s, 2, r)
         self.set_ref(s, 3, s)
 
+        lib.bump_ptr_reset()
         lib.qcgc_collect()
-        self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", r)) == lib.BLOCK_WHITE)
-        self.assertTrue(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", s)) == lib.BLOCK_WHITE)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", r)), lib.BLOCK_WHITE)
+        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", s)), lib.BLOCK_WHITE)
 
     def test_incremental(self):
         o = self.allocate_prebuilt_ref(2)
