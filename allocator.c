@@ -119,8 +119,7 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	result->flags |= QCGC_GRAY_FLAG;
 #if CHECKED
 	assert(qcgc_arena_is_coalesced(qcgc_arena_addr((cell_t *)result)));
-	if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) !=
-			(arena_t *) qcgc_allocator_state.bump_state.bump_ptr) {
+	if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
 		assert(qcgc_arena_get_blocktype(
 					qcgc_allocator_state.bump_state.bump_ptr) == BLOCK_FREE);
 		for (size_t i = 1; i < qcgc_allocator_state.bump_state.remaining_cells;
