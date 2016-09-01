@@ -60,3 +60,39 @@ class QCGCTest(unittest.TestCase):
 
     def ss_size(self):
         return lib.qcgc_state.shadow_stack.count;
+
+    # Utilities for mark/sweep testing
+    def gen_structure_1(self):
+        result = self.allocate_ref(6)
+        result_list = [result]
+
+        for i in range(5):
+            p = self.allocate(1)
+            result_list.append(p)
+            self.set_ref(result, i, p)
+        p = self.allocate_ref(1)
+        result_list.append(p)
+        self.set_ref(result, 5, p)
+
+        q = self.allocate(1)
+        result_list.append(q)
+        self.set_ref(p, 0, q)
+        return result, result_list
+
+    def gen_circular_structure(self, size):
+        assert size >= 1
+
+        first = self.allocate_ref(1)
+        objects = [first]
+        p = first
+
+        # Build chain
+        for _ in range(size - 1):
+            q = self.allocate_ref(1)
+            objects.append(q)
+            self.set_ref(p, 0, q)
+            p = q
+
+        # Close cycle
+        self.set_ref(p, 0, first)
+        return objects
