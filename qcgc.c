@@ -201,8 +201,8 @@ void qcgc_mark(bool incremental) {
 
 		while (to_process > 0) {
 			object_t *top = qcgc_gray_stack_top(qcgc_state.gp_gray_stack);
-			qcgc_state.gp_gray_stack =
-				qcgc_gray_stack_pop(qcgc_state.gp_gray_stack);
+			qcgc_state.gp_gray_stack = qcgc_gray_stack_pop(
+					qcgc_state.gp_gray_stack);
 			qcgc_pop_object(top);
 			to_process--;
 		}
@@ -216,10 +216,8 @@ void qcgc_mark(bool incremental) {
 					(arena->gray_stack->index));
 
 			while (to_process > 0) {
-				object_t *top =
-					qcgc_gray_stack_top(arena->gray_stack);
-				arena->gray_stack =
-					qcgc_gray_stack_pop(arena->gray_stack);
+				object_t *top = qcgc_gray_stack_top(arena->gray_stack);
+				arena->gray_stack = qcgc_gray_stack_pop(arena->gray_stack);
 				qcgc_pop_object(top);
 				to_process--;
 			}
@@ -238,6 +236,7 @@ void qcgc_mark(bool incremental) {
 	qcgc_event_logger_log(EVENT_MARK_DONE, 0, NULL);
 #if CHECKED
 	assert(incremental || (qcgc_state.phase = GC_COLLECT));
+	assert(qcgc_state.phase != GC_PAUSE);
 #endif
 }
 
