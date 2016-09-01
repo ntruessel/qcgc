@@ -192,14 +192,20 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	size_t last_free_cell = QCGC_ARENA_FIRST_CELL_INDEX;
 
 	if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) == arena) {
-		// Skip the arena with the bump pointer
+		for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
+				cell < QCGC_ARENA_CELLS_COUNT;
+				cell++) {
+			if (get_blocktype(arena, cell) == BLOCK_BLACK) {
+				set_blocktype(arena, cell, BLOCK_WHITE);
+			}
+		}
 		return false;
 	}
 
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype(arena->cells + cell)) {
+		switch (get_blocktype(arena, cell)) {
 			case BLOCK_EXTENT:
 #if DEBUG_ZERO_ON_SWEEP
 				if (zero) {
