@@ -167,7 +167,9 @@ void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells) {
 	for (size_t i = 1; i < cells; i++) {
 		assert(get_blocktype(arena, index + i) == BLOCK_EXTENT);
 	}
-	assert(get_blocktype(arena, index + cells) != BLOCK_EXTENT);
+	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT) {
+		assert(get_blocktype(arena, index + cells) != BLOCK_EXTENT);
+	}
 #endif
 }
 
