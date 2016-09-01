@@ -75,6 +75,8 @@ void qcgc_fit_allocator_add(cell_t *ptr, size_t cells) {
 	if (cells > 0) {
 		assert((((object_t *)ptr)->flags & QCGC_PREBUILT_OBJECT) == 0);
 		assert((cell_t *) qcgc_arena_addr(ptr) != ptr);
+		assert(qcgc_arena_get_blocktype(ptr) == BLOCK_FREE ||
+				qcgc_arena_get_blocktype(ptr) == BLOCK_EXTENT);
 	}
 #endif
 	if (cells > 0) {
