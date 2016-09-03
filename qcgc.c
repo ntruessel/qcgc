@@ -27,9 +27,12 @@ void qcgc_sweep(void);
 static size_t major_collection_threshold = QCGC_MAJOR_COLLECTION_THRESHOLD;
 static size_t incmark_threshold = QCGC_INCMARK_THRESHOLD;
 
+QCGC_STATIC void update_weakrefs(void);
+
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_shadow_stack_create(QCGC_SHADOWSTACK_SIZE);
-	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); //XXX
+	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); // XXX
+	qcgc_state.weakrefs = qcgc_weakref_bag_create(16); // XXX
 	qcgc_state.gp_gray_stack = qcgc_gray_stack_create(16); // XXX
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
@@ -50,6 +53,7 @@ void qcgc_destroy(void) {
 	qcgc_allocator_destroy();
 	free(qcgc_state.shadow_stack);
 	free(qcgc_state.prebuilt_objects);
+	free(qcgc_state.weakrefs);
 	free(qcgc_state.gp_gray_stack);
 }
 
@@ -360,10 +364,55 @@ void qcgc_sweep(void) {
 	qcgc_state.phase = GC_PAUSE;
 
 	qcgc_event_logger_log(EVENT_SWEEP_DONE, 0, NULL);
+	update_weakrefs();
 }
 
 void qcgc_collect(void) {
 	qcgc_mark(false);
 	qcgc_sweep();
 	qcgc_state.bytes_since_collection = 0;
+}
+
+void qcgc_register_weakref(object_t **weakref) {
+	// NOTE: No checks here, as the reference itself might not have been set yet
+	qcgc_state.weakrefs = qcgc_weakref_bag_add(qcgc_state.weakrefs, weakref);
+}
+
+QCGC_STATIC void update_weakrefs(void) {
+	size_t i = 0;
+	while (i < qcgc_state.weakrefs->count) {
+		object_t *o = *(qcgc_state.weakrefs->items[i]);
+		if (o->flags & QCGC_PREBUILT_OBJECT) {
+			// Points to prebuilt object, forget this weakref, will always be
+			// valid
+			qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
+					qcgc_state.weakrefs, i);
+		} else if ((object_t *) qcgc_arena_addr((cell_t *)o) == o) {
+			// Huge object
+			if (qcgc_hbtable_has(o)) {
+				// Still valid
+				i++;
+			} else {
+				// Invalid
+				*(qcgc_state.weakrefs->items[i]) = NULL;
+				qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
+						qcgc_state.weakrefs, i);
+			}
+		} else {
+			// Normal object
+			switch(qcgc_arena_get_blocktype((cell_t *) o)) {
+				case BLOCK_BLACK: // Still valid
+				case BLOCK_WHITE:
+					i++;
+					break;
+				case BLOCK_EXTENT: // Fall through
+				case BLOCK_FREE:
+					// Invalid
+					*(qcgc_state.weakrefs->items[i]) = NULL;
+					qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
+							qcgc_state.weakrefs, i);
+					break;
+			}
+		}
+	}
 }

@@ -195,6 +195,12 @@ ffi.cdef("""
         hbbucket_t *qcgc_hbbucket_remove_index(
                 hbbucket_t *self, size_t index);
 
+        typedef struct weakref_bag_s {
+            size_t size;
+            size_t count;
+            object_t **items[];
+        } weakref_bag_t;
+
         """)
 
 ################################################################################
@@ -230,6 +236,7 @@ ffi.cdef("""
         struct qcgc_state {
                 shadow_stack_t *shadow_stack;
                 shadow_stack_t *prebuilt_objects;
+                weakref_bag_t *weakrefs;
                 gray_stack_t *gp_gray_stack;
                 size_t gray_stack_size;
                 gc_phase_t phase;

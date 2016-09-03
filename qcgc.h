@@ -83,6 +83,13 @@ void qcgc_shadowstack_push(object_t *object);
 object_t *qcgc_shadowstack_pop(void);
 
 /**
+ * Weakref registration
+ *
+ * @param	weakref	Pointer to referenced object
+ */
+void qcgc_register_weakref(object_t **weakref);
+
+/**
  * Tracing function.
  *
  * This function traces an object, i.e. calls visit on every object referenced

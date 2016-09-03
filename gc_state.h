@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+#include "bag.h"
+#include "gray_stack.h"
 #include "shadow_stack.h"
 
 /**
@@ -25,6 +27,7 @@ typedef enum gc_phase {
 struct qcgc_state {
 	shadow_stack_t *shadow_stack;
 	shadow_stack_t *prebuilt_objects;
+	weakref_bag_t *weakrefs;
 	gray_stack_t *gp_gray_stack;
 	size_t gray_stack_size;
 	gc_phase_t phase;
