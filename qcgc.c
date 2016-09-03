@@ -10,12 +10,22 @@
 #include "hugeblocktable.h"
 #include "event_logger.h"
 
+#define env_or_fallback(var, env_name, fallback) while(0) {		\
+	char *env_val = getenv(env_name);							\
+	if (env_val != NULL) {										\
+		if (1 != sscanf(env_val, "%zu", &var)) {				\
+			var = fallback;										\
+		}														\
+	}															\
+}
+
 void qcgc_mark(bool incremental);
 void qcgc_pop_object(object_t *object);
 void qcgc_push_object(object_t *object);
 void qcgc_sweep(void);
 
 static size_t major_collection_threshold = QCGC_MAJOR_COLLECTION_THRESHOLD;
+static size_t incmark_threshold = QCGC_INCMARK_THRESHOLD;
 
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_shadow_stack_create(QCGC_SHADOWSTACK_SIZE);
@@ -24,18 +34,14 @@ void qcgc_initialize(void) {
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_state.bytes_since_collection = 0;
+	qcgc_state.bytes_since_incmark = 0;
 	qcgc_allocator_initialize();
 	qcgc_hbtable_initialize();
 	qcgc_event_logger_initialize();
 
-	// Read alternative config from env
-	char *env_majc_threshold = getenv("QCGC_MAJOR_COLLECTION");
-	if (env_majc_threshold != NULL) {
-		size_t env_t = 0;
-		if (1 == sscanf(env_majc_threshold, "%zu", &env_t)) {
-			major_collection_threshold = env_t;
-		}
-	}
+	env_or_fallback(major_collection_threshold, "QCGC_MAJOR_COLLECTION",
+			QCGC_MAJOR_COLLECTION_THRESHOLD);
+	env_or_fallback(incmark_threshold, "QCGC_INCMARK", QCGC_INCMARK_THRESHOLD);
 }
 
 void qcgc_destroy(void) {
@@ -125,10 +131,18 @@ object_t *qcgc_allocate(size_t size) {
 			(uint8_t *) &size);
 #endif
 	object_t *result;
+
+	// XXX: Should we use cells instead of bytes?
 	qcgc_state.bytes_since_collection += size;
+	qcgc_state.bytes_since_incmark += size;
+
 	if (qcgc_state.bytes_since_collection > major_collection_threshold) {
 		qcgc_collect();
 	}
+	if (qcgc_state.bytes_since_incmark > incmark_threshold) {
+		qcgc_mark(true);
+	}
+
 	if (size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP) {
 		// Use bump / fit allocator
 		if (true) { // FIXME: Implement reasonable switch
@@ -186,6 +200,7 @@ void qcgc_mark(bool incremental) {
 #endif
 	// FIXME: Log some more information
 	qcgc_event_logger_log(EVENT_MARK_START, 0, NULL);
+	qcgc_state.bytes_since_incmark = 0;
 
 	if (qcgc_state.phase == GC_PAUSE) {
 		qcgc_state.phase = GC_MARK;

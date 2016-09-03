@@ -29,4 +29,5 @@ struct qcgc_state {
 	size_t gray_stack_size;
 	gc_phase_t phase;
 	size_t bytes_since_collection;
+	size_t bytes_since_incmark;
 } qcgc_state;
