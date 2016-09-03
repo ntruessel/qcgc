@@ -195,9 +195,9 @@ mark_color_t qcgc_get_mark_color(object_t *object) {
 }
 
 void qcgc_mark(bool incremental) {
-#if CHECKED
-	assert(qcgc_state.phase == GC_PAUSE || qcgc_state.phase == GC_MARK);
-#endif
+	if (qcgc_state.phase == GC_COLLECT) {
+		return;	// Fast exit when there is nothing to mark
+	}
 	// FIXME: Log some more information
 	qcgc_event_logger_log(EVENT_MARK_START, 0, NULL);
 	qcgc_state.bytes_since_incmark = 0;
