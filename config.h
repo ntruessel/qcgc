@@ -30,6 +30,11 @@
 #define QCGC_SMALL_FREE_LIST_INIT_SIZE 16	// Initial size for small free lists
 
 /**
+ * Auto Mark/Collect
+ */
+#define QCGC_MAJOR_COLLECTION_THRESHOLD (5 * (1<<QCGC_ARENA_SIZE_EXP))
+
+/**
  * DO NOT MODIFY BELOW HERE
  */
 

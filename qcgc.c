@@ -15,15 +15,27 @@ void qcgc_pop_object(object_t *object);
 void qcgc_push_object(object_t *object);
 void qcgc_sweep(void);
 
+static size_t major_collection_threshold = QCGC_MAJOR_COLLECTION_THRESHOLD;
+
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_shadow_stack_create(QCGC_SHADOWSTACK_SIZE);
 	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); //XXX
 	qcgc_state.gp_gray_stack = qcgc_gray_stack_create(16); // XXX
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
+	qcgc_state.bytes_since_collection = 0;
 	qcgc_allocator_initialize();
 	qcgc_hbtable_initialize();
 	qcgc_event_logger_initialize();
+
+	// Read alternative config from env
+	char *env_majc_threshold = getenv("QCGC_MAJOR_COLLECTION");
+	if (env_majc_threshold != NULL) {
+		size_t env_t = 0;
+		if (1 == sscanf(env_majc_threshold, "%zu", &env_t)) {
+			major_collection_threshold = env_t;
+		}
+	}
 }
 
 void qcgc_destroy(void) {
@@ -113,6 +125,10 @@ object_t *qcgc_allocate(size_t size) {
 			(uint8_t *) &size);
 #endif
 	object_t *result;
+	qcgc_state.bytes_since_collection += size;
+	if (qcgc_state.bytes_since_collection > major_collection_threshold) {
+		qcgc_collect();
+	}
 	if (size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP) {
 		// Use bump / fit allocator
 		if (true) { // FIXME: Implement reasonable switch
@@ -334,4 +350,5 @@ void qcgc_sweep(void) {
 void qcgc_collect(void) {
 	qcgc_mark(false);
 	qcgc_sweep();
+	qcgc_state.bytes_since_collection = 0;
 }
