@@ -136,10 +136,6 @@ object_t *qcgc_allocate(size_t size) {
 #endif
 	object_t *result;
 
-	// XXX: Should we use cells instead of bytes?
-	qcgc_state.bytes_since_collection += size;
-	qcgc_state.bytes_since_incmark += size;
-
 	if (qcgc_state.bytes_since_collection > major_collection_threshold) {
 		qcgc_collect();
 	}
@@ -163,6 +159,11 @@ object_t *qcgc_allocate(size_t size) {
 		// Use huge block allocator
 		result = qcgc_large_allocate(size);
 	}
+
+	// XXX: Should we use cells instead of bytes?
+	qcgc_state.bytes_since_collection += size;
+	qcgc_state.bytes_since_incmark += size;
+
 
 #if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
@@ -373,34 +374,58 @@ void qcgc_collect(void) {
 	qcgc_state.bytes_since_collection = 0;
 }
 
-void qcgc_register_weakref(object_t **weakref) {
-	// NOTE: No checks here, as the reference itself might not have been set yet
-	qcgc_state.weakrefs = qcgc_weakref_bag_add(qcgc_state.weakrefs, weakref);
+void qcgc_register_weakref(object_t *weakrefobj, object_t **target) {
+#if CHECKED
+	assert((weakrefobj->flags & QCGC_PREBUILT_OBJECT) == 0);
+	assert((object_t *) qcgc_arena_addr((cell_t *) weakrefobj) != weakrefobj);
+#endif
+	// NOTE: At this point, the target must point to a pointer to a valid
+	// object. We don't register any weakrefs to prebuilt objects as they
+	// are always valid.
+	if (((*target)->flags & QCGC_PREBUILT_OBJECT) == 0) {
+		qcgc_state.weakrefs = qcgc_weakref_bag_add(qcgc_state.weakrefs,
+				(struct weakref_bag_item_s) {
+					.weakrefobj = weakrefobj,
+					.target = target});
+	}
 }
 
 QCGC_STATIC void update_weakrefs(void) {
 	size_t i = 0;
 	while (i < qcgc_state.weakrefs->count) {
-		object_t *o = *(qcgc_state.weakrefs->items[i]);
-		if (o->flags & QCGC_PREBUILT_OBJECT) {
-			// Points to prebuilt object, forget this weakref, will always be
-			// valid
-			qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
-					qcgc_state.weakrefs, i);
-		} else if ((object_t *) qcgc_arena_addr((cell_t *)o) == o) {
+		struct weakref_bag_item_s item = qcgc_state.weakrefs->items[i];
+		// Check whether weakref object itself was collected
+		// We know the weakref object is a normal object
+		switch(qcgc_arena_get_blocktype((cell_t *) item.weakrefobj)) {
+			case BLOCK_EXTENT: // Fall through
+			case BLOCK_FREE:
+				// Weakref itself was collected, forget it
+				qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
+						qcgc_state.weakrefs, i);
+				continue;
+			case BLOCK_BLACK:
+			case BLOCK_WHITE:
+				// Weakref object is still valid, continue
+				break;
+		}
+
+		// Check whether the weakref target is still valid
+		object_t *points_to = *item.target;
+		if ((object_t *) qcgc_arena_addr((cell_t *) points_to) ==
+				points_to) {
 			// Huge object
-			if (qcgc_hbtable_has(o)) {
+			if (qcgc_hbtable_has(points_to)) {
 				// Still valid
 				i++;
 			} else {
 				// Invalid
-				*(qcgc_state.weakrefs->items[i]) = NULL;
+				*(item.target) = NULL;
 				qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
 						qcgc_state.weakrefs, i);
 			}
 		} else {
 			// Normal object
-			switch(qcgc_arena_get_blocktype((cell_t *) o)) {
+			switch(qcgc_arena_get_blocktype((cell_t *) points_to)) {
 				case BLOCK_BLACK: // Still valid
 				case BLOCK_WHITE:
 					i++;
@@ -408,7 +433,7 @@ QCGC_STATIC void update_weakrefs(void) {
 				case BLOCK_EXTENT: // Fall through
 				case BLOCK_FREE:
 					// Invalid
-					*(qcgc_state.weakrefs->items[i]) = NULL;
+					*(item.target) = NULL;
 					qcgc_state.weakrefs = qcgc_weakref_bag_remove_index(
 							qcgc_state.weakrefs, i);
 					break;

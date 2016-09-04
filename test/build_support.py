@@ -195,10 +195,15 @@ ffi.cdef("""
         hbbucket_t *qcgc_hbbucket_remove_index(
                 hbbucket_t *self, size_t index);
 
+        struct weakref_bag_item_s {
+                object_t *weakrefobj;
+                object_t **target;
+        };
+
         typedef struct weakref_bag_s {
             size_t size;
             size_t count;
-            object_t **items[];
+            struct weakref_bag_item_s items[];
         } weakref_bag_t;
 
         """)
@@ -332,6 +337,7 @@ ffi.cdef("""
         object_t *qcgc_allocate(size_t size);
         void qcgc_collect(void);
         mark_color_t qcgc_get_mark_color(object_t *object);
+        void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
 
         void qcgc_shadowstack_push(object_t *object);
         object_t *qcgc_shadowstack_pop(void);

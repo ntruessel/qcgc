@@ -42,6 +42,16 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_write(o) # Register object
         return ffi.cast("myobject_t *", o)
 
+    def allocate_weakref(self, to):
+        o = lib.qcgc_allocate(self.header_size + ffi.sizeof("myobject_t *"))
+        self.assertNotEqual(o, ffi.NULL)
+        lib._set_type_id(o, 0)  # Prevent from tracing
+        ffi.cast("myobject_t *", o).refs[0] = ffi.cast("myobject_t *", to) # Ref has to be valid before registering
+        lib.qcgc_register_weakref(o, ffi.cast("object_t **",
+            ffi.cast("myobject_t *", o).refs)) # XXX: ffi.addressof .refs[0] does not work
+        lib.qcgc_write(o)
+        return o
+
     def set_ref(self, obj, index, ref):
         lib.qcgc_write(ffi.cast("object_t *", obj)) # Trigger write barrier
         assert index >= 0
@@ -53,7 +63,6 @@ class QCGCTest(unittest.TestCase):
             if (lib.qcgc_state.gp_gray_stack.items[i] == obj):
                 return True
         return False
-
 
     def get_ref(self, obj, index):
         return ffi.cast("myobject_t *", obj).refs[index]
