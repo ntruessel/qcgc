@@ -27,6 +27,10 @@ typedef enum gc_phase {
 struct qcgc_state {
 	shadow_stack_t *shadow_stack;
 	shadow_stack_t *prebuilt_objects;
+	shadow_stack_t *extra_roots;	// Additional roots about whose structure we
+									// can't assume anything
+									// XXX: Wrong item type (object_t * instead
+									// of object_t **)
 	weakref_bag_t *weakrefs;
 	gray_stack_t *gp_gray_stack;
 	size_t gray_stack_size;

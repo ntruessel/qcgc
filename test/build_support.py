@@ -241,6 +241,7 @@ ffi.cdef("""
         struct qcgc_state {
                 shadow_stack_t *shadow_stack;
                 shadow_stack_t *prebuilt_objects;
+                shadow_stack_t *extra_roots;
                 weakref_bag_t *weakrefs;
                 gray_stack_t *gp_gray_stack;
                 size_t gray_stack_size;
@@ -337,6 +338,7 @@ ffi.cdef("""
         object_t *qcgc_allocate(size_t size);
         void qcgc_collect(void);
         mark_color_t qcgc_get_mark_color(object_t *object);
+        void qcgc_register_extra_root(object_t **root);
         void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
 
         void qcgc_shadowstack_push(object_t *object);
