@@ -83,13 +83,6 @@ void qcgc_shadowstack_push(object_t *object);
 object_t *qcgc_shadowstack_pop(void);
 
 /**
- * Register extra root. This has to be done before the first allocation.
- *
- * @param	root	Pointer to a refrence to a gc-object
- */
-void qcgc_register_extra_root(object_t **root);
-
-/**
  * Weakref registration
  *
  * @param	weakrefobj	Pointer to the weakref itself

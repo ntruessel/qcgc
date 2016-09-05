@@ -32,7 +32,6 @@ QCGC_STATIC void update_weakrefs(void);
 void qcgc_initialize(void) {
 	qcgc_state.shadow_stack = qcgc_shadow_stack_create(QCGC_SHADOWSTACK_SIZE);
 	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); // XXX
-	qcgc_state.extra_roots = qcgc_shadow_stack_create(2); // XXX
 	qcgc_state.weakrefs = qcgc_weakref_bag_create(16); // XXX
 	qcgc_state.gp_gray_stack = qcgc_gray_stack_create(16); // XXX
 	qcgc_state.gray_stack_size = 0;
@@ -54,7 +53,6 @@ void qcgc_destroy(void) {
 	qcgc_allocator_destroy();
 	free(qcgc_state.shadow_stack);
 	free(qcgc_state.prebuilt_objects);
-	free(qcgc_state.extra_roots);
 	free(qcgc_state.weakrefs);
 	free(qcgc_state.gp_gray_stack);
 }
@@ -228,14 +226,6 @@ void qcgc_mark(bool incremental) {
 					qcgc_state.gp_gray_stack,
 					qcgc_state.prebuilt_objects->items[i]);
 		}
-		// Trace all extra objects
-		count = qcgc_state.extra_roots->count;
-		for (size_t i = 0; i < count; i++) {
-			object_t *o = *((object_t **) qcgc_state.extra_roots->items[i]);
-			if (o != NULL) {
-				qcgc_trace_cb(o, &qcgc_push_object);
-			}
-		}
 	}
 
 	while (qcgc_state.gray_stack_size > 0) {
@@ -382,15 +372,6 @@ void qcgc_collect(void) {
 	qcgc_mark(false);
 	qcgc_sweep();
 	qcgc_state.bytes_since_collection = 0;
-}
-
-void qcgc_register_extra_root(object_t **root) {
-#if CHECKED
-	assert(root != NULL);
-	assert(qcgc_state.phase == GC_PAUSE);
-#endif
-	qcgc_state.extra_roots = qcgc_shadow_stack_push(qcgc_state.extra_roots,
-			(object_t *) root);
 }
 
 void qcgc_register_weakref(object_t *weakrefobj, object_t **target) {
