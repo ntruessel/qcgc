@@ -26,6 +26,7 @@ class WeakrefTestCase(QCGCTest):
     def test_collected_weakref_no_err(self):
         alive = self.allocate(1)
         self.push_root(alive)
+        wr = self.allocate_weakref(alive)
         # Collect
         lib.bump_ptr_reset()
         lib.qcgc_collect()
