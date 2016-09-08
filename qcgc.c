@@ -355,7 +355,6 @@ void qcgc_sweep(void) {
 					qcgc_allocator_state.arenas, i);
 			qcgc_allocator_state.free_arenas = qcgc_arena_bag_add(
 					qcgc_allocator_state.free_arenas, arena);
-
 			// NO i++
 		} else {
 			// Not free

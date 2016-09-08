@@ -29,6 +29,8 @@ void qcgc_allocator_initialize(void) {
 		qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
 	qcgc_allocator_state.free_arenas = qcgc_arena_bag_create(4); // XXX
 
+	qcgc_allocator_state.free_cells = 0;
+
 	// Bump Allocator
 	qcgc_allocator_state.bump_state.bump_ptr = NULL;
 	qcgc_allocator_state.bump_state.remaining_cells = 0;
@@ -111,6 +113,7 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	cell_t *mem = qcgc_allocator_state.bump_state.bump_ptr;
 	bump_allocator_advance(cells);
 
+	qcgc_allocator_state.free_cells -= cells;
 	qcgc_arena_mark_allocated(mem, cells);
 	object_t *result = (object_t *) mem;
 
@@ -172,6 +175,8 @@ QCGC_STATIC void bump_allocator_renew_block(void) {
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 		qcgc_allocator_state.arenas =
 			qcgc_arena_bag_add(qcgc_allocator_state.arenas, arena);
+		qcgc_allocator_state.free_cells += QCGC_ARENA_CELLS_COUNT -
+			QCGC_ARENA_FIRST_CELL_INDEX;
 	}
 
 	qcgc_allocator_state.fit_state.
@@ -220,6 +225,8 @@ object_t *qcgc_fit_allocate(size_t bytes) {
 	if (mem == NULL) {
 		return NULL;
 	}
+
+	qcgc_allocator_state.free_cells -= cells;
 
 	qcgc_arena_mark_allocated(mem, cells);
 	object_t *result = (object_t *) mem;
