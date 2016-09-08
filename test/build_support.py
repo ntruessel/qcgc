@@ -262,11 +262,13 @@ ffi.cdef("""
         // Access functions for state
         arena_bag_t *arenas(void);
         arena_bag_t *free_arenas(void);
-        size_t free_cells(void);
         cell_t *bump_ptr(void);
         size_t remaining_cells(void);
         linear_free_list_t *small_free_list(size_t index);
         exp_free_list_t *large_free_list(size_t index);
+        size_t free_cells(void);
+        size_t largest_free_block(void);
+        bool use_bump_allocator(void);
 
         void bump_ptr_reset(void);
 
@@ -460,10 +462,6 @@ ffi.set_source("support",
             return qcgc_allocator_state.free_arenas;
         }
 
-        size_t free_cells(void) {
-            return qcgc_allocator_state.free_cells;
-        }
-
         cell_t *bump_ptr(void) {
             return qcgc_allocator_state.bump_state.bump_ptr;
         }
@@ -478,6 +476,18 @@ ffi.set_source("support",
 
         exp_free_list_t *large_free_list(size_t index) {
             return qcgc_allocator_state.fit_state.large_free_list[index];
+        }
+
+        size_t free_cells(void) {
+            return qcgc_allocator_state.free_cells;
+        }
+
+        size_t largest_free_block(void) {
+            return qcgc_allocator_state.largest_free_block;
+        }
+
+        bool use_bump_allocator(void) {
+            return qcgc_allocator_state.use_bump_allocator;
         }
 
         void bump_ptr_reset(void) {

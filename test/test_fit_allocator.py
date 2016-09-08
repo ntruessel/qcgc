@@ -3,6 +3,27 @@ from support import lib,ffi
 from qcgc_test import QCGCTest
 
 class FitAllocatorTest(QCGCTest):
+    def test_initialization(self):
+        # self.assertEqual( <config_value> ,lib.arenas().size)
+        self.assertEqual(0, lib.arenas().count)
+        self.assertNotEqual(ffi.NULL, lib.arenas().items)
+        # self.assertEqual( <config_value> ,lib.free_arenas().size)
+        self.assertEqual(0, lib.free_arenas().count)
+        self.assertNotEqual(ffi.NULL, lib.free_arenas().items)
+        self.assertEqual(ffi.NULL, lib.bump_ptr())
+        self.assertEqual(0, lib.remaining_cells())
+        for i in range(lib.qcgc_small_free_lists):
+            self.assertEqual(lib.QCGC_SMALL_FREE_LIST_INIT_SIZE, lib.small_free_list(i).size)
+            self.assertEqual(0, lib.small_free_list(i).count)
+            self.assertNotEqual(ffi.NULL, lib.small_free_list(i).items)
+        for i in range(lib.qcgc_large_free_lists):
+            self.assertEqual(lib.QCGC_LARGE_FREE_LIST_INIT_SIZE, lib.large_free_list(i).size)
+            self.assertEqual(0, lib.large_free_list(i).count)
+            self.assertNotEqual(ffi.NULL, lib.large_free_list(i).items)
+        self.assertEqual(0, lib.free_cells())
+        self.assertEqual(0, lib.largest_free_block())
+        self.assertTrue(lib.use_bump_allocator())
+
     def test_macro_consistency(self):
         self.assertEqual(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP, lib.qcgc_small_free_lists + 1)
         last_exp = lib.QCGC_LARGE_FREE_LIST_FIRST_EXP + lib.qcgc_large_free_lists - 1

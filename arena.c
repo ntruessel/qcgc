@@ -251,6 +251,9 @@ bool qcgc_arena_sweep(arena_t *arena) {
 				if (add_to_free_list) {
 					qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							cell - last_free_cell);
+					qcgc_allocator_state.largest_free_block = MAX(
+							qcgc_allocator_state.largest_free_block,
+							cell - last_free_cell);
 				}
 				free = false;
 				coalesce = false;
@@ -265,6 +268,13 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	if (add_to_free_list && !free) {
 		qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							QCGC_ARENA_CELLS_COUNT - last_free_cell);
+		qcgc_allocator_state.largest_free_block = MAX(
+				qcgc_allocator_state.largest_free_block,
+				QCGC_ARENA_CELLS_COUNT - last_free_cell);
+	} else if (free) {
+		qcgc_allocator_state.largest_free_block = MAX(
+				qcgc_allocator_state.largest_free_block,
+				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 	}
 #if CHECKED
 	assert(qcgc_arena_is_coalesced(arena));

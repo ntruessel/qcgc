@@ -30,6 +30,8 @@ void qcgc_allocator_initialize(void) {
 	qcgc_allocator_state.free_arenas = qcgc_arena_bag_create(4); // XXX
 
 	qcgc_allocator_state.free_cells = 0;
+	qcgc_allocator_state.largest_free_block = 0;
+	qcgc_allocator_state.use_bump_allocator = true;
 
 	// Bump Allocator
 	qcgc_allocator_state.bump_state.bump_ptr = NULL;
