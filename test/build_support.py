@@ -129,6 +129,7 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         size_t qcgc_arena_white_blocks(arena_t *arena);
         size_t qcgc_arena_black_blocks(arena_t *arena);
 
+        bool qcgc_arena_pseudo_sweep(arena_t *arena);
         bool qcgc_arena_sweep(arena_t *arena);
 
         size_t qcgc_arena_sizeof(void);
@@ -247,6 +248,8 @@ ffi.cdef("""
                 gc_phase_t phase;
                 size_t bytes_since_collection;
                 size_t bytes_since_incmark;
+                size_t free_cells;
+                size_t largest_free_block;
         } qcgc_state;
 
         """)
@@ -266,8 +269,6 @@ ffi.cdef("""
         size_t remaining_cells(void);
         linear_free_list_t *small_free_list(size_t index);
         exp_free_list_t *large_free_list(size_t index);
-        size_t free_cells(void);
-        size_t largest_free_block(void);
         bool use_bump_allocator(void);
 
         void bump_ptr_reset(void);
@@ -476,14 +477,6 @@ ffi.set_source("support",
 
         exp_free_list_t *large_free_list(size_t index) {
             return qcgc_allocator_state.fit_state.large_free_list[index];
-        }
-
-        size_t free_cells(void) {
-            return qcgc_allocator_state.free_cells;
-        }
-
-        size_t largest_free_block(void) {
-            return qcgc_allocator_state.largest_free_block;
         }
 
         bool use_bump_allocator(void) {

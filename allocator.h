@@ -48,9 +48,6 @@ struct qcgc_allocator_state {
 		linear_free_list_t *small_free_list[QCGC_SMALL_FREE_LISTS];
 		exp_free_list_t *large_free_list[QCGC_LARGE_FREE_LISTS];
 	} fit_state;
-	size_t free_cells;		// Overall amount of free cells without huge blocks
-	size_t largest_free_block;	// Size of the largest free block.
-								// Valid right after sweep
 	bool use_bump_allocator;
 } qcgc_allocator_state;
 

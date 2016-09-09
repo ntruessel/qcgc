@@ -29,8 +29,6 @@ void qcgc_allocator_initialize(void) {
 		qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
 	qcgc_allocator_state.free_arenas = qcgc_arena_bag_create(4); // XXX
 
-	qcgc_allocator_state.free_cells = 0;
-	qcgc_allocator_state.largest_free_block = 0;
 	qcgc_allocator_state.use_bump_allocator = true;
 
 	// Bump Allocator
@@ -115,7 +113,6 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	cell_t *mem = qcgc_allocator_state.bump_state.bump_ptr;
 	bump_allocator_advance(cells);
 
-	qcgc_allocator_state.free_cells -= cells;
 	qcgc_arena_mark_allocated(mem, cells);
 	object_t *result = (object_t *) mem;
 
@@ -177,8 +174,6 @@ QCGC_STATIC void bump_allocator_renew_block(void) {
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 		qcgc_allocator_state.arenas =
 			qcgc_arena_bag_add(qcgc_allocator_state.arenas, arena);
-		qcgc_allocator_state.free_cells += QCGC_ARENA_CELLS_COUNT -
-			QCGC_ARENA_FIRST_CELL_INDEX;
 	}
 
 	qcgc_allocator_state.fit_state.
@@ -227,8 +222,6 @@ object_t *qcgc_fit_allocate(size_t bytes) {
 	if (mem == NULL) {
 		return NULL;
 	}
-
-	qcgc_allocator_state.free_cells -= cells;
 
 	qcgc_arena_mark_allocated(mem, cells);
 	object_t *result = (object_t *) mem;
@@ -307,7 +300,7 @@ QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells) {
 	while (i < qcgc_allocator_state.fit_state.large_free_list[index]->count) {
 		if (valid_block(qcgc_allocator_state.fit_state.large_free_list[index] ->
 					items[i].ptr,
-				   	qcgc_allocator_state.fit_state.large_free_list[index]->
+					qcgc_allocator_state.fit_state.large_free_list[index]->
 					items[i].size)) {
 			if (qcgc_allocator_state.fit_state.large_free_list[index]->
 					items[i].size >= cells &&

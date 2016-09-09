@@ -38,6 +38,8 @@ void qcgc_initialize(void) {
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_state.bytes_since_collection = 0;
 	qcgc_state.bytes_since_incmark = 0;
+	qcgc_state.free_cells = 0;
+	qcgc_state.largest_free_block = 0;
 	qcgc_allocator_initialize();
 	qcgc_hbtable_initialize();
 	qcgc_event_logger_initialize();
@@ -364,7 +366,8 @@ void qcgc_sweep(void) {
 
 	qcgc_hbtable_sweep();
 	size_t i = 0;
-	qcgc_allocator_state.largest_free_block = 0;
+	qcgc_state.free_cells = 0;
+	qcgc_state.largest_free_block = 0;
 	while (i < qcgc_allocator_state.arenas->count) {
 		arena_t *arena = qcgc_allocator_state.arenas->items[i];
 		// The arena that contains the bump pointer is autmatically skipped
@@ -385,8 +388,8 @@ void qcgc_sweep(void) {
 	// Determine whether fragmentation is too high
 	// Fragmenation = 1 - (largest block / total free space)
 	// Use bump allocator when fragmentation < 50%
-	qcgc_allocator_state.use_bump_allocator = qcgc_allocator_state.free_cells <
-		2 * qcgc_allocator_state.largest_free_block;
+	qcgc_allocator_state.use_bump_allocator = qcgc_state.free_cells <
+		2 * qcgc_state.largest_free_block;
 
 	update_weakrefs();
 
@@ -396,8 +399,8 @@ void qcgc_sweep(void) {
 			size_t largest_free_block;
 		};
 		struct log_info_s log_info = {
-			qcgc_allocator_state.free_cells,
-			qcgc_allocator_state.largest_free_block
+			qcgc_state.free_cells,
+			qcgc_state.largest_free_block
 		};
 		qcgc_event_logger_log(EVENT_SWEEP_DONE, sizeof(struct log_info_s),
 				(uint8_t *) &log_info);
