@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+import sys
+from logutils.iterator import LogIterator
+from logutils.visitor import LogEventVisitor
+
+class SummaryVisitor(LogEventVisitor):
+    def __init__(self):
+        self._log_start = 0.0
+        self.total_time = 0.0
+        #
+        self._sweep_start = 0.0
+        self.sweep_time = 0.0
+        self.arenas_sweeped = 0
+        #
+        self._mark_start = 0.0
+        self.mark_time = 0.0
+        self.incmark_time = 0.0
+        self.incmark_steps = 0
+
+    def visit_log_start(self, event):
+        self.log_start = event.time()
+
+    def visit_log_stop(self, event):
+        self.total_time = event.time() - self._log_start
+
+    def visit_sweep_start(self, event):
+        self._sweep_start = event.time()
+        self.arenas_sweeped += event.arenas
+
+    def visit_sweep_done(self, event):
+        self.sweep_time += event.time() - self._sweep_start
+
+    def visit_mark_start(self, event):
+        self._mark_start = event.time()
+
+    def visit_mark_done(self, event):
+        self.mark_time += event.time() - self._mark_start
+        if event.incremental:
+            self.incmark_time += event.time() - self._mark_start
+            self.incmark_steps += 1
+
+def print_summary(filename):
+    log = LogIterator(filename)
+    v = SummaryVisitor()
+    for event in log:
+        event.accept(v)
+    #
+    print("Normal Execution             : {:.2%}".format((v.total_time - v.mark_time - v.sweep_time) / v.total_time))
+    print("Marking                      : {:.2%}".format(v.mark_time / v.total_time))
+    print("  incremental                : {:.2%}".format(v.incmark_time / v.mark_time))
+    print("  non-incremental            : {:.2%}".format((v.mark_time - v.incmark_time) / v.mark_time))
+    print("  avg. incmark pause         : {:.2f}ms".format(v.incmark_time / v.incmark_steps * 1000))
+    print("Sweeping                     : {:.2%}".format(v.sweep_time / v.total_time))
+    print("  avg. sweep time per arena  : {:.2f}ms".format(v.sweep_time / v.arenas_sweeped * 1000))
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        print_summary(filename)

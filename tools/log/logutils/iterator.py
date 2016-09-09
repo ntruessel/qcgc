@@ -36,6 +36,7 @@ class LogIterator:
                 result = UnknownEvent(sec, nsec, eventID)
 
             result.parse_additional_data(self.f, additional_bytes)
+
             return result
         else:
             self.f.close()
