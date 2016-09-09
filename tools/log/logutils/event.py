@@ -33,14 +33,19 @@ class SweepStartEvent(EventBase):
         return "[{: 4d}.{:09d}] Sweep start, {} arenas".format(self.sec, self.nsec, self.arenas)
 
 class SweepDoneEvent(EventBase):
+    def parse_additional_data(self, f, size):
+        buf = f.read(size)
+        self.free_cells, self.largest_free_block = struct.unpack("LL", buf)
+
     def __str__(self):
-        return "[{: 4d}.{:09d}] Sweep done".format(self.sec, self.nsec)
+        return "[{: 4d}.{:09d}] Sweep done. Fragmentation = {}%".format(
+                self.sec, self.nsec,
+                100 * (1 - self.largest_free_block / self.free_cells))
 
 class AllocateStartEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
-        s = struct.unpack("L", buf)
-        self.size = s[0]
+        self.size, = struct.unpack("L", buf)
 
     def __str__(self):
         return "[{: 4d}.{:09d}] Allocation start, {} bytes".format(self.sec, self.nsec, self.size)
@@ -59,29 +64,21 @@ class NewArenaEvent(EventBase):
         return "[{: 4d}.{:09d}] New arena created".format(self.sec, self.nsec)
 
 class MarkStartEvent(EventBase):
-    def __str__(self):
-        return "[{: 4d}.{:09d}] Mark phase start".format(self.sec, self.nsec)
-
-class IncmarkStartEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
-        self.stack_size, = struct.unpack("L", buf)
+        self.incremental, self.stack_size = struct.unpack("?L", buf)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] Incremenal mark phase start, current gray stack size = {}".format(self.sec, self.nsec, self.stack_size)
+        return "[{: 4d}.{:09d}] {} mark phase start. Gray stack size = {}".format(
+                self.sec, self.nsec, "Incremental" if self.incremental else "Full", self.stack_size)
 
 class MarkDoneEvent(EventBase):
     def parse_additional_data(self, f, size):
-        if (size > 0):
-            buf = f.read(size)
-            self.stack_size, = struct.unpack("L", buf)
-        else:
-            self.stack_size = -1
+        buf = f.read(size)
+        self.incremental, self.stack_size = struct.unpack("?L", buf)
 
     def __str__(self):
-        if (self.stack_size == -1):
-            return "[{: 4d}.{:09d}] Mark phase done".format(self.sec, self.nsec)
-        else:
-            return "[{: 4d}.{:09d}] Mark phase done, current gray stack size = {}".format(self.sec, self.nsec, self.stack_size)
+        return "[{: 4d}.{:09d}] {} mark phase done. Gray stack size = {}".format(
+                self.sec, self.nsec, "Incremental" if self.incremental else "Full", self.stack_size)
 
 del EventBase
