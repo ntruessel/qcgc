@@ -196,8 +196,22 @@ bool qcgc_arena_sweep(arena_t *arena) {
 		for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 				cell < QCGC_ARENA_CELLS_COUNT;
 				cell++) {
-			if (get_blocktype(arena, cell) == BLOCK_BLACK) {
-				set_blocktype(arena, cell, BLOCK_WHITE);
+			switch (get_blocktype(arena, cell)) {
+				case BLOCK_BLACK:
+					set_blocktype(arena, cell, BLOCK_WHITE);
+					qcgc_allocator_state.largest_free_block = MAX(
+							qcgc_allocator_state.largest_free_block,
+							cell - last_free_cell);
+					break;
+				case BLOCK_WHITE:
+					qcgc_allocator_state.largest_free_block = MAX(
+							qcgc_allocator_state.largest_free_block,
+							cell - last_free_cell);
+				case BLOCK_FREE:
+					last_free_cell = cell;
+					break;
+				case BLOCK_EXTENT:
+					break;
 			}
 		}
 		return false;
@@ -255,6 +269,9 @@ bool qcgc_arena_sweep(arena_t *arena) {
 							qcgc_allocator_state.largest_free_block,
 							cell - last_free_cell);
 				}
+				qcgc_allocator_state.largest_free_block = MAX(
+						qcgc_allocator_state.largest_free_block,
+						cell - last_free_cell);
 				free = false;
 				coalesce = false;
 				add_to_free_list = false;
