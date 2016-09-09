@@ -23,7 +23,7 @@ int main(void) {
 
 	qcgc_shadowstack_push((object_t *)list);
 	node_t *last = list;
-	for (size_t i = 1; i < 1<<22; i++) { // 4+ arenas of memory
+	for (size_t i = 1; i < 1<<20; i++) { // 4+ arenas of memory
 		last->next = (node_t *) qcgc_allocate(sizeof(node_t));
 		last = last->next;
 		last->value = i;

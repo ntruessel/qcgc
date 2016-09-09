@@ -99,7 +99,15 @@ class CellCountingTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 33)
         self.assertEqual(lib.qcgc_state.largest_free_block,  self.arena_blocks - 44)
 
+    def test_bump_allocate(self):
+        for _ in range(2 ** 9):
+            self.push_root(self.allocate(1))
 
+        lib.bump_ptr_reset()
+        lib.qcgc_collect()
 
+        self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 2 ** 9)
+        self.assertEqual(lib.qcgc_state.largest_free_block, self.arena_blocks - 2 ** 9)
+    
 if __name__ == "__main__":
     unittest.main()
