@@ -46,10 +46,10 @@ class SweepTestCase(QCGCTest):
         for i in range(lib.qcgc_small_free_lists):
             self.assertEqual(0, lib.small_free_list(i).count)
 
-        # NO large free blocks, as the last block was already marked free, hence
-        # it has to be registered previously
-        for i in range(lib.qcgc_large_free_lists):
+        for i in range(lib.qcgc_large_free_lists - 1):
             self.assertEqual(0, lib.large_free_list(i).count)
+        self.assertEqual(1, lib.large_free_list(lib.qcgc_large_free_lists - 1).count)
+
 
     def test_arena_sweep_mixed(self):
         arena = lib.qcgc_arena_create()
@@ -85,7 +85,7 @@ class SweepTestCase(QCGCTest):
                  , (5, lib.BLOCK_FREE)
                  , (20, lib.BLOCK_BLACK)
                  , (32, lib.BLOCK_BLACK)
-                 , (33, lib.BLOCK_FREE)     # This block should not be registerd as free as it already was free and no changes were made
+                 , (33, lib.BLOCK_FREE)
                  , (42, lib.BLOCK_BLACK)
                  , (43, lib.BLOCK_WHITE)
                  , (44, lib.BLOCK_WHITE)
@@ -98,7 +98,7 @@ class SweepTestCase(QCGCTest):
 
         lib.qcgc_arena_sweep(arena)
 
-        have_elems = [5,19]
+        have_elems = [5,8,19]
 
         for i in range(lib.qcgc_small_free_lists):
             if (i in have_elems):

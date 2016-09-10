@@ -209,11 +209,11 @@ class FitAllocatorTest(QCGCTest):
         q = self.fit_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         self.assertEqual(p, q)
 
-    def test_fit_allocate_forget_coalesced(self):
+    def test_fit_allocate_no_double_entry(self):
         roots = list()
-        x = lib.qcgc_bump_allocate(16 * 10)
+        x = lib.qcgc_bump_allocate(16 * 3)
         roots.append(x)
-        f = lib.qcgc_bump_allocate(16 * 10)
+        lib.qcgc_bump_allocate(16 * 1)
         roots.append(lib.qcgc_bump_allocate(16 * 1))
         #
         for r in roots:
@@ -223,7 +223,7 @@ class FitAllocatorTest(QCGCTest):
         for _ in roots:
             self.pop_root()
         #
-        self.assertEqual(lib.small_free_list(9).count, 1)
+        self.assertEqual(lib.small_free_list(0).count, 1)
         #
         del roots[0]
         for r in roots:
@@ -232,37 +232,12 @@ class FitAllocatorTest(QCGCTest):
         for _ in roots:
             self.pop_root()
         #
-        self.assertEqual(lib.small_free_list(19).count, 1)
+        self.assertEqual(lib.small_free_list(3).count, 1)
         #
-        y = lib.qcgc_fit_allocate(16 * 12)
-        self.assertEqual(lib.small_free_list(19).count, 0)
-        self.assertEqual(lib.small_free_list(7).count, 1)
+        y = lib.qcgc_fit_allocate(16 * 3) # Create double entry
+        self.assertEqual(lib.small_free_list(3).count, 0)
+        self.assertEqual(lib.small_free_list(0).count, 1)
         self.assertEqual(x, y)
-        roots.append(lib.qcgc_fit_allocate(16 * 8))
-        self.assertEqual(lib.small_free_list(7).count, 0)
-        #
-        for r in roots:
-            self.push_root(r)
-        lib.qcgc_collect()
-        for _ in roots:
-            self.pop_root()
-        #
-        self.assertEqual(lib.small_free_list(11).count, 1)
-        #
-        y = lib.qcgc_fit_allocate(16 * 10)
-        self.assertEqual(lib.small_free_list(1).count, 1)
-        self.assertEqual(x, y)
-        del roots[-1]
-        roots.append(y)
-        #
-        for r in roots:
-            self.push_root(r)
-        lib.qcgc_collect()
-        for _ in roots:
-            self.pop_root()
-        #
-        y = lib.qcgc_fit_allocate(16 * 10)
-        self.assertNotEqual(y, f)
 
     def fit_allocate(self, cells):
         p = lib.qcgc_fit_allocate(cells * 16)

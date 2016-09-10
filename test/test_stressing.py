@@ -157,7 +157,7 @@ class StressTestCase(QCGCTest):
         # all shadow objs (some may be dead)
         self.shadow_objs = {}
 
-        for i in range(1000):
+        for i in range(2000):
             self.allocate()
             self.mutate()
             self.forget()
