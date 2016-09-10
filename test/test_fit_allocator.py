@@ -181,8 +181,8 @@ class FitAllocatorTest(QCGCTest):
         # Large block
         # coalesced area no 1
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        y = lib.qcgc_bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        x = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        y = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
@@ -197,8 +197,8 @@ class FitAllocatorTest(QCGCTest):
 
         # coalesced area no 2
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        y = lib.qcgc_bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        x = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        y = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
@@ -208,6 +208,61 @@ class FitAllocatorTest(QCGCTest):
 
         q = self.fit_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         self.assertEqual(p, q)
+
+    def test_fit_allocate_forget_coalesced(self):
+        roots = list()
+        x = lib.qcgc_bump_allocate(16 * 10)
+        roots.append(x)
+        f = lib.qcgc_bump_allocate(16 * 10)
+        roots.append(lib.qcgc_bump_allocate(16 * 1))
+        #
+        for r in roots:
+            self.push_root(r)
+        lib.bump_ptr_reset()
+        lib.qcgc_collect()
+        for _ in roots:
+            self.pop_root()
+        #
+        self.assertEqual(lib.small_free_list(9).count, 1)
+        #
+        del roots[0]
+        for r in roots:
+            self.push_root(r)
+        lib.qcgc_collect()
+        for _ in roots:
+            self.pop_root()
+        #
+        self.assertEqual(lib.small_free_list(19).count, 1)
+        #
+        y = lib.qcgc_fit_allocate(16 * 12)
+        self.assertEqual(lib.small_free_list(19).count, 0)
+        self.assertEqual(lib.small_free_list(7).count, 1)
+        self.assertEqual(x, y)
+        roots.append(lib.qcgc_fit_allocate(16 * 8))
+        self.assertEqual(lib.small_free_list(7).count, 0)
+        #
+        for r in roots:
+            self.push_root(r)
+        lib.qcgc_collect()
+        for _ in roots:
+            self.pop_root()
+        #
+        self.assertEqual(lib.small_free_list(11).count, 1)
+        #
+        y = lib.qcgc_fit_allocate(16 * 10)
+        self.assertEqual(lib.small_free_list(1).count, 1)
+        self.assertEqual(x, y)
+        del roots[-1]
+        roots.append(y)
+        #
+        for r in roots:
+            self.push_root(r)
+        lib.qcgc_collect()
+        for _ in roots:
+            self.pop_root()
+        #
+        y = lib.qcgc_fit_allocate(16 * 10)
+        self.assertNotEqual(y, f)
 
     def fit_allocate(self, cells):
         p = lib.qcgc_fit_allocate(cells * 16)
