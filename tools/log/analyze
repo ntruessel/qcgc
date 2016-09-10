@@ -12,6 +12,7 @@ class SummaryVisitor(LogEventVisitor):
         self._sweep_start = 0.0
         self.sweep_time = 0.0
         self.arenas_sweeped = 0
+        self.max_arenas = 0
         #
         self._mark_start = 0.0
         self.mark_time = 0.0
@@ -27,6 +28,7 @@ class SummaryVisitor(LogEventVisitor):
     def visit_sweep_start(self, event):
         self._sweep_start = event.time()
         self.arenas_sweeped += event.arenas
+        self.max_arenas = max(self.max_arenas, event.arenas)
 
     def visit_sweep_done(self, event):
         self.sweep_time += event.time() - self._sweep_start
@@ -46,13 +48,21 @@ def print_summary(filename):
     for event in log:
         event.accept(v)
     #
-    print("Normal Execution             : {:.2%}".format((v.total_time - v.mark_time - v.sweep_time) / v.total_time))
-    print("Marking                      : {:.2%}".format(v.mark_time / v.total_time))
-    print("  incremental                : {:.2%}".format(v.incmark_time / v.mark_time))
-    print("  non-incremental            : {:.2%}".format((v.mark_time - v.incmark_time) / v.mark_time))
-    print("  avg. incmark pause         : {:.2f}ms".format(v.incmark_time / v.incmark_steps * 1000))
-    print("Sweeping                     : {:.2%}".format(v.sweep_time / v.total_time))
-    print("  avg. sweep time per arena  : {:.2f}ms".format(v.sweep_time / v.arenas_sweeped * 1000))
+    if v.total_time == 0:
+        print("Log did not stop, analysis results can't be displayed")
+    else:
+        print("Normal Execution             : {:.2%}".format((v.total_time - v.mark_time - v.sweep_time) / v.total_time))
+        print("Marking                      : {:.2%}".format(v.mark_time / v.total_time))
+        if v.mark_time == 0:
+            print("  unable to calculate incremental/non-incremental distribution, as no mark steps were performed")
+        print("  incremental                : {:.2%}".format(v.incmark_time / v.mark_time))
+        print("  non-incremental            : {:.2%}".format((v.mark_time - v.incmark_time) / v.mark_time))
+        if v.incmark_steps == 0:
+            print("  unable to calculate avg. incmark pause, as no mark step was incremental")
+        print("  avg. incmark pause         : {:.2f}ms".format(v.incmark_time / v.incmark_steps * 1000))
+        print("Sweeping                     : {:.2%}".format(v.sweep_time / v.total_time))
+        print("  max arenas allocated       : {:d}".format(v.max_arenas))
+        print("  avg. sweep time per arena  : {:.2f}ms".format(v.sweep_time / v.arenas_sweeped * 1000))
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:

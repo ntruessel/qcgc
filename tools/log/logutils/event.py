@@ -56,9 +56,14 @@ class SweepDoneEvent(EventBase):
         visitor.visit_sweep_done(self)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] Sweep done. Fragmentation = {}%".format(
-                self.sec, self.nsec,
-                100 * (1 - self.largest_free_block / self.free_cells))
+        if (self.free_cells != 0):
+            return "[{: 4d}.{:09d}] Sweep done. Fragmentation = {:.2%}".format(
+                    self.sec, self.nsec, 
+                    1 - self.largest_free_block / self.free_cells)
+        else:
+            return "[{: 4d}.{:09d}] Sweep done. Fragmentation = 0%".format(
+                    self.sec, self.nsec)
+
 
 class AllocateStartEvent(EventBase):
     def parse_additional_data(self, f, size):
