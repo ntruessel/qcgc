@@ -300,31 +300,6 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# mark_list                                                                    #
-################################################################################
-ffi.cdef("""
-        typedef struct mark_list_s {
-                size_t head;
-                size_t tail;
-                size_t length;
-                size_t count;
-                size_t insert_index;
-                object_t **segments[];
-        } mark_list_t;
-
-        mark_list_t *qcgc_mark_list_create(size_t initial_size);
-        void qcgc_mark_list_destroy(mark_list_t *list);
-
-        mark_list_t *qcgc_mark_list_push(mark_list_t *list, object_t *object);
-        mark_list_t *qcgc_mark_list_push_all(mark_list_t *list,
-                        object_t **objects, size_t count);
-
-        object_t **qcgc_mark_list_get_head_segment(mark_list_t *list);
-        mark_list_t *qcgc_mark_list_drop_head_segment(mark_list_t *list);
-        """)
-
-
-################################################################################
 # qcgc                                                                         #
 ################################################################################
 ffi.cdef("""
@@ -383,17 +358,16 @@ ffi.cdef("""
 
 ffi.set_source("support",
         """
-        #include "../config.h"
-        #include "../object.h"
-        #include "../qcgc.h"
-        #include "../arena.h"
-        #include "../mark_list.h"
-        #include "../gray_stack.h"
-        #include "../bag.h"
-        #include "../allocator.h"
-        #include "../event_logger.h"
-        #include "../shadow_stack.h"
-        #include "../hugeblocktable.h"
+        #include "../src/config.h"
+        #include "../src/object.h"
+        #include "../src/qcgc.h"
+        #include "../src/arena.h"
+        #include "../src/gray_stack.h"
+        #include "../src/bag.h"
+        #include "../src/allocator.h"
+        #include "../src/event_logger.h"
+        #include "../src/shadow_stack.h"
+        #include "../src/hugeblocktable.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -530,10 +504,7 @@ ffi.set_source("support",
             }
         }
 
-        """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
-                '../mark_list.c', '../gray_stack.c', '../bag.c',
-                '../event_logger.c', '../shadow_stack.c',
-                '../hugeblocktable.c', '../signal_handler.c'],
+        """, sources=['../qcgc.c'],
         extra_compile_args=['-Wall', '-Wextra', '--coverage', '-std=gnu11',
                 '-UNDEBUG', '-DTESTING', '-O0', '-g'],
         extra_link_args=['--coverage', '-lrt'])

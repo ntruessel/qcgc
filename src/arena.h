@@ -118,7 +118,7 @@ blocktype_t qcgc_arena_get_blocktype(cell_t *ptr);
  * @param	ptr		Pointer to cell for which you want to set the blocktype
  * @param	type	Blocktype that should be set
  */
-void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type);
+QCGC_STATIC void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type);
 
 /**
  * Mark ptr as allocated area with given size.
@@ -126,7 +126,7 @@ void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type);
  * @param	ptr		Pointer to first cell of area
  * @param	cells	Size in cells
  */
-void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells);
+QCGC_STATIC void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells);
 
 /**
  * Mark cell ptr point to as free (no coalescing).
