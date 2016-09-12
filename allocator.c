@@ -163,10 +163,6 @@ QCGC_STATIC void bump_allocator_renew_block(void) {
 	// Try finding some huge block from fit allocator
 	exp_free_list_t *free_list = qcgc_allocator_state.fit_state.
 		large_free_list[QCGC_LARGE_FREE_LISTS - 1];
-	while (free_list->count > 0 && !valid_block(free_list->items[0].ptr,
-				free_list->items[0].size)) {
-		free_list = qcgc_exp_free_list_remove_index(free_list, 0);
-	}
 
 	if (free_list->count > 0) {
 		// Assign huge block to bump allocator
