@@ -119,7 +119,11 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	cell_t *mem = qcgc_allocator_state.bump_state.bump_ptr;
 	bump_allocator_advance(cells);
 
-	qcgc_arena_mark_allocated(mem, cells);
+	qcgc_arena_set_blocktype(mem, BLOCK_WHITE);
+	if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
+		qcgc_arena_set_blocktype(qcgc_allocator_state.bump_state.bump_ptr,
+				BLOCK_FREE);
+	}
 	object_t *result = (object_t *) mem;
 
 #if QCGC_INIT_ZERO
@@ -279,8 +283,11 @@ QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
 				qcgc_linear_free_list_remove_index(
 						qcgc_allocator_state.fit_state.small_free_list[index],
 						0);
-			qcgc_arena_mark_allocated(result, cells);
-			qcgc_fit_allocator_add(result + cells, list_cell_size - cells);
+			qcgc_arena_set_blocktype(result, BLOCK_WHITE);
+			if (list_cell_size - cells > 0) {
+				qcgc_arena_set_blocktype(result + cells, BLOCK_FREE);
+				qcgc_fit_allocator_add(result + cells, list_cell_size - cells);
+			}
 			return result;
 		}
 	}
@@ -321,8 +328,11 @@ QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells) {
 		qcgc_allocator_state.fit_state.large_free_list[index] =
 			qcgc_exp_free_list_remove_index(qcgc_allocator_state.fit_state.
 					large_free_list[index], best_fit_index);
-		qcgc_arena_mark_allocated(result, cells);
-		qcgc_fit_allocator_add(result + cells, best_fit_cells - cells);
+		qcgc_arena_set_blocktype(result, BLOCK_WHITE);
+		if (best_fit_cells - cells > 0) {
+			qcgc_arena_set_blocktype(result + cells, BLOCK_FREE);
+			qcgc_fit_allocator_add(result + cells, best_fit_cells - cells);
+		}
 	} else {
 		// No best fit, go for first fit
 		result = fit_allocator_large_first_fit(index + 1, cells);
@@ -344,7 +354,11 @@ QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
 						0);
 
 			qcgc_arena_mark_allocated(item.ptr, cells);
-			qcgc_fit_allocator_add(item.ptr + cells, item.size - cells);
+			qcgc_arena_set_blocktype(item.ptr, BLOCK_WHITE);
+			if (item.size - cells > 0) {
+				qcgc_arena_set_blocktype(item.ptr + cells, BLOCK_FREE);
+				qcgc_fit_allocator_add(item.ptr + cells, item.size - cells);
+			}
 			return item.ptr;
 		}
 	}
