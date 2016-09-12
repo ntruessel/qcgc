@@ -215,36 +215,33 @@ bool qcgc_arena_sweep(arena_t *arena) {
 		return qcgc_arena_pseudo_sweep(arena);
 	}
 
+	size_t last_free_cell = 0;
+	bool free = true;
+
 	// Vectorized bitmap updates
 	for (size_t i = QCGC_ARENA_FIRST_CELL_INDEX / 8;
 			i < QCGC_ARENA_BITMAP_SIZE;
 			i++) {
 		uint8_t new_block = arena->block_bitmap[i] & arena->mark_bitmap[i];
 		uint8_t new_mark = arena->block_bitmap[i] ^ arena->mark_bitmap[i];
-		arena->block_bitmap[i] = new_block;
-		arena->mark_bitmap[i] = new_mark;
-	}
 
-	// Coalesce and register free blocks
-	bool free = true;
-	size_t last_free_cell = 0;
-	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
-			cell < QCGC_ARENA_CELLS_COUNT;
-			cell++) {
-		switch (get_blocktype(arena, cell)) {
-			case BLOCK_EXTENT:
-				break;
-			case BLOCK_FREE:
+		arena->block_bitmap[i] = new_block;
+
+		for (size_t j = 0; j < 8; j++) {
+			size_t cell = i * 8 + j;
+			uint8_t mask = 1 << j;
+			if ((new_mark & mask) == mask) {
 				if (last_free_cell != 0) {
 					// Coalesce
-					set_blocktype(arena, cell, BLOCK_EXTENT);
+					new_mark &= ~mask;
 				} else {
 					last_free_cell = cell;
 				}
-				break;
-			case BLOCK_WHITE:
-				// Register last free block
+			} else if ((new_block & mask) == mask) {
+				free = false;
 				if (last_free_cell != 0) {
+					// Force update to satisfy precondition
+					arena->mark_bitmap[i] = new_mark;
 					qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							cell - last_free_cell);
 #if DEBUG_ZERO_ON_SWEEP
@@ -257,13 +254,14 @@ bool qcgc_arena_sweep(arena_t *arena) {
 							cell - last_free_cell);
 					last_free_cell = 0;
 				}
-				free = false;
-				break;
-			case BLOCK_BLACK:
-				assert(false);
-				break;
+				// White
+			} else {
+				// Extent
+			}
 		}
+		arena->mark_bitmap[i] = new_mark;
 	}
+
 	if (last_free_cell != 0 && !free) {
 		qcgc_fit_allocator_add(arena->cells + last_free_cell,
 				QCGC_ARENA_CELLS_COUNT - last_free_cell);
