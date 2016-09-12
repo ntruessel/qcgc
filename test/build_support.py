@@ -240,7 +240,8 @@ ffi.cdef("""
         } gc_phase_t;
 
         struct qcgc_state {
-                shadow_stack_t *shadow_stack;
+                object_t **shadow_stack;
+                object_t **shadow_stack_base;
                 shadow_stack_t *prebuilt_objects;
                 weakref_bag_t *weakrefs;
                 gray_stack_t *gp_gray_stack;
@@ -532,7 +533,7 @@ ffi.set_source("support",
         """, sources=['../qcgc.c', '../arena.c', '../allocator.c',
                 '../mark_list.c', '../gray_stack.c', '../bag.c',
                 '../event_logger.c', '../shadow_stack.c',
-                '../hugeblocktable.c'],
+                '../hugeblocktable.c', '../signal_handler.c'],
         extra_compile_args=['-Wall', '-Wextra', '--coverage', '-std=gnu11',
                 '-UNDEBUG', '-DTESTING', '-O0', '-g'],
         extra_link_args=['--coverage', '-lrt'])

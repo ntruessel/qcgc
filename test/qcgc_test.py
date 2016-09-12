@@ -68,7 +68,7 @@ class QCGCTest(unittest.TestCase):
         return ffi.cast("myobject_t *", obj).refs[index]
 
     def ss_size(self):
-        return lib.qcgc_state.shadow_stack.count;
+        return lib.qcgc_state.shadow_stack - lib.qcgc_state.shadow_stack_base
 
     # Utilities for mark/sweep testing
     def gen_structure_1(self):
