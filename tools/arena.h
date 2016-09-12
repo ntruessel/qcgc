@@ -100,9 +100,9 @@ bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index);
  *
  * @param	bitmap	Bitmap
  * @param	index	Index of cell
- * @param	value	1 to set entry, 0 to reset entry
+ * @param	value	true to set entry, false to reset entry
  */
-void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, uint8_t value);
+void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, bool value);
 
 /**
  * Get blocktype.
