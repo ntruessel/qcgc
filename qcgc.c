@@ -148,8 +148,7 @@ object_t *qcgc_allocate(size_t size) {
 
 	if (size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP) {
 		// Use bump / fit allocator
-		//if (qcgc_allocator_state.use_bump_allocator) {
-		if (false) {
+		if (qcgc_allocator_state.use_bump_allocator) {
 			result = qcgc_bump_allocate(size);
 		} else {
 			result = qcgc_fit_allocate(size);
