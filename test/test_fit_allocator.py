@@ -145,6 +145,7 @@ class FitAllocatorTest(QCGCTest):
         q = self.fit_allocate(1)
         self.assertEqual(q, p + size - 1)
 
+    @unittest.skip("Free lists do not contain invalid blocks")
     def test_allocate_coalesced_block(self):
         "Test allocation when there are invalid blocks in the free lists"
         # Small block
