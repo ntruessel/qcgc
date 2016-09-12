@@ -45,8 +45,10 @@
 
 #ifdef TESTING
 #define QCGC_STATIC
+#define QCGC_INLINE
 #else
 #define QCGC_STATIC static
+#define QCGC_INLINE inline __attribute((always_inline))
 #endif
 
 #define MAX(a,b) (((a)>(b))?(a):(b))

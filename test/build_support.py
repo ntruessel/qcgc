@@ -249,6 +249,8 @@ ffi.cdef("""
                 gc_phase_t phase;
                 size_t bytes_since_collection;
                 size_t bytes_since_incmark;
+                size_t major_collection_threshold;
+                size_t incmark_threshold;
                 size_t free_cells;
                 size_t largest_free_block;
         } qcgc_state;
@@ -300,31 +302,32 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# qcgc                                                                         #
+# core                                                                         #
 ################################################################################
 ffi.cdef("""
-        typedef enum mark_color {
-                MARK_COLOR_WHITE,
-                MARK_COLOR_LIGHT_GRAY,
-                MARK_COLOR_DARK_GRAY,
-                MARK_COLOR_BLACK,
-                MARK_COLOR_INVALID,
-        } mark_color_t;
-
         void qcgc_initialize(void);
         void qcgc_destroy(void);
         void qcgc_write(object_t *object);
         object_t *qcgc_allocate(size_t size);
         void qcgc_collect(void);
-        mark_color_t qcgc_get_mark_color(object_t *object);
-        void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
 
-        void qcgc_shadowstack_push(object_t *object);
-        object_t *qcgc_shadowstack_pop(void);
+        void qcgc_push_root(object_t *object);
+        void qcgc_pop_root(void);
+        """)
 
-        // qcgc.c
-        bool qcgc_mark(bool incremental);
+################################################################################
+# collector                                                                    #
+################################################################################
+ffi.cdef("""
+        void qcgc_mark(bool incremental);
         void qcgc_sweep(void);
+        """)
+
+################################################################################
+# weakref                                                                      #
+################################################################################
+ffi.cdef("""
+        void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
         """)
 
 ################################################################################
@@ -350,6 +353,17 @@ ffi.cdef("""
 
         void _set_type_id(object_t *obj, uint32_t id);
         uint32_t _get_type_id(object_t *obj);
+
+        typedef enum mark_color {
+            MARK_COLOR_WHITE,
+            MARK_COLOR_LIGHT_GRAY,
+            MARK_COLOR_DARK_GRAY,
+            MARK_COLOR_BLACK,
+            MARK_COLOR_INVALID,
+        } mark_color_t;
+
+        mark_color_t qcgc_get_mark_color(object_t *object);
+
         """)
 
 ################################################################################
@@ -359,15 +373,19 @@ ffi.cdef("""
 ffi.set_source("support",
         """
         #include "../src/config.h"
-        #include "../src/object.h"
-        #include "../src/qcgc.h"
-        #include "../src/arena.h"
-        #include "../src/gray_stack.h"
-        #include "../src/bag.h"
         #include "../src/allocator.h"
+        #include "../src/arena.h"
+        #include "../src/bag.h"
+        #include "../src/collector.h"
+        #include "../src/core.h"
         #include "../src/event_logger.h"
-        #include "../src/shadow_stack.h"
+        #include "../src/gc_state.h"
+        #include "../src/gray_stack.h"
         #include "../src/hugeblocktable.h"
+        #include "../src/object.h"
+        #include "../src/shadow_stack.h"
+        #include "../src/signal_handler.h"
+        #include "../src/weakref.h"
 
         // arena.h - Macro replacements
         const size_t qcgc_arena_size = QCGC_ARENA_SIZE;
@@ -381,11 +399,6 @@ ffi.set_source("support",
 
         // hugeblocktable.c prototyes
         size_t bucket(object_t *object);
-
-        // qcgc.c prototoypes
-        object_t *qcgc_bump_allocate(size_t size);
-        bool qcgc_mark(bool incremental);
-        void qcgc_sweep(void);
 
         // allocator.h - Macro replacements
         const size_t qcgc_small_free_lists = QCGC_SMALL_FREE_LISTS;
@@ -495,6 +508,36 @@ ffi.set_source("support",
 
         uint32_t _get_type_id(object_t *object) {
             return ((myobject_t *) object)->type_id;
+        }
+
+        typedef enum mark_color {
+            MARK_COLOR_WHITE,
+            MARK_COLOR_LIGHT_GRAY,
+            MARK_COLOR_DARK_GRAY,
+            MARK_COLOR_BLACK,
+            MARK_COLOR_INVALID,
+        } mark_color_t;
+
+        mark_color_t qcgc_get_mark_color(object_t *object);
+
+        mark_color_t qcgc_get_mark_color(object_t *object) {
+                blocktype_t blocktype = qcgc_arena_get_blocktype((cell_t *) object);
+                bool gray = (object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG;
+                if (blocktype == BLOCK_WHITE) {
+                        if (gray) {
+                                return MARK_COLOR_LIGHT_GRAY;
+                        } else {
+                                return MARK_COLOR_WHITE;
+                        }
+                } else if(blocktype == BLOCK_BLACK) {
+                        if (gray) {
+                                return MARK_COLOR_DARK_GRAY;
+                        } else {
+                                return MARK_COLOR_BLACK;
+                        }
+                } else {
+                        return MARK_COLOR_INVALID;
+                }
         }
 
         void qcgc_trace_cb(object_t *object, void (*visit)(object_t *)) {

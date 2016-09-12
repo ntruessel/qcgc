@@ -11,10 +11,10 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_destroy()
 
     def push_root(self, o):
-        lib.qcgc_shadowstack_push(ffi.cast("object_t *", o))
+        lib.qcgc_push_root(ffi.cast("object_t *", o))
 
     def pop_root(self):
-        return lib.qcgc_shadowstack_pop()
+        lib.qcgc_pop_root()
 
     def allocate(self, size):
         o = lib.qcgc_allocate(self.header_size + size)

@@ -79,23 +79,18 @@ class MarkAllTestCase(QCGCTest):
             o = self.allocate_ref(1)
             self.push_root(o)
             reachable.append(o)
-
-        for o in reachable:
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *",o)), lib.MARK_COLOR_LIGHT_GRAY)
 
-        lib.qcgc_mark_incremental()
+
+        lib.qcgc_mark_incremental() # Marks ALL root objects
         self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
 
-        newobjs = list()
         for o in reachable:
-            self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_BLACK, lib.MARK_COLOR_DARK_GRAY])
+            self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_DARK_GRAY, lib.MARK_COLOR_BLACK])
             if (lib.qcgc_get_mark_color(ffi.cast("object_t *", o)) == lib.MARK_COLOR_BLACK):
                 # Trigger write barrier and add object
-                p = self.allocate(1)
-                self.set_ref(o, 0, p)
-                newobjs.append(p)
+                lib.qcgc_write(ffi.cast("object_t *", o))
                 self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_DARK_GRAY)
-        reachable.extend(newobjs)
 
         lib.qcgc_mark_all()
 

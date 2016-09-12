@@ -273,7 +273,6 @@ bool qcgc_arena_sweep(arena_t *arena) {
 		qcgc_state.largest_free_block = MAX(
 				qcgc_state.largest_free_block,
 				QCGC_ARENA_CELLS_COUNT - last_free_cell);
-		last_free_cell = 0;
 	}
 #if CHECKED
 	assert(qcgc_arena_is_coalesced(arena));

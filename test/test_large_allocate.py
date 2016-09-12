@@ -12,18 +12,26 @@ class LargeAllocateTestCase(QCGCTest):
 
     def test_mark_large(self):
         o = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        self.push_root(o)
         p = ffi.cast("object_t *", self.allocate_ref(lib.qcgc_arena_size // ffi.sizeof("myobject_t *")))
+        self.push_root(p)
         q = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        self.push_root(q)
         r = ffi.cast("object_t *", self.allocate(1))
+        self.push_root(r)
         s = ffi.cast("object_t *", self.allocate_ref(1))
+        self.push_root(s)
         t = ffi.cast("object_t *", self.allocate(lib.qcgc_arena_size))
+        self.push_root(t)
         self.set_ref(p, 0, q)
         self.set_ref(p, 1, r)
         self.set_ref(p, 2, s)
         self.set_ref(s, 0, p)
         #
-        lib.qcgc_shadowstack_push(o)
-        lib.qcgc_shadowstack_push(s)
+        for _ in range(6):
+            self.pop_root()
+        self.push_root(o)
+        self.push_root(s)
         #
         lib.qcgc_mark_all()
         #
@@ -74,11 +82,13 @@ class LargeAllocateTestCase(QCGCTest):
 
     def test_incremenatal(self):
         o = ffi.cast("object_t *", self.allocate_ref(lib.qcgc_arena_size // ffi.sizeof("myobject_t *")))
+        self.push_root(o)
         p = ffi.cast("object_t *", self.allocate(1))
+        self.push_root(p)
         q = ffi.cast("object_t *", self.allocate(1))
         self.set_ref(o, 0, p)
         #
-        lib.qcgc_shadowstack_push(o)
+        self.pop_root()
         lib.qcgc_mark_incremental()
         #
         self.assertTrue(self.hbtable_has(o))

@@ -16,8 +16,7 @@ class StressTestCase(QCGCTest):
         # use after operations that may cause collections
         self.assertTrue(self.ss_size() == len(self.root_set))
         for _ in self.root_set:
-            p = self.pop_root()
-            self.assertTrue(p in self.root_set)
+            self.pop_root()
         self.assertTrue(self.ss_size() == 0)
 
     def allocate(self):

@@ -21,7 +21,7 @@ int main(void) {
 	list->value = 0;
 	list->next = NULL;
 
-	qcgc_shadowstack_push((object_t *)list);
+	qcgc_push_root((object_t *)list);
 	node_t *last = list;
 	for (size_t i = 1; i < 1<<20; i++) { // 4+ arenas of memory
 		last->next = (node_t *) qcgc_allocate(sizeof(node_t));
