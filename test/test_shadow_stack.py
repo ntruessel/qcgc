@@ -28,18 +28,6 @@ class ShadowStackTestCase(QCGCTest):
         self.push_root(p)
         self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         self.assertEqual(lib.qcgc_state.phase, lib.GC_PAUSE)
-        #
-        p = self.allocate(1)
-        lib.qcgc_state.phase = lib.GC_MARK
-        self.push_root(p)
-        self.assertEqual(lib.qcgc_state.gray_stack_size, 1)
-        self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
-        #
-        p = self.allocate(1)
-        lib.qcgc_state.phase = lib.GC_COLLECT
-        self.push_root(p)
-        self.assertEqual(lib.qcgc_state.gray_stack_size, 2)
-        self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
 
 
 
