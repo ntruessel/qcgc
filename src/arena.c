@@ -207,7 +207,6 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena) {
 	return false;
 }
 
-__attribute__((optimize("unroll-loops")))
 bool qcgc_arena_sweep(arena_t *arena) {
 #if CHECKED
 	assert(arena != NULL);
@@ -242,8 +241,6 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			} else if ((new_block & mask) == mask) {
 				free = false;
 				if (last_free_cell != 0) {
-					// Force update to satisfy precondition
-					arena->mark_bitmap[i] = new_mark;
 					qcgc_fit_allocator_add(arena->cells + last_free_cell,
 							cell - last_free_cell);
 #if DEBUG_ZERO_ON_SWEEP

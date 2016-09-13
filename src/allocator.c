@@ -74,19 +74,6 @@ void qcgc_allocator_destroy(void) {
 }
 
 void qcgc_fit_allocator_add(cell_t *ptr, size_t cells) {
-#if CHECKED
-	if (cells > 0) {
-		assert((((object_t *)ptr)->flags & QCGC_PREBUILT_OBJECT) == 0);
-		assert((cell_t *) qcgc_arena_addr(ptr) != ptr);
-		assert(qcgc_arena_get_blocktype(ptr) == BLOCK_FREE);
-		if (qcgc_arena_addr(ptr) == qcgc_arena_addr(ptr + cells)) {
-			assert(qcgc_arena_get_blocktype(ptr + cells) != BLOCK_EXTENT);
-		}
-		for (size_t i = 1; i < cells; i++) {
-			assert(qcgc_arena_get_blocktype(ptr + i) == BLOCK_EXTENT);
-		}
-	}
-#endif
 	if (cells > 0) {
 		if (is_small(cells)) {
 			size_t index = small_index(cells);
