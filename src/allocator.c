@@ -9,14 +9,14 @@
 
 QCGC_STATIC size_t bytes_to_cells(size_t bytes);
 
-QCGC_STATIC void bump_allocator_assign(cell_t *ptr, size_t cells);
-QCGC_STATIC void bump_allocator_advance(size_t cells);
+QCGC_STATIC QCGC_INLINE void bump_allocator_assign(cell_t *ptr, size_t cells);
+QCGC_STATIC QCGC_INLINE void bump_allocator_advance(size_t cells);
 QCGC_STATIC void bump_allocator_renew_block(void);
 
-QCGC_STATIC bool is_small(size_t cells);
-QCGC_STATIC size_t small_index(size_t cells);
-QCGC_STATIC size_t large_index(size_t cells);
-QCGC_STATIC size_t small_index_to_cells(size_t index);
+QCGC_STATIC QCGC_INLINE bool is_small(size_t cells);
+QCGC_STATIC QCGC_INLINE size_t small_index(size_t cells);
+QCGC_STATIC QCGC_INLINE size_t large_index(size_t cells);
+QCGC_STATIC QCGC_INLINE size_t small_index_to_cells(size_t index);
 
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells);
 QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells);
@@ -114,28 +114,33 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 #endif
 	size_t cells = bytes_to_cells(bytes);
 	if (cells > qcgc_allocator_state.bump_state.remaining_cells) {
+		if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
+			qcgc_arena_set_blocktype(qcgc_allocator_state.bump_state.bump_ptr,
+					BLOCK_FREE);
+		}
 		bump_allocator_renew_block();
 	}
 	cell_t *mem = qcgc_allocator_state.bump_state.bump_ptr;
 	bump_allocator_advance(cells);
 
 	qcgc_arena_set_blocktype(mem, BLOCK_WHITE);
+	/*
 	if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
 		qcgc_arena_set_blocktype(qcgc_allocator_state.bump_state.bump_ptr,
 				BLOCK_FREE);
 	}
+	*/
+
 	object_t *result = (object_t *) mem;
 
 #if QCGC_INIT_ZERO
 	memset(result, 0, cells * sizeof(cell_t));
 #endif
 
-	result->flags |= QCGC_GRAY_FLAG;
+	result->flags = QCGC_GRAY_FLAG;
 #if CHECKED
 	assert(qcgc_arena_is_coalesced(qcgc_arena_addr((cell_t *)result)));
 	if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
-		assert(qcgc_arena_get_blocktype(
-					qcgc_allocator_state.bump_state.bump_ptr) == BLOCK_FREE);
 		for (size_t i = 1; i < qcgc_allocator_state.bump_state.remaining_cells;
 				i++) {
 			assert(qcgc_arena_get_blocktype(
@@ -238,7 +243,7 @@ object_t *qcgc_fit_allocate(size_t bytes) {
 	memset(result, 0, cells * sizeof(cell_t));
 #endif
 
-	result->flags |= QCGC_GRAY_FLAG;
+	result->flags = QCGC_GRAY_FLAG;
 	return result;
 }
 
@@ -255,6 +260,7 @@ object_t *qcgc_large_allocate(size_t bytes) {
 	memset(result, 0, bytes);
 #endif
 	qcgc_hbtable_insert(result);
+	result->flags = QCGC_GRAY_FLAG;
 	return result;
 }
 
