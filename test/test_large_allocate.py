@@ -33,7 +33,7 @@ class LargeAllocateTestCase(QCGCTest):
         self.push_root(o)
         self.push_root(s)
         #
-        lib.qcgc_mark_all()
+        lib.qcgc_mark()
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
@@ -89,7 +89,7 @@ class LargeAllocateTestCase(QCGCTest):
         self.set_ref(o, 0, p)
         #
         self.pop_root()
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))
@@ -103,7 +103,7 @@ class LargeAllocateTestCase(QCGCTest):
         self.set_ref(o, 1, q)
         self.assertTrue(self.gp_gray_stack_has(o))
         #
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertTrue(self.hbtable_marked(o))

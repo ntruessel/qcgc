@@ -2,7 +2,7 @@ from support import lib,ffi
 from qcgc_test import QCGCTest
 import unittest
 
-class MarkAllTestCase(QCGCTest):
+class MarkIncTestCase(QCGCTest):
     def test_no_references(self):
         """No references"""
         roots = list()
@@ -82,7 +82,7 @@ class MarkAllTestCase(QCGCTest):
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *",o)), lib.MARK_COLOR_LIGHT_GRAY)
 
 
-        lib.qcgc_mark_incremental() # Marks ALL root objects
+        lib.qcgc_incmark() # Marks ALL root objects
         self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
 
         for o in reachable:
@@ -92,7 +92,7 @@ class MarkAllTestCase(QCGCTest):
                 lib.qcgc_write(ffi.cast("object_t *", o))
                 self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_DARK_GRAY)
 
-        lib.qcgc_mark_all()
+        lib.qcgc_mark()
 
         for o in reachable:
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_BLACK)
@@ -115,7 +115,7 @@ class MarkAllTestCase(QCGCTest):
             p, objs = self.gen_structure_1()
             unreachable.extend(objs)
         #
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         # Generate new roots
         objects = self.gen_circular_structure(100)
@@ -131,9 +131,9 @@ class MarkAllTestCase(QCGCTest):
             self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_WHITE)
 
 def mark_all_inc():
-    lib.qcgc_mark_incremental()
+    lib.qcgc_incmark()
     while(lib.qcgc_state.phase == lib.GC_MARK):
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
 
 if __name__ == "__main__":
     unittest.main()

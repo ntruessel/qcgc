@@ -16,7 +16,7 @@ class MarkAllTestCase(QCGCTest):
             p = self.allocate(3)
             garbage.append(p)
 
-        lib.qcgc_mark_all()
+        lib.qcgc_mark()
 
         for p in roots:
             self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -40,7 +40,7 @@ class MarkAllTestCase(QCGCTest):
             p, objs = self.gen_structure_1()
             unreachable.extend(objs)
 
-        lib.qcgc_mark_all()
+        lib.qcgc_mark()
 
         for p in reachable:
             self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
@@ -62,7 +62,7 @@ class MarkAllTestCase(QCGCTest):
             objects = self.gen_circular_structure(i + 1)
             unreachable.extend(objects)
 
-        lib.qcgc_mark_all()
+        lib.qcgc_mark()
 
         for p in reachable:
             self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)

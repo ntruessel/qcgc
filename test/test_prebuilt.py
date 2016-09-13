@@ -29,20 +29,20 @@ class PrebuiltObjectTestCase(QCGCTest):
         q = self.allocate(2)
         self.set_ref(o, 0, p)
         #
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", q)), lib.BLOCK_WHITE)
         #
         self.set_ref(o, 1, q)
         #
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         r = self.allocate_prebuilt_ref(1)
         s = self.allocate(2)
         self.set_ref(r, 0, s)
         #
-        lib.qcgc_mark_incremental()
+        lib.qcgc_incmark()
         #
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", q)), lib.BLOCK_BLACK)

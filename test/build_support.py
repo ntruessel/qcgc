@@ -320,7 +320,8 @@ ffi.cdef("""
 # collector                                                                    #
 ################################################################################
 ffi.cdef("""
-        void qcgc_mark(bool incremental);
+        void qcgc_mark(void);
+        void qcgc_incmark(void);
         void qcgc_sweep(void);
         """)
 
@@ -336,10 +337,6 @@ ffi.cdef("""
 ################################################################################
 
 ffi.cdef("""
-        // Old api
-        void qcgc_mark_all(void);
-        void qcgc_mark_incremental(void);
-
         // prebuilt
         object_t *allocate_prebuilt(size_t bytes);
 
@@ -594,7 +591,8 @@ ffi.set_source("support",
 
 /******************************************************************************/
         // collector.h
-        void qcgc_mark(bool incremental);
+        void qcgc_mark(void);
+        void qcgc_incmark(void);
         void qcgc_sweep(void);
 
 /******************************************************************************/
@@ -706,16 +704,6 @@ ffi.set_source("support",
             }
             qcgc_allocator_state.bump_state.bump_ptr = NULL;
             qcgc_allocator_state.bump_state.remaining_cells = 0;
-        }
-
-        // Utilites
-
-        void qcgc_mark_all(void) {
-            qcgc_mark(false);
-        }
-
-        void qcgc_mark_incremental(void) {
-            qcgc_mark(true);
         }
 
         object_t *allocate_prebuilt(size_t bytes) {
