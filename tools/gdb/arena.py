@@ -1,5 +1,4 @@
 import gdb
-from enum import Enum
 
 class ArenaCoalesceError(gdb.Command):
     def __init__(self):
@@ -34,45 +33,61 @@ class BlocktypeLookup(gdb.Command):
 
     def invoke(self, arg, from_tty):
         ptr = gdb.parse_and_eval(arg)
+        print(blocktype(ptr))
+
+class BlocktypeWatch(gdb.Command):
+    def __init__(self):
+        super(BlocktypeWatch, self).__init__("blocktype-watch", gdb.COMMAND_USER, gdb.COMPLETE_EXPRESSION)
+
+    def invoke(self, arg, from_tty):
+        ptr = gdb.parse_and_eval(arg)
         arena = ptr_to_arena(ptr)
-        print(blocktype(arena, index(ptr)))
+        index = ptr_to_index(ptr)
+        print(index)
+        mark_byte = arena['mark_bitmap'][index // 8]
+        block_byte = arena['block_bitmap'][index // 8]
+        mask = 0x01 << (index % 8)
+        print("mark_byte:  watch *(uint8_t *){}".format(mark_byte.address))
+        print("block_byte:  watch *(uint8_t *){}".format(block_byte.address))
 
 def ptr_to_arena(ptr):
-    return gdb.Value(int(ptr) & ~0x0fffff).cast(gdb.lookup_type("arena_t").pointer()).dereference() #XXX: Lookup arena size
+    i = int(str(ptr), 16)
+    return gdb.Value(i & ~0x0fffff).cast(gdb.lookup_type("arena_t").pointer()).dereference() #XXX: Lookup arena size
 
-def index(ptr):
+def ptr_to_index(ptr):
     arena = ptr_to_arena(ptr)
     cell_ptr_t = gdb.lookup_type("cell_t").pointer()
     result = ptr.cast(cell_ptr_t) - arena.address.cast(cell_ptr_t)
-    assert arena['cells'][result].address == ptr
     return int(result)
 
-def blocktype(arena, index):
+def blocktype(ptr):
+    arena = ptr_to_arena(ptr)
+    index = ptr_to_index(ptr)
     mark_bit = bitmap_entry(arena['mark_bitmap'], index)
     block_bit = bitmap_entry(arena['block_bitmap'], index)
     if block_bit:
         if mark_bit:
-            return Blocktype.black
+            return Blocktype['black']
         else:
-            return Blocktype.white
+            return Blocktype['white']
     else:
         if mark_bit:
-            return Blocktype.free
+            return Blocktype['free']
         else:
-            return Blocktype.extent
+            return Blocktype['extent']
 
 def bitmap_entry(bitmap, index):
-    return (((bitmap[index // 8] >> (index % 8)) & 0x1) == 0x1);
+    byte = index // 8
+    mask = 0x01 << (index % 8)
+    return ((bitmap[byte] & mask) == mask);
 
 
-class Blocktype(Enum):
-    extent  = "BLOCK_EXTENT"
-    free    = "BLOCK_FREE"
-    white   = "BLOCK_WHITE"
-    black   = "BLOCK_BLACK"
-
-    def __str__(self):
-        return (self.value)
+Blocktype = { 'extent': "BLOCK_EXTENT"
+            , 'free': "BLOCK_FREE"
+            , 'white': "BLOCK_WHITE"
+            , 'black': "BLOCK_BLACK"
+            }
 
 ArenaCoalesceError()
 BlocktypeLookup()
+BlocktypeWatch()
