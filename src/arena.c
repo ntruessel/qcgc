@@ -207,6 +207,7 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena) {
 	return false;
 }
 
+__attribute__((optimize("unroll-loops")))
 bool qcgc_arena_sweep(arena_t *arena) {
 #if CHECKED
 	assert(arena != NULL);
