@@ -100,8 +100,8 @@ object_t *qcgc_bump_allocate(size_t bytes) {
 	assert(bytes <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP);
 #endif
 	size_t cells = bytes_to_cells(bytes);
-	if (cells > qcgc_allocator_state.bump_state.remaining_cells) {
-		if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
+	if (UNLIKELY(cells > qcgc_allocator_state.bump_state.remaining_cells)) {
+		if (LIKELY(qcgc_allocator_state.bump_state.remaining_cells > 0)) {
 			qcgc_arena_set_blocktype(qcgc_allocator_state.bump_state.bump_ptr,
 					BLOCK_FREE);
 		}

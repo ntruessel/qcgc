@@ -312,7 +312,7 @@ ffi.cdef("""
         void qcgc_collect(void);
 
         void qcgc_push_root(object_t *object);
-        void qcgc_pop_root(void);
+        void qcgc_pop_root(size_t count);
         """)
 
 ################################################################################
@@ -372,6 +372,7 @@ ffi.cdef("""
 
 ffi.set_source("support",
         """
+        #include "../qcgc.h"
         #include "../src/config.h"
         #include "../src/allocator.h"
         #include "../src/arena.h"

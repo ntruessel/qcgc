@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include "src/config.h"
+
 #include <stddef.h>
 
+#include "src/gc_state.h"
 #include "src/object.h"
 
 /**
@@ -32,12 +35,20 @@ object_t *qcgc_allocate(size_t size);
  *
  * @param	object	The root object
  */
-void qcgc_push_root(object_t *object);
+QCGC_STATIC QCGC_INLINE void qcgc_push_root(object_t *object) {
+	*qcgc_state.shadow_stack = object;
+	qcgc_state.shadow_stack++;
+}
 
 /**
- * Pop root object.
+ * Pop root objects.
+ *
+ * @param	count	Number of object to pop
  */
-void qcgc_pop_root(void);
+QCGC_STATIC QCGC_INLINE void qcgc_pop_root(size_t count) {
+	qcgc_state.shadow_stack -= count;
+	assert(qcgc_state.shadow_stack_base <= qcgc_state.shadow_stack);
+}
 
 /**
  * Write barrier. Has to be called whenever a reference to another object is

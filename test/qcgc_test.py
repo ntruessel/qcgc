@@ -14,7 +14,7 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_push_root(ffi.cast("object_t *", o))
 
     def pop_root(self):
-        lib.qcgc_pop_root()
+        lib.qcgc_pop_root(1)
 
     def allocate(self, size):
         o = lib.qcgc_allocate(self.header_size + size)
