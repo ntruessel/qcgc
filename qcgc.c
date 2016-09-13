@@ -141,11 +141,13 @@ void qcgc_write(object_t *object) {
 	if ((object->flags & QCGC_PREBUILT_OBJECT) != 0) {
 		// NOTE: No mark test here, as prebuilt objects are always reachable
 		// Push prebuilt object to general purpose gray stack
+		qcgc_state.gray_stack_size++;
 		qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
 				qcgc_state.gp_gray_stack, object);
 	} else if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
 		if (qcgc_hbtable_is_marked(object)) {
 			// Push huge block to general purpose gray stack
+			qcgc_state.gray_stack_size++;
 			qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
 					qcgc_state.gp_gray_stack, object);
 		}
@@ -154,6 +156,7 @@ void qcgc_write(object_t *object) {
 					qcgc_arena_cell_index((cell_t *) object)) == BLOCK_BLACK) {
 			// This was black before, push it to gray stack again
 			arena_t *arena = qcgc_arena_addr((cell_t *) object);
+			qcgc_state.gray_stack_size++;
 			arena->gray_stack = qcgc_gray_stack_push(
 					arena->gray_stack, object);
 		}
