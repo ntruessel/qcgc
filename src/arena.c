@@ -228,34 +228,52 @@ bool qcgc_arena_sweep(arena_t *arena) {
 
 		arena->block_bitmap[i] = new_block;
 
-		for (size_t j = 0; j < 8; j++) {
-			size_t cell = i * 8 + j;
-			uint8_t mask = 1 << j;
-			if ((new_mark & mask) == mask) {
-				if (last_free_cell != 0) {
-					// Coalesce
-					new_mark &= ~mask;
-				} else {
-					last_free_cell = cell;
-				}
-			} else if ((new_block & mask) == mask) {
-				free = false;
-				if (last_free_cell != 0) {
-					qcgc_fit_allocator_add(arena->cells + last_free_cell,
-							cell - last_free_cell);
-#if DEBUG_ZERO_ON_SWEEP
-					memset(arena->cells + last_free_cell, 0,
-							sizeof(cell_t) * (cell - last_free_cell));
-#endif
-					qcgc_state.free_cells += cell - last_free_cell;
-					qcgc_state.largest_free_block = MAX(
-							qcgc_state.largest_free_block,
-							cell - last_free_cell);
-					last_free_cell = 0;
-				}
-				// White
+		if (new_block == new_mark) {
+			// Both are 0
+			continue;
+		}
+
+		if (!new_block) {
+			// Only entries in the mark bitmap
+			if (last_free_cell != 0) {
+				// Coalesce
+				new_mark = 0;
 			} else {
-				// Extent
+				uint8_t first = __builtin_ctz(new_mark);
+				new_mark = 1 << first;
+				last_free_cell = i * 8 + first;
+			}
+		} else {
+			for (size_t j = 0; j < 8; j++) {
+				size_t cell = i * 8 + j;
+				uint8_t m = (new_mark >> j) & 0x1;
+				uint8_t b = (new_block >> j) & 0x1;
+				uint8_t mask = 1 << j;
+				if (m) {
+					// Free
+					if (last_free_cell != 0) {
+						// Coalesce
+						new_mark &= ~mask;
+					} else {
+						last_free_cell = cell;
+					}
+				} else if (b) {
+					// White
+					free = false;
+					if (last_free_cell != 0) {
+						qcgc_fit_allocator_add(arena->cells + last_free_cell,
+								cell - last_free_cell);
+#if DEBUG_ZERO_ON_SWEEP
+						memset(arena->cells + last_free_cell, 0,
+								sizeof(cell_t) * (cell - last_free_cell));
+#endif
+						qcgc_state.free_cells += cell - last_free_cell;
+						qcgc_state.largest_free_block = MAX(
+								qcgc_state.largest_free_block,
+								cell - last_free_cell);
+						last_free_cell = 0;
+					}
+				}
 			}
 		}
 		arena->mark_bitmap[i] = new_mark;
