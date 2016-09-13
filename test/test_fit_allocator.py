@@ -59,7 +59,7 @@ class FitAllocatorTest(QCGCTest):
     def test_add_small(self):
         blocks = list()
         for i in range(1, lib.qcgc_small_free_lists + 1):
-            p = self.bump_allocate(i)
+            p = self.bump_allocate_cells(i)
             lib.qcgc_arena_mark_free(p)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, i)
@@ -73,7 +73,7 @@ class FitAllocatorTest(QCGCTest):
         blocks = list()
         for i in range(lib.qcgc_large_free_lists):
             size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-            p = self.bump_allocate(size)
+            p = self.bump_allocate_cells(size)
             lib.qcgc_arena_mark_free(p)
             blocks.append(p)
             lib.qcgc_fit_allocator_add(p, size)
@@ -90,7 +90,7 @@ class FitAllocatorTest(QCGCTest):
 
         # Small first fit
         for i in range(1, lib.qcgc_small_free_lists + 1):
-            p = self.bump_allocate(i)
+            p = self.bump_allocate_cells(i)
             lib.qcgc_arena_mark_free(p)
             lib.qcgc_fit_allocator_add(p, i)
             q = self.fit_allocate(i)
@@ -101,7 +101,7 @@ class FitAllocatorTest(QCGCTest):
         # Large first fit
         for i in range(lib.qcgc_large_free_lists):
             size = 2**(i + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-            p = self.bump_allocate(size)
+            p = self.bump_allocate_cells(size)
             lib.qcgc_arena_mark_free(p)
             lib.qcgc_fit_allocator_add(p, size)
             q = self.fit_allocate(size)
@@ -112,7 +112,7 @@ class FitAllocatorTest(QCGCTest):
     def test_allocate_no_block(self):
         "Test allocate when no block is available"
 
-        p = self.bump_allocate(1)
+        p = self.bump_allocate_cells(1)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, 1)
 
@@ -123,7 +123,7 @@ class FitAllocatorTest(QCGCTest):
         "Test allocation when blocks have to be split"
         # Small block
         size = lib.qcgc_small_free_lists
-        p = self.bump_allocate(size)
+        p = self.bump_allocate_cells(size)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, size)
 
@@ -134,7 +134,7 @@ class FitAllocatorTest(QCGCTest):
 
         # Large block
         size = 2**(1 + lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        p = self.bump_allocate(size)
+        p = self.bump_allocate_cells(size)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, size)
 
@@ -151,9 +151,9 @@ class FitAllocatorTest(QCGCTest):
         # Small block
         # coalesced area no 1
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(16)
-        y = lib.qcgc_bump_allocate(16)
-        lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
+        x = self.bump_allocate(16)
+        y = self.bump_allocate(16)
+        self.bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 1)
@@ -161,15 +161,15 @@ class FitAllocatorTest(QCGCTest):
         self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         # only valid block
-        p = self.bump_allocate(1)
+        p = self.bump_allocate_cells(1)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, 1)
 
         # coalesced area no 2
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(16)
-        y = lib.qcgc_bump_allocate(16)
-        lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
+        x = self.bump_allocate(16)
+        y = self.bump_allocate(16)
+        self.bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 1)
@@ -182,9 +182,9 @@ class FitAllocatorTest(QCGCTest):
         # Large block
         # coalesced area no 1
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        y = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
+        x = self.bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        y = self.bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        self.bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
@@ -192,15 +192,15 @@ class FitAllocatorTest(QCGCTest):
         self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         # only valid block
-        p = self.bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        p = self.bump_allocate_cells(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         lib.qcgc_arena_mark_free(p)
         lib.qcgc_fit_allocator_add(p, 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
 
         # coalesced area no 2
         # ATOMIC! Invalidates internal invariant for short time
-        x = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        y = lib.qcgc_bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        lib.qcgc_bump_allocate(16) # Prevent non-coalesced arena
+        x = self.bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        y = self.bump_allocate(16 * 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
+        self.bump_allocate(16) # Prevent non-coalesced arena
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",x))
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
@@ -212,10 +212,10 @@ class FitAllocatorTest(QCGCTest):
 
     def test_fit_allocate_no_double_entry(self):
         roots = list()
-        x = lib.qcgc_bump_allocate(16 * 3)
+        x = self.bump_allocate(16 * 3)
         roots.append(x)
-        lib.qcgc_bump_allocate(16 * 1)
-        roots.append(lib.qcgc_bump_allocate(16 * 1))
+        self.bump_allocate(16 * 1)
+        roots.append(self.bump_allocate(16 * 1))
         #
         for r in roots:
             self.push_root(r)
@@ -244,9 +244,9 @@ class FitAllocatorTest(QCGCTest):
         p = lib.qcgc_fit_allocate(cells * 16)
         return ffi.cast("cell_t *", p)
 
-    def bump_allocate(self, cells):
-        p = lib.qcgc_bump_allocate(cells * 16)
-        lib.qcgc_bump_allocate(16)   # Prevent non-coalseced arena
+    def bump_allocate_cells(self, cells):
+        p = self.bump_allocate(cells * 16)
+        self.bump_allocate(16)   # Prevent non-coalseced arena
         return ffi.cast("cell_t *", p)
 
 

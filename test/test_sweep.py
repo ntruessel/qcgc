@@ -161,7 +161,7 @@ class SweepTestCase(QCGCTest):
 
     @unittest.skip("Bump pointer not set to free")
     def test_arena_sweep_no_bump_ptr_coalescing(self):
-        p = lib.qcgc_bump_allocate(16)
+        p = self.bump_allocate(16)
         arena = lib.qcgc_arena_addr(ffi.cast("cell_t *", p))
 
         lib.qcgc_arena_sweep(arena)

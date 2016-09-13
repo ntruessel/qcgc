@@ -288,7 +288,7 @@ ffi.cdef("""
         size_t bytes_to_cells(size_t bytes);
 
         void bump_allocator_assign(cell_t *ptr, size_t cells);
-        void bump_allocator_advance(size_t cells);
+        void qcgc_bump_allocator_renew_block(void);
 
         bool is_small(size_t cells);
         size_t small_index(size_t cells);
@@ -588,6 +588,7 @@ ffi.set_source("support",
         object_t *qcgc_large_allocate(size_t bytes);
         void qcgc_fit_allocator_empty_lists(void);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
+        void qcgc_bump_allocator_renew_block(void);
 
 /******************************************************************************/
         // collector.h

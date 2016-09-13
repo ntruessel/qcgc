@@ -25,6 +25,8 @@
 QCGC_STATIC QCGC_INLINE void initialize_shadowstack(void);
 QCGC_STATIC QCGC_INLINE void destroy_shadowstack(void);
 
+QCGC_STATIC object_t *bump_allocate(size_t size);
+
 void qcgc_initialize(void) {
 	initialize_shadowstack();
 	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); // XXX
@@ -79,13 +81,13 @@ object_t *qcgc_allocate(size_t size) {
 	if (LIKELY(size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
 		// Use bump / fit allocator
 		if (qcgc_allocator_state.use_bump_allocator) {
-			result = qcgc_bump_allocate(size);
+			result = bump_allocate(size);
 		} else {
 			result = qcgc_fit_allocate(size);
 
 			// Fallback to bump allocator
 			if (result == NULL) {
-				result = qcgc_bump_allocate(size);
+				result = bump_allocate(size);
 			}
 		}
 	} else {
@@ -197,4 +199,12 @@ QCGC_STATIC void destroy_shadowstack(void) {
 				PROT_WRITE);
 
 	free(qcgc_shadowstack.base);
+}
+
+QCGC_STATIC object_t *bump_allocate(size_t size) {
+	if (UNLIKELY(qcgc_allocator_state.bump_state.remaining_cells <
+			bytes_to_cells(size))) {
+		qcgc_bump_allocator_renew_block();
+	}
+	return qcgc_bump_allocate(size);
 }
