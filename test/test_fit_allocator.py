@@ -50,7 +50,7 @@ class FitAllocatorTest(QCGCTest):
         self.assertTrue(lib.valid_block(first, lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index))
         lib.qcgc_arena_mark_allocated(first, 10);
         self.assertFalse(lib.valid_block(first, 10));
-        lib.qcgc_arena_set_blocktype(first, lib.BLOCK_FREE);
+        self.set_blocktype(first, lib.BLOCK_FREE);
         self.assertTrue(lib.valid_block(first, 10));
         self.assertFalse(lib.valid_block(first, 8));
         self.assertFalse(lib.valid_block(first + 1, 9));
@@ -158,7 +158,7 @@ class FitAllocatorTest(QCGCTest):
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 1)
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", y), 1)
-        lib.qcgc_arena_set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
+        self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         # only valid block
         p = self.bump_allocate(1)
@@ -174,7 +174,7 @@ class FitAllocatorTest(QCGCTest):
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 1)
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", y), 1)
-        lib.qcgc_arena_set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
+        self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         q = self.fit_allocate(1)
         self.assertEqual(p, q)
@@ -189,7 +189,7 @@ class FitAllocatorTest(QCGCTest):
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", y), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        lib.qcgc_arena_set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
+        self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         # only valid block
         p = self.bump_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
@@ -205,7 +205,7 @@ class FitAllocatorTest(QCGCTest):
         lib.qcgc_arena_mark_free(ffi.cast("cell_t *",y))
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", x), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         lib.qcgc_fit_allocator_add(ffi.cast("cell_t *", y), 2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
-        lib.qcgc_arena_set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
+        self.set_blocktype(ffi.cast("cell_t *", y), lib.BLOCK_EXTENT)
 
         q = self.fit_allocate(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP)
         self.assertEqual(p, q)

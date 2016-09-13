@@ -1,7 +1,7 @@
 #pragma once
 
 #define CHECKED 1							// Enable runtime sanity checks
-#define DEBUG_ZERO_ON_SWEEP 1				// Zero memory on sweep (debug only)
+#define DEBUG_ZERO_ON_SWEEP 0				// Zero memory on sweep (debug only)
 
 #define QCGC_INIT_ZERO 1					// Init new objects with zero bytes
 

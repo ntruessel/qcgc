@@ -68,7 +68,16 @@ class QCGCTest(unittest.TestCase):
         return ffi.cast("myobject_t *", obj).refs[index]
 
     def ss_size(self):
-        return lib.qcgc_state.shadow_stack - lib.qcgc_state.shadow_stack_base
+        return lib.qcgc_shadowstack.top - lib.qcgc_shadowstack.base
+
+    def get_blocktype(self, ptr):
+        return lib.qcgc_arena_get_blocktype(lib.qcgc_arena_addr(ptr),
+                lib.qcgc_arena_cell_index(ptr))
+
+    def set_blocktype(self, ptr, blocktype):
+        lib.qcgc_arena_set_blocktype(lib.qcgc_arena_addr(ptr),
+                lib.qcgc_arena_cell_index(ptr),
+                blocktype)
 
     # Utilities for mark/sweep testing
     def gen_structure_1(self):

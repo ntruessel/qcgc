@@ -1,6 +1,23 @@
-CFLAGS=-Wall -Wextra -std=gnu11 -Wmissing-declarations -Wmissing-prototypes -g -O0
-SRC=qcgc.c
-LDFLAGS=-lrt
+CFLAGS	= -Wall \
+		  -Wextra \
+		  -std=gnu11 \
+		  -Wmissing-declarations \
+		  -Wmissing-prototypes \
+		  -g -O0
+
+SRC		= qcgc.c \
+		  src/allocator.c \
+		  src/arena.c \
+		  src/bag.c \
+		  src/collector.c \
+		  src/event_logger.c \
+		  src/gray_stack.c \
+		  src/hugeblocktable.c \
+		  src/shadow_stack.c \
+		  src/signal_handler.c \
+		  src/weakref.c
+
+LDFLAGS	= -lrt
 
 lib: $(SRC)
 	$(CC) $(CFLAGS) -fpic -shared -o qcgc.so $^ $(LDFLAGS)

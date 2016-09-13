@@ -58,7 +58,7 @@ class CellCountingTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         lib.qcgc_state.free_cells = 0
         lib.qcgc_state.largest_free_block = 0

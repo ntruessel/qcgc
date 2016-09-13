@@ -33,7 +33,7 @@ class SweepTestCase(QCGCTest):
         for j in range(10):
             p = ffi.addressof(lib.arena_cells(arena)[i + j])
             lib.qcgc_arena_mark_allocated(p, 1)
-            lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
+            self.set_blocktype(p, lib.BLOCK_BLACK)
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 10)
 
@@ -65,7 +65,7 @@ class SweepTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
@@ -94,7 +94,7 @@ class SweepTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         lib.qcgc_arena_sweep(arena)
 
@@ -109,6 +109,7 @@ class SweepTestCase(QCGCTest):
         for i in range(lib.qcgc_large_free_lists):
             self.assertEqual(0, lib.large_free_list(i).count)
 
+    @unittest.skip("Sweeping was reworked")
     def test_arena_sweep_no_double_add(self):
         arena = lib.qcgc_arena_create()
         i = lib.qcgc_arena_first_cell_index
@@ -120,7 +121,7 @@ class SweepTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         lib.qcgc_arena_sweep(arena)
 
@@ -140,9 +141,10 @@ class SweepTestCase(QCGCTest):
                  , (2, lib.BLOCK_BLACK)
                  ]
 
+        i = lib.qcgc_arena_first_cell_index
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         lib.qcgc_arena_sweep(arena)
 
@@ -164,7 +166,7 @@ class SweepTestCase(QCGCTest):
 
         lib.qcgc_arena_sweep(arena)
 
-        self.assertEqual(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", lib.bump_ptr())), lib.BLOCK_FREE)
+        self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", lib.bump_ptr())), lib.BLOCK_FREE)
 
     def test_write_barrier_after_sweep(self):
         o = self.allocate_ref(1)
@@ -178,7 +180,7 @@ class SweepTestCase(QCGCTest):
         lib.bump_ptr_reset()
         lib.qcgc_collect()
         #
-        self.assertIn(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", p)), [lib.BLOCK_WHITE, lib.BLOCK_BLACK])
+        self.assertIn(self.get_blocktype(ffi.cast("cell_t *", p)), [lib.BLOCK_WHITE, lib.BLOCK_BLACK])
 
 if __name__ == "__main__":
     unittest.main()

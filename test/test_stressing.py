@@ -58,7 +58,7 @@ class StressTestCase(QCGCTest):
 
 
     def assert_valid_gc_object(self, obj):
-        self.assertIn(lib.qcgc_arena_get_blocktype(ffi.cast("cell_t *", obj)), [
+        self.assertIn(self.get_blocktype(ffi.cast("cell_t *", obj)), [
                 lib.BLOCK_BLACK, lib.BLOCK_WHITE ])
 
     def _collect_shadow_objs(self):

@@ -13,11 +13,11 @@ class ShadowStackTestCase(QCGCTest):
         self.push_root(q)
         self.assertEqual(self.ss_size(), 2)
         #
-        self.assertEqual(lib.qcgc_state.shadow_stack_base[1], q)
+        self.assertEqual(lib.qcgc_shadowstack.base[1], q)
         self.pop_root()
         self.assertEqual(self.ss_size(), 1)
         #
-        self.assertEqual(lib.qcgc_state.shadow_stack_base[0], p)
+        self.assertEqual(lib.qcgc_shadowstack.base[0], p)
         self.pop_root()
         self.assertEqual(self.ss_size(), 0)
 

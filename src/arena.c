@@ -13,12 +13,6 @@
 #include "event_logger.h"
 #include "gc_state.h"
 
-/**
- * Internal functions
- */
-QCGC_STATIC QCGC_INLINE blocktype_t get_blocktype(arena_t *arena, size_t index);
-QCGC_STATIC QCGC_INLINE void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
-
 arena_t *qcgc_arena_create(void) {
 	qcgc_event_logger_log(EVENT_NEW_ARENA, 0, NULL);
 
@@ -48,7 +42,7 @@ arena_t *qcgc_arena_create(void) {
 	}
 
 	// Init bitmaps: One large free block
-	qcgc_arena_set_bitmap_entry(result->mark_bitmap, QCGC_ARENA_FIRST_CELL_INDEX, 1);
+	result->mark_bitmap[QCGC_ARENA_FIRST_CELL_INDEX / 8] = 1;
 
 	// Create gray stack
 	result->gray_stack = qcgc_gray_stack_create(QCGC_GRAY_STACK_INIT_SIZE);
@@ -63,121 +57,36 @@ void qcgc_arena_destroy(arena_t *arena) {
 	munmap((void *) arena, QCGC_ARENA_SIZE);
 }
 
-arena_t *qcgc_arena_addr(cell_t *ptr) {
-	return (arena_t *)((intptr_t) ptr & ~(QCGC_ARENA_SIZE - 1));
-}
-
-size_t qcgc_arena_cell_index(cell_t *ptr) {
-	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1)) >> 4;
-}
-
-bool qcgc_arena_get_bitmap_entry(uint8_t *bitmap, size_t index) {
-#if CHECKED
-	assert(bitmap != NULL);
-#endif
-	size_t byte = index / 8;
-	uint8_t mask = 0x01 << (index % 8);
-	return ((bitmap[byte] & mask) == mask);
-}
-
-void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, uint8_t value) {
-#if CHECKED
-	assert(bitmap != NULL);
-#endif
-	size_t byte = index / 8;
-	uint8_t bit = (index % 8);
-	bitmap[byte] &= ~(1 << bit);
-	bitmap[byte] = (bitmap[byte] & ~(1 << bit)) | (value << bit);
-}
-
-QCGC_STATIC QCGC_INLINE blocktype_t get_blocktype(arena_t *arena, size_t index) {
-#if CHECKED
-	assert(arena != NULL);
-#endif
-	uint8_t block_bit = qcgc_arena_get_bitmap_entry(arena->block_bitmap, index);
-	uint8_t mark_bit = qcgc_arena_get_bitmap_entry(arena->mark_bitmap, index);
-
-	if (block_bit) {
-		if (mark_bit) {
-			return BLOCK_BLACK;
-		} else {
-			return BLOCK_WHITE;
-		}
-	} else {
-		if (mark_bit) {
-			return BLOCK_FREE;
-		} else {
-			return BLOCK_EXTENT;
-		}
-	}
-}
-
-QCGC_STATIC QCGC_INLINE blocktype_t qcgc_arena_get_blocktype(cell_t *ptr) {
-	size_t index = qcgc_arena_cell_index(ptr);
-	arena_t *arena = qcgc_arena_addr(ptr);
-
-	return get_blocktype(arena, index);
-}
-
-QCGC_STATIC QCGC_INLINE void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
-#if CHECKED
-	assert(arena != NULL);
-#endif
-	switch(type) {
-		case BLOCK_EXTENT:
-			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, 0);
-			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, 0);
-			break;
-		case BLOCK_FREE:
-			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, 0);
-			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, 1);
-			break;
-		case BLOCK_WHITE:
-			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, 1);
-			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, 0);
-			break;
-		case BLOCK_BLACK:
-			qcgc_arena_set_bitmap_entry(arena->mark_bitmap, index, 1);
-			qcgc_arena_set_bitmap_entry(arena->block_bitmap, index, 1);
-			break;
-	}
-}
-
-QCGC_STATIC QCGC_INLINE void qcgc_arena_set_blocktype(cell_t *ptr,
-		blocktype_t type) {
-	size_t index = qcgc_arena_cell_index(ptr);
-	arena_t *arena = qcgc_arena_addr(ptr);
-	set_blocktype(arena, index, type);
-}
-
 void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 #if CHECKED
-	assert(get_blocktype(arena, index) == BLOCK_FREE);
+	assert(qcgc_arena_get_blocktype(arena, index) == BLOCK_FREE);
 	for (size_t i = 1; i < cells; i++) {
-		assert(get_blocktype(arena, index + i) == BLOCK_EXTENT);
+		assert(qcgc_arena_get_blocktype(arena, index + i) == BLOCK_EXTENT);
 	}
 #endif
-	set_blocktype(arena, index, BLOCK_WHITE);
+	qcgc_arena_set_blocktype(arena, index, BLOCK_WHITE);
 	size_t index_of_next_block = index + cells;
 	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT &&
-			get_blocktype(arena, index_of_next_block) == BLOCK_EXTENT) {
-		set_blocktype(arena, index_of_next_block, BLOCK_FREE);
+			qcgc_arena_get_blocktype(arena, index_of_next_block) ==
+			BLOCK_EXTENT) {
+		qcgc_arena_set_blocktype(arena, index_of_next_block, BLOCK_FREE);
 	}
 #if CHECKED
-	assert(get_blocktype(arena, index) == BLOCK_WHITE);
+	assert(qcgc_arena_get_blocktype(arena, index) == BLOCK_WHITE);
 	for (size_t i = 1; i < cells; i++) {
-		assert(get_blocktype(arena, index + i) == BLOCK_EXTENT);
+		assert(qcgc_arena_get_blocktype(arena, index + i) == BLOCK_EXTENT);
 	}
 	if (index_of_next_block < QCGC_ARENA_CELLS_COUNT) {
-		assert(get_blocktype(arena, index + cells) != BLOCK_EXTENT);
+		assert(qcgc_arena_get_blocktype(arena, index + cells) != BLOCK_EXTENT);
 	}
 #endif
 }
 
 void qcgc_arena_mark_free(cell_t *ptr) {
-	qcgc_arena_set_blocktype(ptr, BLOCK_FREE);
+	qcgc_arena_set_blocktype(qcgc_arena_addr(ptr), qcgc_arena_cell_index(ptr),
+			BLOCK_FREE);
 	// No coalescing, collector will do this
 }
 
@@ -192,9 +101,9 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (get_blocktype(arena, cell)) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_BLACK:
-				set_blocktype(arena, cell, BLOCK_WHITE);
+				qcgc_arena_set_blocktype(arena, cell, BLOCK_WHITE);
 			case BLOCK_FREE: // Fall through
 			case BLOCK_EXTENT: // Fall through
 			case BLOCK_WHITE: // Fall through
@@ -305,7 +214,7 @@ bool qcgc_arena_is_empty(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_WHITE: // Fall through
 			case BLOCK_BLACK:
 				return false;
@@ -326,7 +235,7 @@ bool qcgc_arena_is_coalesced(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_WHITE: // Fall through
 			case BLOCK_BLACK:
 				prev_was_free = false;
@@ -355,7 +264,7 @@ size_t qcgc_arena_free_blocks(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_WHITE: // Fall through
 			case BLOCK_BLACK:
 			case BLOCK_EXTENT:
@@ -377,7 +286,7 @@ size_t qcgc_arena_white_blocks(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_BLACK:	// Fall through
 			case BLOCK_EXTENT:
 			case BLOCK_FREE:
@@ -399,7 +308,7 @@ size_t qcgc_arena_black_blocks(arena_t *arena) {
 	for (size_t cell = QCGC_ARENA_FIRST_CELL_INDEX;
 			cell < QCGC_ARENA_CELLS_COUNT;
 			cell++) {
-		switch (qcgc_arena_get_blocktype((void *) &arena->cells[cell])) {
+		switch (qcgc_arena_get_blocktype(arena, cell)) {
 			case BLOCK_WHITE: // Fall through
 			case BLOCK_FREE:
 			case BLOCK_EXTENT:

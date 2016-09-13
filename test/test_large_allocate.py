@@ -51,9 +51,9 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertFalse(self.hbtable_marked(t))
         self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", s)), lib.BLOCK_BLACK)
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", r)), lib.BLOCK_BLACK)
         #
         lib.bump_ptr_reset()
@@ -75,9 +75,9 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertFalse(self.hbtable_marked(t))
         self.assertEqual(lib.qcgc_state.gray_stack_size, 0)
         #
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", s)), lib.BLOCK_WHITE)
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", r)), lib.BLOCK_WHITE)
 
     def test_incremenatal(self):
@@ -95,9 +95,9 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertTrue(self.hbtable_marked(o))
         self.assertFalse(self.gp_gray_stack_has(o))
         #
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", q)), lib.BLOCK_WHITE)
         #
         self.set_ref(o, 1, q)
@@ -109,9 +109,9 @@ class LargeAllocateTestCase(QCGCTest):
         self.assertTrue(self.hbtable_marked(o))
         self.assertFalse(self.gp_gray_stack_has(o))
         #
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", p)), lib.BLOCK_BLACK)
-        self.assertEqual(lib.qcgc_arena_get_blocktype(
+        self.assertEqual(self.get_blocktype(
             ffi.cast("cell_t *", q)), lib.BLOCK_BLACK)
 
     def hbtable_has(self, o):

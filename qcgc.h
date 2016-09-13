@@ -4,12 +4,30 @@
 
 #pragma once
 
-#include "src/config.h"
+#include "config.h"
 
+#include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 
-#include "src/gc_state.h"
-#include "src/object.h"
+/**
+ * Object Layout.
+ */
+#define QCGC_GRAY_FLAG (1<<0)
+#define QCGC_PREBUILT_OBJECT (1<<1)
+#define QCGC_PREBUILT_REGISTERED (1<<2)
+
+typedef struct object_s {
+	uint32_t flags;
+} object_t;
+
+/**
+ * Shadow stack
+ */
+struct qcgc_shadowstack {
+	object_t **top;
+	object_t **base;
+} qcgc_shadowstack;
 
 /**
  * Initialize the garbage collector.
@@ -36,8 +54,8 @@ object_t *qcgc_allocate(size_t size);
  * @param	object	The root object
  */
 QCGC_STATIC QCGC_INLINE void qcgc_push_root(object_t *object) {
-	*qcgc_state.shadow_stack = object;
-	qcgc_state.shadow_stack++;
+	*qcgc_shadowstack.top = object;
+	qcgc_shadowstack.top++;
 }
 
 /**
@@ -46,8 +64,8 @@ QCGC_STATIC QCGC_INLINE void qcgc_push_root(object_t *object) {
  * @param	count	Number of object to pop
  */
 QCGC_STATIC QCGC_INLINE void qcgc_pop_root(size_t count) {
-	qcgc_state.shadow_stack -= count;
-	assert(qcgc_state.shadow_stack_base <= qcgc_state.shadow_stack);
+	qcgc_shadowstack.top -= count;
+	assert(qcgc_shadowstack.base <= qcgc_shadowstack.top);
 }
 
 /**

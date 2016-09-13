@@ -39,6 +39,7 @@ class ArenaTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_arena_first_cell_index,
                 lib.qcgc_arena_cell_index(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
 
+    @unittest.skip("These functions were inlined")
     def test_bitmap_manipulation(self):
         p = lib.qcgc_arena_create()
         for i in range(0, 7):
@@ -55,8 +56,8 @@ class ArenaTestCase(QCGCTest):
         p = lib.qcgc_arena_create()
         block = ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])
         for t in [lib.BLOCK_EXTENT, lib.BLOCK_FREE, lib.BLOCK_WHITE, lib.BLOCK_BLACK]:
-            lib.qcgc_arena_set_blocktype(block, t)
-            self.assertEqual(t, lib.qcgc_arena_get_blocktype(block))
+            self.set_blocktype(block, t)
+            self.assertEqual(t, self.get_blocktype(block))
 
     def test_block_counting(self):
         arena = lib.qcgc_arena_create()
@@ -74,7 +75,7 @@ class ArenaTestCase(QCGCTest):
 
         for b in layout:
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
-            lib.qcgc_arena_set_blocktype(p, b[1])
+            self.set_blocktype(p, b[1])
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
@@ -91,7 +92,7 @@ class ArenaTestCase(QCGCTest):
         lib.qcgc_arena_mark_allocated(p, 1)
         self.assertFalse(lib.qcgc_arena_is_empty(arena))
 
-        lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
+        self.set_blocktype(p, lib.BLOCK_BLACK)
         self.assertFalse(lib.qcgc_arena_is_empty(arena))
 
     def test_is_coalesced(self):
@@ -105,7 +106,7 @@ class ArenaTestCase(QCGCTest):
         lib.qcgc_arena_mark_allocated(p, 1)
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
-        lib.qcgc_arena_set_blocktype(p, lib.BLOCK_BLACK)
+        self.set_blocktype(p, lib.BLOCK_BLACK)
         self.assertTrue(lib.qcgc_arena_is_coalesced(arena))
 
         lib.qcgc_arena_mark_free(p)
@@ -123,7 +124,7 @@ class ArenaTestCase(QCGCTest):
                 int(ffi.cast("uint64_t", p))
                     << lib.QCGC_ARENA_SIZE_EXP
                     >> lib.QCGC_ARENA_SIZE_EXP)
-        self.assertEqual(lib.BLOCK_FREE, lib.qcgc_arena_get_blocktype(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
+        self.assertEqual(lib.BLOCK_FREE, self.get_blocktype(ffi.addressof(lib.arena_cells(p)[lib.qcgc_arena_first_cell_index])))
 
 if __name__ == "__main__":
     unittest.main()
