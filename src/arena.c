@@ -16,8 +16,8 @@
 /**
  * Internal functions
  */
-QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index);
-QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
+QCGC_STATIC QCGC_INLINE blocktype_t get_blocktype(arena_t *arena, size_t index);
+QCGC_STATIC QCGC_INLINE void set_blocktype(arena_t *arena, size_t index, blocktype_t type);
 
 arena_t *qcgc_arena_create(void) {
 	qcgc_event_logger_log(EVENT_NEW_ARENA, 0, NULL);
@@ -90,7 +90,7 @@ void qcgc_arena_set_bitmap_entry(uint8_t *bitmap, size_t index, uint8_t value) {
 	bitmap[byte] = (bitmap[byte] & ~(1 << bit)) | (value << bit);
 }
 
-QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index) {
+QCGC_STATIC QCGC_INLINE blocktype_t get_blocktype(arena_t *arena, size_t index) {
 #if CHECKED
 	assert(arena != NULL);
 #endif
@@ -112,14 +112,14 @@ QCGC_STATIC blocktype_t get_blocktype(arena_t *arena, size_t index) {
 	}
 }
 
-blocktype_t qcgc_arena_get_blocktype(cell_t *ptr) {
+QCGC_STATIC QCGC_INLINE blocktype_t qcgc_arena_get_blocktype(cell_t *ptr) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 
 	return get_blocktype(arena, index);
 }
 
-QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
+QCGC_STATIC QCGC_INLINE void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
 #if CHECKED
 	assert(arena != NULL);
 #endif
@@ -143,7 +143,8 @@ QCGC_STATIC void set_blocktype(arena_t *arena, size_t index, blocktype_t type) {
 	}
 }
 
-void qcgc_arena_set_blocktype(cell_t *ptr, blocktype_t type) {
+QCGC_STATIC QCGC_INLINE void qcgc_arena_set_blocktype(cell_t *ptr,
+		blocktype_t type) {
 	size_t index = qcgc_arena_cell_index(ptr);
 	arena_t *arena = qcgc_arena_addr(ptr);
 	set_blocktype(arena, index, type);
