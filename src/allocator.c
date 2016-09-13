@@ -66,20 +66,21 @@ void qcgc_allocator_destroy(void) {
 }
 
 void qcgc_fit_allocator_add(cell_t *ptr, size_t cells) {
-	if (cells > 0) {
-		if (is_small(cells)) {
-			size_t index = small_index(cells);
-			qcgc_allocator_state.fit_state.small_free_list[index] =
-				qcgc_linear_free_list_add(
-						qcgc_allocator_state.fit_state.small_free_list[index],
-						ptr);
-		} else {
-			size_t index = large_index(cells);
-			qcgc_allocator_state.fit_state.large_free_list[index] =
-				qcgc_exp_free_list_add(
-						qcgc_allocator_state.fit_state.large_free_list[index],
-						(struct exp_free_list_item_s) {ptr, cells});
-		}
+#if CHECKED
+	assert(cells > 0);
+#endif
+	if (is_small(cells)) {
+		size_t index = small_index(cells);
+		qcgc_allocator_state.fit_state.small_free_list[index] =
+			qcgc_linear_free_list_add(
+					qcgc_allocator_state.fit_state.small_free_list[index],
+					ptr);
+	} else {
+		size_t index = large_index(cells);
+		qcgc_allocator_state.fit_state.large_free_list[index] =
+			qcgc_exp_free_list_add(
+					qcgc_allocator_state.fit_state.large_free_list[index],
+					(struct exp_free_list_item_s) {ptr, cells});
 	}
 }
 
@@ -307,7 +308,6 @@ QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
 						qcgc_allocator_state.fit_state.large_free_list[index],
 						0);
 
-			qcgc_arena_mark_allocated(item.ptr, cells);
 			qcgc_arena_set_blocktype(qcgc_arena_addr(item.ptr),
 					qcgc_arena_cell_index(item.ptr), BLOCK_WHITE);
 			if (item.size - cells > 0) {
