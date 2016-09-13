@@ -472,6 +472,10 @@ ffi.set_source("support",
         }
 
         void bump_ptr_reset(void) {
+            if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
+                qcgc_arena_set_blocktype(
+                    qcgc_allocator_state.bump_state.bump_ptr, BLOCK_FREE);
+            }
             qcgc_allocator_state.bump_state.bump_ptr = NULL;
             qcgc_allocator_state.bump_state.remaining_cells = 0;
         }
