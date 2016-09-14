@@ -275,7 +275,7 @@ void qcgc_sweep(void) {
 		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
 			log_info = (struct log_info_s){
 				1<<(QCGC_LARGE_FREE_LIST_FIRST_EXP + i),
-				qcgc_allocator_state.fit_state.small_free_list[i]->count};
+				qcgc_allocator_state.fit_state.large_free_list[i]->count};
 			qcgc_event_logger_log(EVENT_FREELIST_DUMP,
 					sizeof(struct log_info_s), (uint8_t *) &log_info);
 		}
