@@ -32,7 +32,7 @@
 /**
  * Auto Mark/Collect
  */
-#define QCGC_INCMARK_THRESHOLD (1<<QCGC_ARENA_SIZE_EXP)
+#define QCGC_INCMARK_THRESHOLD (1<<(QCGC_ARENA_SIZE_EXP-4))
 #define QCGC_INCMARK_TO_SWEEP 5
 
 /**

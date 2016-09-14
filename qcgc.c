@@ -34,7 +34,8 @@ void qcgc_initialize(void) {
 	qcgc_state.gp_gray_stack = qcgc_gray_stack_create(16); // XXX
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
-	qcgc_state.bytes_since_incmark = 0;
+	qcgc_state.cells_since_incmark = 0;
+	qcgc_state.cells_since_collect = 0;
 	qcgc_state.incmark_since_sweep = 0;
 	qcgc_state.free_cells = 0;
 	qcgc_state.largest_free_block = 0;
@@ -67,7 +68,7 @@ object_t *qcgc_allocate(size_t size) {
 #endif
 	object_t *result;
 
-	if (UNLIKELY(qcgc_state.bytes_since_incmark >
+	if (UNLIKELY(qcgc_state.cells_since_incmark >
 				qcgc_state.incmark_threshold)) {
 		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
 			qcgc_collect();
@@ -75,7 +76,6 @@ object_t *qcgc_allocate(size_t size) {
 			qcgc_incmark();
 			qcgc_state.incmark_since_sweep++;
 		}
-		
 	}
 
 	if (LIKELY(size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
@@ -96,7 +96,8 @@ object_t *qcgc_allocate(size_t size) {
 	}
 
 	// XXX: Should we use cells instead of bytes?
-	qcgc_state.bytes_since_incmark += size;
+	qcgc_state.cells_since_incmark += bytes_to_cells(size);
+	qcgc_state.cells_since_collect += bytes_to_cells(size);
 
 
 #if LOG_ALLOCATION

@@ -94,7 +94,7 @@ QCGC_STATIC void mark_setup(bool incremental) {
 				(uint8_t *) &log_info);
 	}
 
-	qcgc_state.bytes_since_incmark = 0;
+	qcgc_state.cells_since_incmark = 0;
 
 	if (qcgc_state.phase == GC_PAUSE) {
 

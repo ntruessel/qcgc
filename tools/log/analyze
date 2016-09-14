@@ -13,6 +13,7 @@ class SummaryVisitor(LogEventVisitor):
         self.sweep_time = 0.0
         self.arenas_sweeped = 0
         self.max_arenas = 0
+        self.sweeps = 0
         #
         self._mark_start = 0.0
         self.mark_time = 0.0
@@ -29,6 +30,7 @@ class SummaryVisitor(LogEventVisitor):
         self._sweep_start = event.time()
         self.arenas_sweeped += event.arenas
         self.max_arenas = max(self.max_arenas, event.arenas)
+        self.sweeps += 1
 
     def visit_sweep_done(self, event):
         self.sweep_time += event.time() - self._sweep_start
@@ -61,6 +63,7 @@ def print_summary(filename):
             print("  unable to calculate avg. incmark pause, as no mark step was incremental")
         print("  avg. incmark pause         : {:.2f}ms".format(v.incmark_time / v.incmark_steps * 1000))
         print("Sweeping                     : {:.2%}".format(v.sweep_time / v.total_time))
+        print("  count                      : {:d}".format(v.sweeps))
         print("  max arenas allocated       : {:d}".format(v.max_arenas))
         print("  avg. sweep time per arena  : {:.2f}ms".format(v.sweep_time / v.arenas_sweeped * 1000))
 
