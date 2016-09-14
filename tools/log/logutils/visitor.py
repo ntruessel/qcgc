@@ -14,10 +14,7 @@ class LogEventVisitor:
     def visit_sweep_done(self, event):
         self.default(event)
 
-    def visit_allocate_start(self, event):
-        self.default(event)
-
-    def visit_allocate_done(self, event):
+    def visit_allocate(self, event):
         self.default(event)
 
     def visit_new_arena(self, event):

@@ -65,28 +65,16 @@ class SweepDoneEvent(EventBase):
                     self.sec, self.nsec)
 
 
-class AllocateStartEvent(EventBase):
+class AllocateEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
         self.size, = struct.unpack("L", buf)
 
     def accept(self, visitor):
-        visitor.visit_allocate_start(self)
+        visitor.visit_allocate(self)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] Allocation start, {} bytes".format(self.sec, self.nsec, self.size)
-
-class AllocateDoneEvent(EventBase):
-    def parse_additional_data(self, f, size):
-        buf = f.read(size)
-        s = struct.unpack("P", buf)
-        self.ptr = s[0]
-
-    def accept(self, visitor):
-        visitor.visit_allocate_done(self)
-
-    def __str__(self):
-        return "[{: 4d}.{:09d}] Allocation done, ptr = 0x{:x}".format(self.sec, self.nsec, self.ptr)
+        return "[{: 4d}.{:09d}] Allocation of {} cells".format(self.sec, self.nsec, self.size)
 
 class NewArenaEvent(EventBase):
     def accept(self, visitor):

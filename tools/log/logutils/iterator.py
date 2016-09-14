@@ -23,16 +23,14 @@ class LogIterator:
             elif (eventID == 3):
                 result = SweepDoneEvent(sec, nsec)
             elif (eventID == 4):
-                result = AllocateStartEvent(sec, nsec)
+                result = AllocateEvent(sec, nsec)
             elif (eventID == 5):
-                result = AllocateDoneEvent(sec, nsec)
-            elif (eventID == 6):
                 result = NewArenaEvent(sec, nsec)
-            elif (eventID == 7):
+            elif (eventID == 6):
                 result = MarkStartEvent(sec, nsec)
-            elif (eventID == 8):
+            elif (eventID == 7):
                 result = MarkDoneEvent(sec, nsec)
-            elif (eventID == 9):
+            elif (eventID == 8):
                 result = FreelistDumpEvent(sec, nsec)
             else:
                 result = UnknownEvent(sec, nsec, eventID)

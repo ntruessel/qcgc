@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+import sys
+from logutils.iterator import LogIterator
+from logutils.visitor import LogEventVisitor
+
+class DataDim:
+    def __init__(self, name):
+        self._data = []
+        self.name = name
+
+    def append(self, val):
+        self._data.append(val)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, index):
+        return self._data[index]
+
+class Data:
+    def __init__(self, name):
+        self.name = name
+        self._dims = []
+
+    def add_dim(self, dim):
+        self._dims.append(dim)
+
+    def append_line(self, line):
+        assert len(line) == len(self._dims)
+        for i in range(len(line)):
+            self._dims[i].append(line[i])
+
+    def dump(self):
+        assert len(self._dims) > 0
+        # Name
+        print("# {}".format(self.name))
+        # Dimension names
+        for dim in self._dims:
+            print(dim.name, end='\t')
+        print()
+        # Values
+        for i in range(len(self._dims[0])):
+            for dim in self._dims:
+                print(dim[i], end='\t')
+            print()
+
+class AllocStatVisitor(LogEventVisitor):
+    def __init__(self):
+        self.data = Data("Allocation Stats")
+        self.data.add_dim(DataDim("Size"))
+        self.data.add_dim(DataDim("Allocations"))
+        self.sizes = [i for i in range(1,32)] + [2**i for i in range(5,11)]
+        self.allocations = [0] * len(self.sizes)
+
+    def visit_allocate(self, event):
+        self.allocations[self.index(event.size)] += 1
+
+    def visit_log_stop(self, event):
+        for (size, count) in zip(self.sizes, self.allocations):
+            self.data.append_line([size, count])
+
+    def index(self, size):
+        assert(size > 0)
+        i = len(self.sizes) - 1
+        while i >= 0:
+            if (self.sizes[i] <= size):
+                return i
+            i -= 1
+
+def print_summary(filename):
+    log = LogIterator(filename)
+    v = AllocStatVisitor()
+    for event in log:
+        event.accept(v)
+    #
+    v.data.dump()
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        print_summary(filename)

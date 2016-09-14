@@ -63,8 +63,9 @@ void qcgc_destroy(void) {
 
 object_t *qcgc_allocate(size_t size) {
 #if LOG_ALLOCATION
-	qcgc_event_logger_log(EVENT_ALLOCATE_START, sizeof(size_t),
-			(uint8_t *) &size);
+	size_t cells = bytes_to_cells(size);
+	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
+			(uint8_t *) &cells);
 #endif
 	object_t *result;
 
@@ -97,11 +98,6 @@ object_t *qcgc_allocate(size_t size) {
 	}
 	qcgc_state.cells_since_incmark += bytes_to_cells(size);
 	qcgc_state.cells_since_collect += bytes_to_cells(size);
-
-#if LOG_ALLOCATION
-	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),
-			(uint8_t *) &result);
-#endif
 	return result;
 }
 
