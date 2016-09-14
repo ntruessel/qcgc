@@ -186,10 +186,16 @@ void qcgc_sweep(void) {
 	assert(qcgc_state.phase == GC_COLLECT);
 #endif
 	{
-		unsigned long arena_count;
-		arena_count = qcgc_allocator_state.arenas->count;
-		qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(arena_count),
-				(uint8_t *) &arena_count);
+		struct log_info_s {
+			size_t arenas;
+			size_t free_cells;
+		};
+		struct log_info_s log_info = {
+			qcgc_allocator_state.arenas->count,
+			qcgc_state.free_cells,
+		};
+		qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(struct log_info_s),
+				(uint8_t *) &log_info);
 	}
 
 	qcgc_hbtable_sweep();
@@ -240,18 +246,25 @@ void qcgc_sweep(void) {
 		}
 	assert(free_cells == qcgc_state.free_cells);
 	assert(largest_free_block == qcgc_state.largest_free_block);
+	assert(free_cells <= qcgc_allocator_state.arenas->count * (QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX));
+	assert(qcgc_allocator_state.arenas->count *
+			(QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX) >=
+			free_cells);
 #endif
 	qcgc_allocator_state.use_bump_allocator = qcgc_state.free_cells <
 		2 * qcgc_state.largest_free_block;
 
 	update_weakrefs();
 
+	qcgc_state.free_cells += qcgc_allocator_state.bump_state.remaining_cells;
 	{
 		struct log_info_s {
+			size_t arenas;
 			size_t free_cells;
 			size_t largest_free_block;
 		};
 		struct log_info_s log_info = {
+			qcgc_allocator_state.arenas->count,
 			qcgc_state.free_cells,
 			qcgc_state.largest_free_block
 		};

@@ -39,7 +39,7 @@ class LogStopEvent(EventBase):
 class SweepStartEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
-        self.arenas, = struct.unpack("L", buf)
+        self.arenas, self.free_cells = struct.unpack("LL", buf)
 
     def accept(self, visitor):
         visitor.visit_sweep_start(self)
@@ -50,7 +50,7 @@ class SweepStartEvent(EventBase):
 class SweepDoneEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
-        self.free_cells, self.largest_free_block = struct.unpack("LL", buf)
+        self.arenas, self.free_cells, self.largest_free_block = struct.unpack("LLL", buf)
 
     def accept(self, visitor):
         visitor.visit_sweep_done(self)

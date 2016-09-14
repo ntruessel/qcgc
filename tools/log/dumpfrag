@@ -4,31 +4,69 @@ import sys
 from logutils.iterator import LogIterator
 from logutils.visitor import LogEventVisitor
 
-class Data:
-    def __init__(self, dim):
-        self._data = []
-        self.dim = dim
+arena_cells = (2**20 / 4) * (63/64)
 
-    def append_line(self, *args):
-        assert len(args) == self.dim
-        self._data.append(args)
+class DataDim:
+    def __init__(self, name):
+        self._data = []
+        self.name = name
+
+    def append(self, val):
+        self._data.append(val)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, index):
+        return self._data[index]
+
+class Data:
+    def __init__(self, name):
+        self.name = name
+        self._dims = []
+
+    def add_dim(self, dim):
+        self._dims.append(dim)
+
+    def append_line(self, line):
+        assert len(line) == len(self._dims)
+        for i in range(len(line)):
+            self._dims[i].append(line[i])
 
     def dump(self):
-        for line in self._data:
-            for i in range(self.dim):
-                print(line[i], end='\t')
+        assert len(self._dims) > 0
+        # Name
+        print("# {}".format(self.name))
+        # Dimension names
+        for dim in self._dims:
+            print(dim.name, end='\t')
+        print()
+        # Values
+        for i in range(len(self._dims[0])):
+            for dim in self._dims:
+                print(dim[i], end='\t')
             print()
 
 class FragmentationVisitor(LogEventVisitor):
     def __init__(self):
-        self.data = Data(2)
+        self.data = Data("Fragmentation & Memusage")
+        self.data.add_dim(DataDim("Time"))
+        self.data.add_dim(DataDim("Fragmentation"))
+        self.data.add_dim(DataDim("Memory Usage"))
+
+    def visit_sweep_start(self, event):
+        total = event.arenas * arena_cells
+        assert total >= event.free_cells
+        self.data.append_line([event.time(), '-', (total - event.free_cells) / total])
 
     def visit_sweep_done(self, event):
+        total = event.arenas * arena_cells;
+        assert total >= event.free_cells
         if event.free_cells > 0:
             fragmentation = 1 - event.largest_free_block / event.free_cells
         else:
             fragmentation = 0
-        self.data.append_line(event.time(), fragmentation)
+        self.data.append_line([event.time(), fragmentation, (total - event.free_cells) / total])
 
 def print_data(filename):
     log = LogIterator(filename)

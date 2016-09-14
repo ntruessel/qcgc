@@ -90,15 +90,13 @@ object_t *qcgc_allocate(size_t size) {
 				result = bump_allocate(size);
 			}
 		}
+		qcgc_state.free_cells -= bytes_to_cells(size);
 	} else {
 		// Use huge block allocator
 		result = qcgc_large_allocate(size);
 	}
-
-	// XXX: Should we use cells instead of bytes?
 	qcgc_state.cells_since_incmark += bytes_to_cells(size);
 	qcgc_state.cells_since_collect += bytes_to_cells(size);
-
 
 #if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE_DONE, sizeof(object_t *),

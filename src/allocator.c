@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include "gc_state.h"
 
 QCGC_STATIC QCGC_INLINE void bump_allocator_assign(cell_t *ptr, size_t cells);
 
@@ -102,6 +103,8 @@ void qcgc_bump_allocator_renew_block(void) {
 	} else {
 		// Grab a new arena
 		arena_t *arena = qcgc_arena_create();
+		qcgc_state.free_cells += QCGC_ARENA_CELLS_COUNT -
+			QCGC_ARENA_FIRST_CELL_INDEX;
 		bump_allocator_assign(&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
 				QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 		qcgc_allocator_state.arenas =
