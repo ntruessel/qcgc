@@ -6,6 +6,7 @@
 *.log
 __pycache__/
 *.pyc
+*.dat
 doc/
 demo/demo_list
 perf.data*
