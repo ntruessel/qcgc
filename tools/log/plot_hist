@@ -1,0 +1,10 @@
+set style data histogram
+set style fill solid 4 border -1
+
+plot for [i=1:37] "fl.hist" using i title columnheader
+
+set xrange [GPVAL_DATA_X_MIN:GPVAL_DATA_X_MAX]
+set yrange [GPVAL_DATA_Y_MIN:GPVAL_DATA_Y_MAX]
+
+replot
+pause -1 ""

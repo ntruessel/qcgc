@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+import sys
+from logutils.iterator import LogIterator
+from logutils.visitor import LogEventVisitor
+
+class DataDim:
+    def __init__(self, name):
+        self._data = []
+        self.name = name
+
+    def append(self, val):
+        self._data.append(val)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, index):
+        return self._data[index]
+
+class Data:
+    def __init__(self, name):
+        self.name = name
+        self._dims = []
+
+    def add_dim(self, dim):
+        self._dims.append(dim)
+
+    def append_line(self, line):
+        assert len(line) == len(self._dims)
+        for i in range(len(line)):
+            self._dims[i].append(line[i])
+
+    def dump(self):
+        assert len(self._dims) > 0
+        # Name
+        print("# {}".format(self.name))
+        # Dimension names
+        for dim in self._dims:
+            print(dim.name, end='\t')
+        print()
+        # Values
+        for i in range(len(self._dims[0])):
+            for dim in self._dims:
+                print(dim[i], end='\t')
+            print()
+
+class FreelistVisitor(LogEventVisitor):
+    def __init__(self):
+        self.data = Data("Free List Histograms")
+        self.sizes = []
+        self.datadim_init = False
+        self.line = []
+
+    def visit_freelist_dump(self, event):
+        if not self.datadim_init:
+            self.sizes.append(event.size)
+        self.line.append(event.count)
+
+    def default(self, event):
+        if not self.datadim_init and len(self.sizes) > 0:
+            for size in self.sizes:
+                self.data.add_dim(DataDim("{}".format(size)))
+            self.datadim_init = True
+
+        if len(self.line) > 0:
+            self.data.append_line(self.line)
+            self.line = []
+
+def print_data(filename):
+    log = LogIterator(filename)
+    v = FreelistVisitor()
+    for event in log:
+        event.accept(v)
+
+    v.data.dump()
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        print_data(filename)

@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+import sys
+from logutils.iterator import LogIterator
+from logutils.visitor import LogEventVisitor
+
+class Data:
+    def __init__(self, dim):
+        self._data = []
+        self.dim = dim
+
+    def append_line(self, *args):
+        assert len(args) == self.dim
+        self._data.append(args)
+
+    def dump(self):
+        for line in self._data:
+            for i in range(self.dim):
+                print(line[i], end='\t')
+            print()
+
+class FragmentationVisitor(LogEventVisitor):
+    def __init__(self):
+        self.data = Data(2)
+
+    def visit_sweep_done(self, event):
+        if event.free_cells > 0:
+            fragmentation = 1 - event.largest_free_block / event.free_cells
+        else:
+            fragmentation = 0
+        self.data.append_line(event.time(), fragmentation)
+
+def print_data(filename):
+    log = LogIterator(filename)
+    v = FragmentationVisitor()
+    for event in log:
+        event.accept(v)
+
+    v.data.dump()
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        print_data(filename)

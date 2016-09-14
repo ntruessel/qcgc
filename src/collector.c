@@ -218,6 +218,29 @@ void qcgc_sweep(void) {
 	// Determine whether fragmentation is too high
 	// Fragmenation = 1 - (largest block / total free space)
 	// Use bump allocator when fragmentation < 50%
+#if CHECKED
+	size_t free_cells = 0;
+	size_t largest_free_block = 0;
+		for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
+			if (qcgc_allocator_state.fit_state.small_free_list[i]->count > 0) {
+				largest_free_block = i + 1;
+			}
+			free_cells += qcgc_allocator_state.fit_state.small_free_list[i]
+				->count * (i + 1);
+		}
+		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
+			for (size_t j = 0; j < qcgc_allocator_state.fit_state.
+					large_free_list[i]->count; j++) {
+				free_cells += qcgc_allocator_state.fit_state.large_free_list[i]
+					->items[j].size;
+				largest_free_block = MAX(largest_free_block,
+					qcgc_allocator_state.fit_state.large_free_list[i]
+					->items[j].size);
+			}
+		}
+	assert(free_cells == qcgc_state.free_cells);
+	assert(largest_free_block == qcgc_state.largest_free_block);
+#endif
 	qcgc_allocator_state.use_bump_allocator = qcgc_state.free_cells <
 		2 * qcgc_state.largest_free_block;
 
