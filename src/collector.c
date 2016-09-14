@@ -14,7 +14,7 @@ QCGC_STATIC void mark_cleanup(bool incremental);
 
 void qcgc_mark(void) {
 	mark_setup(false);
-	
+
 	while (qcgc_state.gray_stack_size > 0) {
 		// General purpose gray stack (prebuilt objects and huge blocks)
 
@@ -235,5 +235,28 @@ void qcgc_sweep(void) {
 		qcgc_event_logger_log(EVENT_SWEEP_DONE, sizeof(struct log_info_s),
 				(uint8_t *) &log_info);
 	}
+#if LOG_DUMP_FREELIST_STATS
+	{
+		struct log_info_s {
+			size_t class;
+			size_t items;
+		};
+		struct log_info_s log_info;
+
+		for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
+			log_info = (struct log_info_s){ i + 1,
+				qcgc_allocator_state.fit_state.small_free_list[i]->count};
+			qcgc_event_logger_log(EVENT_FREELIST_DUMP,
+					sizeof(struct log_info_s), (uint8_t *) &log_info);
+		}
+		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
+			log_info = (struct log_info_s){
+				1<<(QCGC_LARGE_FREE_LIST_FIRST_EXP + i),
+				qcgc_allocator_state.fit_state.small_free_list[i]->count};
+			qcgc_event_logger_log(EVENT_FREELIST_DUMP,
+					sizeof(struct log_info_s), (uint8_t *) &log_info);
+		}
+	}
+#endif
 }
 

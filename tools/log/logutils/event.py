@@ -58,7 +58,7 @@ class SweepDoneEvent(EventBase):
     def __str__(self):
         if (self.free_cells != 0):
             return "[{: 4d}.{:09d}] Sweep done. Fragmentation = {:.2%}".format(
-                    self.sec, self.nsec, 
+                    self.sec, self.nsec,
                     1 - self.largest_free_block / self.free_cells)
         else:
             return "[{: 4d}.{:09d}] Sweep done. Fragmentation = 0%".format(
@@ -118,5 +118,17 @@ class MarkDoneEvent(EventBase):
     def __str__(self):
         return "[{: 4d}.{:09d}] {} mark phase done. Gray stack size = {}".format(
                 self.sec, self.nsec, "Incremental" if self.incremental else "Full", self.stack_size)
+
+class FreelistDumpEvent(EventBase):
+    def parse_additional_data(self, f, size):
+        buf = f.read(size)
+        self.size, self.count = struct.unpack("LL", buf)
+
+    def accept(self, visitor):
+        visitor.visit_freelist_dump(self)
+
+    def __str__(self):
+        return "[{: 4d}.{:09d}] Freelist dump. Size {}, Count {}".format(
+                self.sec, self.nsec, self.size, self.count)
 
 del EventBase
