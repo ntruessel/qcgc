@@ -253,7 +253,6 @@ ffi.cdef("""
         arena_bag_t *free_arenas(void);
         linear_free_list_t *small_free_list(size_t index);
         exp_free_list_t *large_free_list(size_t index);
-        bool use_bump_allocator(void);
 
         void bump_ptr_reset(void);
         void qcgc_reset_bump_ptr(void);
@@ -555,7 +554,6 @@ ffi.set_source("support",
                 linear_free_list_t *small_free_list[QCGC_SMALL_FREE_LISTS];
                 exp_free_list_t *large_free_list[QCGC_LARGE_FREE_LISTS];
             } fit_state;
-            bool use_bump_allocator;
         } qcgc_allocator_state;
 
         void qcgc_allocator_initialize(void);
@@ -661,10 +659,6 @@ ffi.set_source("support",
 
         exp_free_list_t *large_free_list(size_t index) {
             return qcgc_allocator_state.fit_state.large_free_list[index];
-        }
-
-        bool use_bump_allocator(void) {
-            return qcgc_allocator_state.use_bump_allocator;
         }
 
         void bump_ptr_reset(void) {

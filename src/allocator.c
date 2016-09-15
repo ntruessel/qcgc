@@ -20,12 +20,6 @@ void qcgc_allocator_initialize(void) {
 		qcgc_arena_bag_create(QCGC_ARENA_BAG_INIT_SIZE);
 	qcgc_allocator_state.free_arenas = qcgc_arena_bag_create(4); // XXX
 
-	qcgc_allocator_state.use_bump_allocator = true;
-
-	// Bump Allocator
-	_qcgc_bump_allocator.ptr = NULL;
-	_qcgc_bump_allocator.remaining_cells = 0;
-
 	// Fit Allocator
 	for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
 		qcgc_allocator_state.fit_state.small_free_list[i] =
@@ -37,6 +31,8 @@ void qcgc_allocator_initialize(void) {
 			qcgc_exp_free_list_create(QCGC_LARGE_FREE_LIST_INIT_SIZE);
 	}
 
+	_qcgc_bump_allocator.ptr = NULL;
+	_qcgc_bump_allocator.remaining_cells = 0;
 	qcgc_bump_allocator_renew_block();
 }
 
@@ -106,7 +102,6 @@ void qcgc_bump_allocator_renew_block(void) {
 
 	qcgc_allocator_state.fit_state.
 		large_free_list[QCGC_LARGE_FREE_LISTS - 1] = free_list;
-	qcgc_allocator_state.use_bump_allocator = true;
 #if CHECKED
 	assert(_qcgc_bump_allocator.ptr != NULL);
 	assert(qcgc_arena_get_blocktype(

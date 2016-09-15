@@ -20,7 +20,6 @@ class FitAllocatorTest(QCGCTest):
             self.assertEqual(lib.QCGC_LARGE_FREE_LIST_INIT_SIZE, lib.large_free_list(i).size)
             self.assertEqual(0, lib.large_free_list(i).count)
             self.assertNotEqual(ffi.NULL, lib.large_free_list(i).items)
-        self.assertTrue(lib.use_bump_allocator())
 
     def test_macro_consistency(self):
         self.assertEqual(2**lib.QCGC_LARGE_FREE_LIST_FIRST_EXP, lib.qcgc_small_free_lists + 1)

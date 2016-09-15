@@ -108,10 +108,6 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 */
 
 object_t *_qcgc_allocate_slowpath(size_t size) {
-#if CHECKED
-	assert(qcgc_allocator_state.use_bump_allocator ==
-			(_qcgc_bump_allocator.ptr != NULL));
-#endif
 	object_t *result;
 
 	if (UNLIKELY(qcgc_state.cells_since_incmark >
@@ -125,7 +121,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	}
 
 	// Use bump / fit allocator
-	if (qcgc_allocator_state.use_bump_allocator) {
+	if (_qcgc_bump_allocator.ptr != NULL) {
 		result = bump_allocate(size);
 	} else {
 		result = qcgc_fit_allocate(size);
