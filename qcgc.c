@@ -90,11 +90,6 @@ object_t *_qcgc_allocate_large(size_t size) {
 }
 
 object_t *_qcgc_allocate_slowpath(size_t size) {
-#if LOG_ALLOCATION
-	size_t cells = bytes_to_cells(size);
-	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
-			(uint8_t *) &cells);
-#endif
 	object_t *result;
 
 	if (UNLIKELY(qcgc_state.cells_since_incmark >

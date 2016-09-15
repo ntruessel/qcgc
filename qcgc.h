@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "src/event_logger.h"
+
 /*******************************************************************************
  * Types and global state                                                      *
  ******************************************************************************/
@@ -136,6 +138,11 @@ void qcgc_destroy(void);
  *			case of errros
  */
 QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
+#if LOG_ALLOCATION
+	size_t cells = bytes_to_cells(size);
+	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
+			(uint8_t *) &cells);
+#endif
 	// FIXME: Create a fastpath
 	if (UNLIKELY(size >= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
 		return _qcgc_allocate_large(size);
