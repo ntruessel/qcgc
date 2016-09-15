@@ -33,7 +33,6 @@ void qcgc_initialize(void) {
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_state.cells_since_incmark = 0;
-	qcgc_state.cells_since_collect = 0;
 	qcgc_state.incmark_since_sweep = 0;
 	qcgc_state.free_cells = 0;
 	qcgc_state.largest_free_block = 0;
@@ -82,7 +81,6 @@ object_t *_qcgc_allocate_large(size_t size) {
 	result->flags = QCGC_GRAY_FLAG;
 
 	qcgc_state.cells_since_incmark += bytes_to_cells(size);
-	qcgc_state.cells_since_collect += bytes_to_cells(size);
 
 	return result;
 }
@@ -110,7 +108,6 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 		qcgc_bump_allocator_renew_block(false);
 
 		qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
-		qcgc_state.cells_since_collect += _qcgc_bump_allocator.remaining_cells;
 
 		if (_qcgc_bump_allocator.ptr != NULL &&
 				_qcgc_bump_allocator.remaining_cells >= cells) {
@@ -122,12 +119,10 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	object_t *result = qcgc_fit_allocate(size);
 	if (result != NULL) {
 		qcgc_state.cells_since_incmark += bytes_to_cells(size);
-		qcgc_state.cells_since_collect += bytes_to_cells(size);
 		return result;
 	}
 	qcgc_bump_allocator_renew_block(true);
 	qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
-	qcgc_state.cells_since_collect += _qcgc_bump_allocator.remaining_cells;
 	return qcgc_bump_allocate(size);
 }
 

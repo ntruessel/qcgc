@@ -17,6 +17,7 @@ class CellCountingTestCase(QCGCTest):
         #
         lib.qcgc_collect()
         self.assertEqual(lib.qcgc_state.free_cells, 0) # As the arena is free now
+        self.assertEqual(lib.qcgc_state.largest_free_block, 0)
 
     def test_bump_remain_allocated(self):
         for _ in range(10):
