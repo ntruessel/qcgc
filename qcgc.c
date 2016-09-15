@@ -101,29 +101,56 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 		}
 	}
 
-	// FIXME: Free cells not maintained
-
+	object_t *result = NULL;
 	if (!use_fit_allocator) {
-		assert(_qcgc_bump_allocator.remaining_cells < cells);
 		qcgc_bump_allocator_renew_block(false);
 
-		qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
+		qcgc_state.cells_since_incmark += _qcgc_bump_allocator.end -
+			_qcgc_bump_allocator.ptr;
 
+		cell_t *new_bump_ptr = _qcgc_bump_allocator.ptr + cells;
 		if (_qcgc_bump_allocator.ptr != NULL &&
-				_qcgc_bump_allocator.remaining_cells >= cells) {
-			return qcgc_bump_allocate(size);
+				new_bump_ptr <= _qcgc_bump_allocator.end) {
+			// Bump allocate
+			qcgc_arena_set_blocktype(qcgc_arena_addr(_qcgc_bump_allocator.ptr),
+					qcgc_arena_cell_index(_qcgc_bump_allocator.ptr),
+					BLOCK_WHITE);
+
+			result = (object_t *) _qcgc_bump_allocator.ptr;
+			_qcgc_bump_allocator.ptr = new_bump_ptr;
+
+#if QCGC_INIT_ZERO
+			memset(result, 0, cells * sizeof(cell_t));
+#endif
+
+			result->flags = QCGC_GRAY_FLAG;
+			return result;
 		}
 	}
 
 	// Fit allocate
-	object_t *result = qcgc_fit_allocate(size);
 	if (result != NULL) {
 		qcgc_state.cells_since_incmark += bytes_to_cells(size);
 		return result;
 	}
 	qcgc_bump_allocator_renew_block(true);
-	qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
-	return qcgc_bump_allocate(size);
+	qcgc_state.cells_since_incmark +=
+		_qcgc_bump_allocator.end - _qcgc_bump_allocator.ptr;
+
+	cell_t *new_bump_ptr = _qcgc_bump_allocator.ptr + cells;
+	qcgc_arena_set_blocktype(qcgc_arena_addr(_qcgc_bump_allocator.ptr),
+			qcgc_arena_cell_index(_qcgc_bump_allocator.ptr),
+			BLOCK_WHITE);
+
+	result = (object_t *) _qcgc_bump_allocator.ptr;
+	_qcgc_bump_allocator.ptr = new_bump_ptr;
+
+#if QCGC_INIT_ZERO
+	memset(result, 0, cells * sizeof(cell_t));
+#endif
+
+	result->flags = QCGC_GRAY_FLAG;
+	return result;
 }
 
 /*

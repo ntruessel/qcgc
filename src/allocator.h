@@ -84,17 +84,17 @@ void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
  * Reset bump pointer
  */
 QCGC_STATIC QCGC_INLINE void qcgc_reset_bump_ptr(void) {
-	if (_qcgc_bump_allocator.remaining_cells > 0) {
+	if (_qcgc_bump_allocator.end > _qcgc_bump_allocator.ptr) {
 		qcgc_arena_set_blocktype(
 				qcgc_arena_addr(_qcgc_bump_allocator.ptr),
 				qcgc_arena_cell_index(
 					_qcgc_bump_allocator.ptr),
 				BLOCK_FREE);
 		qcgc_fit_allocator_add(_qcgc_bump_allocator.ptr,
-				_qcgc_bump_allocator.remaining_cells);
+				_qcgc_bump_allocator.end - _qcgc_bump_allocator.ptr);
 	}
 	_qcgc_bump_allocator.ptr = NULL;
-	_qcgc_bump_allocator.remaining_cells = 0;
+	_qcgc_bump_allocator.end = NULL;
 }
 
 /**
@@ -103,33 +103,3 @@ QCGC_STATIC QCGC_INLINE void qcgc_reset_bump_ptr(void) {
  * @param	force_arena	Force generation of new arena if no block is found
  */
 void qcgc_bump_allocator_renew_block(bool force_arena);
-
-/**
- * Allocate new memory region using bump allocator.
- * Bump allocator must have enough space for desired bytes
- * (client is responsible, use qcgc_bump_allocator_renew_block)
- *
- * @param	bytes	Desired size of the memory region in bytes
- * @return	Pointer to memory large enough to hold size bytes, NULL in case of
- *			errors, already zero initialized if QCGC_INIT_ZERO is set
- */
-QCGC_STATIC QCGC_INLINE object_t *qcgc_bump_allocate(size_t bytes) {
-	size_t cells = bytes_to_cells(bytes);
-
-	cell_t *mem = _qcgc_bump_allocator.ptr;
-
-	qcgc_arena_set_blocktype(qcgc_arena_addr(mem), qcgc_arena_cell_index(mem),
-			BLOCK_WHITE);
-
-	_qcgc_bump_allocator.ptr += cells;
-	_qcgc_bump_allocator.remaining_cells -= cells;
-
-	object_t *result = (object_t *) mem;
-
-#if QCGC_INIT_ZERO
-	memset(result, 0, cells * sizeof(cell_t));
-#endif
-
-	result->flags = QCGC_GRAY_FLAG;
-	return result;
-}

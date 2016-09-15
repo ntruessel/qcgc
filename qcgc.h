@@ -47,7 +47,7 @@ typedef uint8_t cell_t[16];
  */
 struct qcgc_bump_allocator {
 	cell_t *ptr;
-	size_t remaining_cells;
+	cell_t *end;
 } _qcgc_bump_allocator;
 
 /**
@@ -204,24 +204,23 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
 	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
 			(uint8_t *) &cells);
 #endif
-	// FIXME: Create a fastpath
 	if (UNLIKELY(size >= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
 		return _qcgc_allocate_large(size);
 	}
 
-	if (_qcgc_bump_allocator.remaining_cells < bytes_to_cells(size)) {
+	cell_t *new_bump_ptr = _qcgc_bump_allocator.ptr + cells;
+	// XXX: UNLIKELY?
+	if (new_bump_ptr > _qcgc_bump_allocator.end) {
 		return _qcgc_allocate_slowpath(size);
 	}
 
-	cell_t *mem = _qcgc_bump_allocator.ptr;
-
-	qcgc_arena_set_blocktype(qcgc_arena_addr(mem), qcgc_arena_cell_index(mem),
+	qcgc_arena_set_blocktype(qcgc_arena_addr(_qcgc_bump_allocator.ptr),
+			qcgc_arena_cell_index(_qcgc_bump_allocator.ptr),
 			BLOCK_WHITE);
 
-	_qcgc_bump_allocator.ptr += cells;
-	_qcgc_bump_allocator.remaining_cells -= cells;
+	object_t *result = (object_t *) _qcgc_bump_allocator.ptr;
+	_qcgc_bump_allocator.ptr = new_bump_ptr;
 
-	object_t *result = (object_t *) mem;
 
 #if QCGC_INIT_ZERO
 	memset(result, 0, cells * sizeof(cell_t));

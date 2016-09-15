@@ -11,7 +11,7 @@ class FitAllocatorTest(QCGCTest):
         self.assertEqual(0, lib.free_arenas().count)
         self.assertNotEqual(ffi.NULL, lib.free_arenas().items)
         self.assertEqual(ffi.addressof(lib.arena_cells(lib.arenas().items[0])[lib.qcgc_arena_first_cell_index]), lib._qcgc_bump_allocator.ptr)
-        self.assertEqual(lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index, lib._qcgc_bump_allocator.remaining_cells)
+        self.assertEqual(lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index, self.bump_remaining_cells())
         for i in range(lib.qcgc_small_free_lists):
             self.assertEqual(lib.QCGC_SMALL_FREE_LIST_INIT_SIZE, lib.small_free_list(i).size)
             self.assertEqual(0, lib.small_free_list(i).count)

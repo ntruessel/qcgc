@@ -32,7 +32,7 @@ void qcgc_allocator_initialize(void) {
 	}
 
 	_qcgc_bump_allocator.ptr = NULL;
-	_qcgc_bump_allocator.remaining_cells = 0;
+	_qcgc_bump_allocator.end = NULL;
 	qcgc_bump_allocator_renew_block(true);
 }
 
@@ -67,13 +67,11 @@ void qcgc_allocator_destroy(void) {
 
 void qcgc_bump_allocator_renew_block(bool force_arena) {
 #if CHECKED
-	if (_qcgc_bump_allocator.remaining_cells > 0) {
-		for (size_t i = 1; i < _qcgc_bump_allocator.remaining_cells;
-				i++) {
-			assert(qcgc_arena_get_blocktype(qcgc_arena_addr(
-							_qcgc_bump_allocator.ptr + i),
-						qcgc_arena_cell_index(
-							_qcgc_bump_allocator.ptr + i))
+	if (_qcgc_bump_allocator.end > _qcgc_bump_allocator.ptr) {
+		for (cell_t *it = _qcgc_bump_allocator.ptr + 1;
+				it < _qcgc_bump_allocator.end; it++) {
+			assert(qcgc_arena_get_blocktype(qcgc_arena_addr(it),
+						qcgc_arena_cell_index(it))
 					== BLOCK_EXTENT);
 		}
 	}
@@ -91,7 +89,8 @@ void qcgc_bump_allocator_renew_block(bool force_arena) {
 		free_list = qcgc_exp_free_list_remove_index(free_list, 0);
 		qcgc_allocator_state.fit_state.
 			large_free_list[QCGC_LARGE_FREE_LISTS - 1] = free_list;
-		qcgc_state.free_cells -= _qcgc_bump_allocator.remaining_cells;
+		qcgc_state.free_cells -=
+			_qcgc_bump_allocator.end - _qcgc_bump_allocator.ptr;
 	} else {
 		if (qcgc_allocator_state.free_arenas->count > 0) {
 			// Reuse arena
@@ -122,13 +121,10 @@ void qcgc_bump_allocator_renew_block(bool force_arena) {
 					qcgc_arena_cell_index(
 						_qcgc_bump_allocator.ptr))
 				== BLOCK_FREE);
-		for (size_t i = 1; i < _qcgc_bump_allocator.remaining_cells;
-				i++) {
-			assert(qcgc_arena_get_blocktype(qcgc_arena_addr(
-							_qcgc_bump_allocator.ptr + i),
-						qcgc_arena_cell_index(
-							_qcgc_bump_allocator.ptr + i))
-					== BLOCK_EXTENT);
+		for (cell_t *it = _qcgc_bump_allocator.ptr + 1;
+				it < _qcgc_bump_allocator.end; it++) {
+			assert(qcgc_arena_get_blocktype(qcgc_arena_addr(it),
+						qcgc_arena_cell_index(it)) == BLOCK_EXTENT);
 		}
 	}
 #endif
@@ -144,7 +140,7 @@ QCGC_STATIC void bump_allocator_assign(cell_t *ptr, size_t cells) {
 	}
 #endif
 	_qcgc_bump_allocator.ptr = ptr;
-	_qcgc_bump_allocator.remaining_cells = cells;
+	_qcgc_bump_allocator.end = ptr + cells;
 }
 
 /*******************************************************************************

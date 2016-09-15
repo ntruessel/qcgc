@@ -65,7 +65,7 @@ class QCGCTest(unittest.TestCase):
         return False
 
     def bump_allocate(self, size):
-        if lib._qcgc_bump_allocator.remaining_cells < lib.bytes_to_cells(size):
+        if self.bump_remaining_cells() < lib.bytes_to_cells(size):
             lib.qcgc_bump_allocator_renew_block();
         return lib.qcgc_bump_allocate(size);
 
@@ -83,6 +83,9 @@ class QCGCTest(unittest.TestCase):
         lib.qcgc_arena_set_blocktype(lib.qcgc_arena_addr(ptr),
                 lib.qcgc_arena_cell_index(ptr),
                 blocktype)
+
+    def bump_remaining_cells(self):
+        return lib._qcgc_bump_allocator.end - lib._qcgc_bump_allocator.ptr
 
     # Utilities for mark/sweep testing
     def gen_structure_1(self):

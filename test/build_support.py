@@ -259,7 +259,6 @@ ffi.cdef("""
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
         object_t *qcgc_fit_allocate(size_t bytes);
-        object_t *qcgc_bump_allocate(size_t bytes);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
 
         // static functions
@@ -286,7 +285,7 @@ ffi.cdef("""
 ffi.cdef("""
         struct qcgc_bump_allocator {
                 cell_t *ptr;
-                size_t remaining_cells;
+                cell_t *end;
         } _qcgc_bump_allocator;
 
         void qcgc_initialize(void);
@@ -346,6 +345,7 @@ ffi.cdef("""
         } mark_color_t;
 
         mark_color_t qcgc_get_mark_color(object_t *object);
+        object_t *qcgc_bump_allocate(size_t bytes);
 
         """)
 
@@ -378,7 +378,7 @@ ffi.set_source("support",
 
         struct qcgc_bump_allocator {
             cell_t *ptr;
-            size_t remaining_cells;
+            cell_t *end;
         } _qcgc_bump_allocator;
 
         void qcgc_initialize(void);
@@ -557,7 +557,6 @@ ffi.set_source("support",
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
         object_t *qcgc_fit_allocate(size_t bytes);
-        object_t *qcgc_bump_allocate(size_t bytes);
         void qcgc_fit_allocator_empty_lists(void);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
         void qcgc_bump_allocator_renew_block(void);
@@ -660,12 +659,12 @@ ffi.set_source("support",
         }
 
         void bump_ptr_reset(void) {
-            if (_qcgc_bump_allocator.remaining_cells > 0) {
+            if (_qcgc_bump_allocator.end > _qcgc_bump_allocator.ptr) {
                 qcgc_arena_set_blocktype(qcgc_arena_addr(_qcgc_bump_allocator.ptr),
                         qcgc_arena_cell_index(_qcgc_bump_allocator.ptr), BLOCK_FREE);
             }
             _qcgc_bump_allocator.ptr = NULL;
-            _qcgc_bump_allocator.remaining_cells = 0;
+            _qcgc_bump_allocator.end = NULL;
         }
 
         object_t *allocate_prebuilt(size_t bytes) {
@@ -680,6 +679,27 @@ ffi.set_source("support",
             uint32_t type_id;
             myobject_t *refs[];
         };
+
+        object_t *qcgc_bump_allocate(size_t bytes);
+        object_t *qcgc_bump_allocate(size_t bytes) {
+            size_t cells = bytes_to_cells(bytes);
+
+            cell_t *mem = _qcgc_bump_allocator.ptr;
+
+            qcgc_arena_set_blocktype(qcgc_arena_addr(mem), qcgc_arena_cell_index(mem),
+                            BLOCK_WHITE);
+
+            _qcgc_bump_allocator.ptr += cells;
+
+            object_t *result = (object_t *) mem;
+
+        #if QCGC_INIT_ZERO
+            memset(result, 0, cells * sizeof(cell_t));
+        #endif
+
+            result->flags = QCGC_GRAY_FLAG;
+            return result;
+        }
 
         void _set_type_id(object_t *obj, uint32_t id);
         uint32_t _get_type_id(object_t *obj);
