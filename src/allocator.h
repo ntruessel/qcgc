@@ -92,15 +92,17 @@ QCGC_STATIC QCGC_INLINE void qcgc_reset_bump_ptr(void) {
 				BLOCK_FREE);
 		qcgc_fit_allocator_add(_qcgc_bump_allocator.ptr,
 				_qcgc_bump_allocator.remaining_cells);
-		_qcgc_bump_allocator.ptr = NULL;
-		_qcgc_bump_allocator.remaining_cells = 0;
 	}
+	_qcgc_bump_allocator.ptr = NULL;
+	_qcgc_bump_allocator.remaining_cells = 0;
 }
 
 /**
  * Find a new block for the bump allocator
+ *
+ * @param	force_arena	Force generation of new arena if no block is found
  */
-void qcgc_bump_allocator_renew_block(void);
+void qcgc_bump_allocator_renew_block(bool force_arena);
 
 /**
  * Allocate new memory region using bump allocator.

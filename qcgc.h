@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "src/event_logger.h"
 
@@ -116,6 +117,62 @@ QCGC_STATIC QCGC_INLINE size_t bytes_to_cells(size_t bytes) {
 	return (bytes + sizeof(cell_t) - 1) / sizeof(cell_t);
 }
 
+/**
+ * Arena pointer for given cell.
+ *
+ * @param	ptr		Pointer to cell for which you want to know the corresponding
+ *					arena
+ * @return	The arena the pointer belongs to
+ */
+QCGC_STATIC QCGC_INLINE arena_t *qcgc_arena_addr(cell_t *ptr) {
+	return (arena_t *)((intptr_t) ptr & ~(QCGC_ARENA_SIZE - 1));
+}
+
+/**
+ * Index of cell in arena.
+ *
+ * @param	ptr		Pointer to cell for which you want to know the cell index
+ * @return	Index of the cell to which ptr points to
+ */
+QCGC_STATIC QCGC_INLINE size_t qcgc_arena_cell_index(cell_t *ptr) {
+	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1)) >> 4;
+}
+
+/**
+ * Set blocktype.
+ *
+ * @param	ptr		Pointer to cell for which you want to set the blocktype
+ * @param	type	Blocktype that should be set
+ */
+QCGC_STATIC QCGC_INLINE void qcgc_arena_set_blocktype(arena_t *arena,
+		size_t index, blocktype_t type) {
+#if CHECKED
+	assert(arena != NULL);
+	assert(index >= QCGC_ARENA_FIRST_CELL_INDEX);
+	assert(index < QCGC_ARENA_CELLS_COUNT);
+#endif
+	size_t byte = index / 8;
+	uint8_t mask = 0x1 << (index % 8);
+	switch(type) {
+		case BLOCK_EXTENT:
+			arena->block_bitmap[byte] &= ~mask;
+			arena->mark_bitmap[byte] &= ~mask;
+			break;
+		case BLOCK_FREE:
+			arena->block_bitmap[byte] &= ~mask;
+			arena->mark_bitmap[byte] |= mask;
+			break;
+		case BLOCK_WHITE:
+			arena->block_bitmap[byte] |= mask;
+			arena->mark_bitmap[byte] &= ~mask;
+			break;
+		case BLOCK_BLACK:
+			arena->block_bitmap[byte] |= mask;
+			arena->mark_bitmap[byte] |= mask;
+			break;
+	}
+}
+
 /*******************************************************************************
  * Public functions                                                            *
  ******************************************************************************/
@@ -138,8 +195,12 @@ void qcgc_destroy(void);
  *			case of errros
  */
 QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
-#if LOG_ALLOCATION
+#if CHECKED
+	assert(size > 0);
+#endif
 	size_t cells = bytes_to_cells(size);
+
+#if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
 			(uint8_t *) &cells);
 #endif
@@ -147,7 +208,27 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
 	if (UNLIKELY(size >= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
 		return _qcgc_allocate_large(size);
 	}
-	return _qcgc_allocate_slowpath(size);
+
+	if (_qcgc_bump_allocator.remaining_cells < bytes_to_cells(size)) {
+		return _qcgc_allocate_slowpath(size);
+	}
+
+	cell_t *mem = _qcgc_bump_allocator.ptr;
+
+	qcgc_arena_set_blocktype(qcgc_arena_addr(mem), qcgc_arena_cell_index(mem),
+			BLOCK_WHITE);
+
+	_qcgc_bump_allocator.ptr += cells;
+	_qcgc_bump_allocator.remaining_cells -= cells;
+
+	object_t *result = (object_t *) mem;
+
+#if QCGC_INIT_ZERO
+	memset(result, 0, cells * sizeof(cell_t));
+#endif
+
+	result->flags = QCGC_GRAY_FLAG;
+	return result;
 }
 
 /**

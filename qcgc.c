@@ -25,8 +25,6 @@
 QCGC_STATIC QCGC_INLINE void initialize_shadowstack(void);
 QCGC_STATIC QCGC_INLINE void destroy_shadowstack(void);
 
-QCGC_STATIC object_t *bump_allocate(size_t size);
-
 void qcgc_initialize(void) {
 	initialize_shadowstack();
 	qcgc_state.prebuilt_objects = qcgc_object_stack_create(16); // XXX
@@ -89,9 +87,9 @@ object_t *_qcgc_allocate_large(size_t size) {
 	return result;
 }
 
-/*
 object_t *_qcgc_allocate_slowpath(size_t size) {
 	bool use_fit_allocator = _qcgc_bump_allocator.ptr == NULL;
+	size_t cells = bytes_to_cells(size);
 
 	if (UNLIKELY(qcgc_state.cells_since_incmark >
 				qcgc_state.incmark_threshold)) {
@@ -104,9 +102,33 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 			qcgc_state.incmark_since_sweep++;
 		}
 	}
-}
-*/
 
+	// XXX: Make these faster
+	qcgc_state.free_cells -= bytes_to_cells(size);
+
+	qcgc_state.cells_since_incmark += bytes_to_cells(size);
+	qcgc_state.cells_since_collect += bytes_to_cells(size);
+
+	if (!use_fit_allocator) {
+		assert(_qcgc_bump_allocator.remaining_cells < cells);
+		qcgc_bump_allocator_renew_block(false);
+
+		if (_qcgc_bump_allocator.ptr != NULL &&
+				_qcgc_bump_allocator.remaining_cells >= cells) {
+			return qcgc_bump_allocate(size);
+		}
+	}
+
+	// Fit allocate
+	object_t *result = qcgc_fit_allocate(size);
+	if (result != NULL) {
+		return result;
+	}
+	qcgc_bump_allocator_renew_block(true);
+	return qcgc_bump_allocate(size);
+}
+
+/*
 object_t *_qcgc_allocate_slowpath(size_t size) {
 	object_t *result;
 
@@ -131,12 +153,9 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 			result = bump_allocate(size);
 		}
 	}
-	qcgc_state.free_cells -= bytes_to_cells(size);
-
-	qcgc_state.cells_since_incmark += bytes_to_cells(size);
-	qcgc_state.cells_since_collect += bytes_to_cells(size);
 	return result;
 }
+*/
 
 void qcgc_collect(void) {
 	qcgc_mark();
@@ -234,12 +253,4 @@ QCGC_STATIC void destroy_shadowstack(void) {
 				PROT_WRITE);
 
 	free(_qcgc_shadowstack.base);
-}
-
-QCGC_STATIC object_t *bump_allocate(size_t size) {
-	if (UNLIKELY(_qcgc_bump_allocator.remaining_cells <
-			bytes_to_cells(size))) {
-		qcgc_bump_allocator_renew_block();
-	}
-	return qcgc_bump_allocate(size);
 }

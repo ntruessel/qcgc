@@ -251,11 +251,6 @@ void qcgc_sweep(void) {
 			(QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX) >=
 			free_cells);
 #endif
-	if (qcgc_state.free_cells > 2 * qcgc_state.largest_free_block) {
-		// Use fit allocator
-		qcgc_reset_bump_ptr();
-	}
-
 	update_weakrefs();
 
 	qcgc_state.free_cells += _qcgc_bump_allocator.remaining_cells;

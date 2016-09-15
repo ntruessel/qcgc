@@ -62,27 +62,6 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena);
  ******************************************************************************/
 
 /**
- * Arena pointer for given cell.
- *
- * @param	ptr		Pointer to cell for which you want to know the corresponding
- *					arena
- * @return	The arena the pointer belongs to
- */
-QCGC_STATIC QCGC_INLINE arena_t *qcgc_arena_addr(cell_t *ptr) {
-	return (arena_t *)((intptr_t) ptr & ~(QCGC_ARENA_SIZE - 1));
-}
-
-/**
- * Index of cell in arena.
- *
- * @param	ptr		Pointer to cell for which you want to know the cell index
- * @return	Index of the cell to which ptr points to
- */
-QCGC_STATIC QCGC_INLINE size_t qcgc_arena_cell_index(cell_t *ptr) {
-	return (size_t)((intptr_t) ptr & (QCGC_ARENA_SIZE - 1)) >> 4;
-}
-
-/**
  * Get blocktype.
  *
  * @param	arena		Arena in which to perform the lookup
@@ -114,41 +93,6 @@ QCGC_STATIC QCGC_INLINE blocktype_t qcgc_arena_get_blocktype(arena_t *arena,
 		} else {
 			return BLOCK_EXTENT;
 		}
-	}
-}
-
-/**
- * Set blocktype.
- *
- * @param	ptr		Pointer to cell for which you want to set the blocktype
- * @param	type	Blocktype that should be set
- */
-QCGC_STATIC QCGC_INLINE void qcgc_arena_set_blocktype(arena_t *arena,
-		size_t index, blocktype_t type) {
-#if CHECKED
-	assert(arena != NULL);
-	assert(index >= QCGC_ARENA_FIRST_CELL_INDEX);
-	assert(index < QCGC_ARENA_CELLS_COUNT);
-#endif
-	size_t byte = index / 8;
-	uint8_t mask = 0x1 << (index % 8);
-	switch(type) {
-		case BLOCK_EXTENT:
-			arena->block_bitmap[byte] &= ~mask;
-			arena->mark_bitmap[byte] &= ~mask;
-			break;
-		case BLOCK_FREE:
-			arena->block_bitmap[byte] &= ~mask;
-			arena->mark_bitmap[byte] |= mask;
-			break;
-		case BLOCK_WHITE:
-			arena->block_bitmap[byte] |= mask;
-			arena->mark_bitmap[byte] &= ~mask;
-			break;
-		case BLOCK_BLACK:
-			arena->block_bitmap[byte] |= mask;
-			arena->mark_bitmap[byte] |= mask;
-			break;
 	}
 }
 
