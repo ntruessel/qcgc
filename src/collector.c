@@ -256,7 +256,7 @@ void qcgc_sweep(void) {
 
 	update_weakrefs();
 
-	qcgc_state.free_cells += qcgc_allocator_state.bump_state.remaining_cells;
+	qcgc_state.free_cells += _qcgc_bump_allocator.remaining_cells;
 	{
 		struct log_info_s {
 			size_t arenas;

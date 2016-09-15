@@ -224,7 +224,7 @@ QCGC_STATIC void destroy_shadowstack(void) {
 }
 
 QCGC_STATIC object_t *bump_allocate(size_t size) {
-	if (UNLIKELY(qcgc_allocator_state.bump_state.remaining_cells <
+	if (UNLIKELY(_qcgc_bump_allocator.remaining_cells <
 			bytes_to_cells(size))) {
 		qcgc_bump_allocator_renew_block();
 	}

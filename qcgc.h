@@ -10,16 +10,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*******************************************************************************
+ * Types and global state                                                      *
+ ******************************************************************************/
+
 /**
  * Object Layout.
  */
-#define QCGC_GRAY_FLAG (1<<0)
-#define QCGC_PREBUILT_OBJECT (1<<1)
-#define QCGC_PREBUILT_REGISTERED (1<<2)
-
 typedef struct object_s {
 	uint32_t flags;
 } object_t;
+
+#define QCGC_GRAY_FLAG (1<<0)
+#define QCGC_PREBUILT_OBJECT (1<<1)
+#define QCGC_PREBUILT_REGISTERED (1<<2)
 
 /**
  * Shadow stack
@@ -30,14 +34,21 @@ struct qcgc_shadowstack {
 } _qcgc_shadowstack;
 
 /**
- * Initialize the garbage collector.
+ * The smallest unit of memory that can be addressed and allocated.
  */
-void qcgc_initialize(void);
+typedef uint8_t cell_t[16];
 
 /**
- * Destroy the garbage collector.
+ * Bump allocator
  */
-void qcgc_destroy(void);
+struct qcgc_bump_allocator {
+	cell_t *ptr;
+	size_t remaining_cells;
+} _qcgc_bump_allocator;
+
+/*******************************************************************************
+ * Internal functions                                                          *
+ ******************************************************************************/
 
 /**
  * Allocate large block. May trigger garbage collection.
@@ -56,6 +67,27 @@ object_t *_qcgc_allocate_large(size_t size);
  *			case of errros
  */
 object_t *_qcgc_allocate_slowpath(size_t size);
+
+/**
+ * Turns bytes to cells.
+ */
+QCGC_STATIC QCGC_INLINE size_t bytes_to_cells(size_t bytes) {
+	return (bytes + sizeof(cell_t) - 1) / sizeof(cell_t);
+}
+
+/*******************************************************************************
+ * Public functions                                                            *
+ ******************************************************************************/
+
+/**
+ * Initialize the garbage collector.
+ */
+void qcgc_initialize(void);
+
+/**
+ * Destroy the garbage collector.
+ */
+void qcgc_destroy(void);
 
 /**
  * Allocate a new object. May trigger garabge collection.

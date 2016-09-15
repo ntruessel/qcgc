@@ -270,8 +270,6 @@ ffi.cdef("""
         // Access functions for state
         arena_bag_t *arenas(void);
         arena_bag_t *free_arenas(void);
-        cell_t *bump_ptr(void);
-        size_t remaining_cells(void);
         linear_free_list_t *small_free_list(size_t index);
         exp_free_list_t *large_free_list(size_t index);
         bool use_bump_allocator(void);
@@ -306,6 +304,11 @@ ffi.cdef("""
 # core                                                                         #
 ################################################################################
 ffi.cdef("""
+        struct qcgc_bump_allocator {
+                cell_t *ptr;
+                size_t remaining_cells;
+        } _qcgc_bump_allocator;
+
         void qcgc_initialize(void);
         void qcgc_destroy(void);
         void qcgc_write(object_t *object);
@@ -373,6 +376,8 @@ ffi.cdef("""
 ffi.set_source("support",
         """
         #include "../config.h"
+        #include <stddef.h>
+        #include <stdint.h>
 
 /******************************************************************************/
         // qcgc.h
@@ -384,10 +389,17 @@ ffi.set_source("support",
                 uint32_t flags;
         } object_t;
 
+        typedef uint8_t cell_t[16];
+
         struct qcgc_shadowstack {
                 object_t **top;
                 object_t **base;
         } _qcgc_shadowstack;
+
+        struct qcgc_bump_allocator {
+            cell_t *ptr;
+            size_t remaining_cells;
+        } _qcgc_bump_allocator;
 
         void qcgc_initialize(void);
         void qcgc_destroy(void);
@@ -447,8 +459,6 @@ ffi.set_source("support",
         #define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
 
         #define QCGC_ARENA_FIRST_CELL_INDEX (1<<(QCGC_ARENA_SIZE_EXP - 10))
-
-        typedef uint8_t cell_t[16];
 
         typedef union {
             struct {
@@ -574,10 +584,6 @@ ffi.set_source("support",
         struct qcgc_allocator_state {
             arena_bag_t *arenas;
             arena_bag_t *free_arenas;
-            struct bump_state {
-                cell_t *bump_ptr;
-                size_t remaining_cells;
-            } bump_state;
             struct fit_state {
                 linear_free_list_t *small_free_list[QCGC_SMALL_FREE_LISTS];
                 exp_free_list_t *large_free_list[QCGC_LARGE_FREE_LISTS];
@@ -681,14 +687,6 @@ ffi.set_source("support",
             return qcgc_allocator_state.free_arenas;
         }
 
-        cell_t *bump_ptr(void) {
-            return qcgc_allocator_state.bump_state.bump_ptr;
-        }
-
-        size_t remaining_cells(void) {
-            return qcgc_allocator_state.bump_state.remaining_cells;
-        }
-
         linear_free_list_t *small_free_list(size_t index) {
             return qcgc_allocator_state.fit_state.small_free_list[index];
         }
@@ -702,12 +700,12 @@ ffi.set_source("support",
         }
 
         void bump_ptr_reset(void) {
-            if (qcgc_allocator_state.bump_state.remaining_cells > 0) {
-                qcgc_arena_set_blocktype(qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr),
-                        qcgc_arena_cell_index(qcgc_allocator_state.bump_state.bump_ptr), BLOCK_FREE);
+            if (_qcgc_bump_allocator.remaining_cells > 0) {
+                qcgc_arena_set_blocktype(qcgc_arena_addr(_qcgc_bump_allocator.ptr),
+                        qcgc_arena_cell_index(_qcgc_bump_allocator.ptr), BLOCK_FREE);
             }
-            qcgc_allocator_state.bump_state.bump_ptr = NULL;
-            qcgc_allocator_state.bump_state.remaining_cells = 0;
+            _qcgc_bump_allocator.ptr = NULL;
+            _qcgc_bump_allocator.remaining_cells = 0;
         }
 
         object_t *allocate_prebuilt(size_t bytes) {

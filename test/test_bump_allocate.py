@@ -9,16 +9,16 @@ class BumpAllocatorTest(QCGCTest):
         size = lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index
         lib.bump_allocator_assign(ffi.addressof(first_cell), size)
 
-        self.assertEqual(ffi.addressof(first_cell), lib.bump_ptr())
-        self.assertEqual(size, lib.remaining_cells())
+        self.assertEqual(ffi.addressof(first_cell), lib._qcgc_bump_allocator.ptr)
+        self.assertEqual(size, lib._qcgc_bump_allocator.remaining_cells)
 
         p = self.bump_allocate(16)
         self.assertEqual(ffi.addressof(first_cell), p)
-        self.assertEqual(size - 1, lib.remaining_cells())
+        self.assertEqual(size - 1, lib._qcgc_bump_allocator.remaining_cells)
 
         q = self.bump_allocate((2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP))
         self.assertEqual(ffi.addressof(lib.arena_cells(arena)[lib.qcgc_arena_first_cell_index + 1]), q)
-        self.assertEqual(size - 1 - 2**(lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP - 4), lib.remaining_cells())
+        self.assertEqual(size - 1 - 2**(lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP - 4), lib._qcgc_bump_allocator.remaining_cells)
 
     def test_alloc_full_arena(self):
         size = 16 * (lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index)

@@ -94,7 +94,7 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena) {
 #if CHECKED
 	assert(arena != NULL);
 	assert(qcgc_arena_is_coalesced(arena));
-	assert(qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) == arena);
+	assert(qcgc_arena_addr(_qcgc_bump_allocator.ptr) == arena);
 #endif
 	// Ignore free cell / largest block counting here, as blocks are not
 	// registerd in free lists as well
@@ -121,7 +121,7 @@ bool qcgc_arena_sweep(arena_t *arena) {
 	assert(arena != NULL);
 	assert(qcgc_arena_is_coalesced(arena));
 #endif
-	if (qcgc_arena_addr(qcgc_allocator_state.bump_state.bump_ptr) == arena) {
+	if (qcgc_arena_addr(_qcgc_bump_allocator.ptr) == arena) {
 		return qcgc_arena_pseudo_sweep(arena);
 	}
 

@@ -41,10 +41,6 @@
 struct qcgc_allocator_state {
 	arena_bag_t *arenas;
 	arena_bag_t *free_arenas;
-	struct bump_state {
-		cell_t *bump_ptr;
-		size_t remaining_cells;
-	} bump_state;
 	struct fit_state {
 		linear_free_list_t *small_free_list[QCGC_SMALL_FREE_LISTS];
 		exp_free_list_t *large_free_list[QCGC_LARGE_FREE_LISTS];
@@ -86,10 +82,6 @@ void qcgc_fit_allocator_empty_lists(void);
  */
 void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
 
-QCGC_STATIC QCGC_INLINE size_t bytes_to_cells(size_t bytes) {
-	return (bytes + sizeof(cell_t) - 1) / sizeof(cell_t);
-}
-
 /**
  * Find a new block for the bump allocator
  */
@@ -107,13 +99,13 @@ void qcgc_bump_allocator_renew_block(void);
 QCGC_STATIC QCGC_INLINE object_t *qcgc_bump_allocate(size_t bytes) {
 	size_t cells = bytes_to_cells(bytes);
 
-	cell_t *mem = qcgc_allocator_state.bump_state.bump_ptr;
+	cell_t *mem = _qcgc_bump_allocator.ptr;
 
 	qcgc_arena_set_blocktype(qcgc_arena_addr(mem), qcgc_arena_cell_index(mem),
 			BLOCK_WHITE);
 
-	qcgc_allocator_state.bump_state.bump_ptr += cells;
-	qcgc_allocator_state.bump_state.remaining_cells -= cells;
+	_qcgc_bump_allocator.ptr += cells;
+	_qcgc_bump_allocator.remaining_cells -= cells;
 
 	object_t *result = (object_t *) mem;
 
