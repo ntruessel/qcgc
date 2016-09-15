@@ -61,6 +61,34 @@ void qcgc_destroy(void) {
 	free(qcgc_state.gp_gray_stack);
 }
 
+object_t *qcgc_allocate_large(size_t size) {
+#if CHECKED
+	assert(size >= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP);
+#endif
+	if (UNLIKELY(qcgc_state.cells_since_incmark >
+				qcgc_state.incmark_threshold)) {
+		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
+			qcgc_collect();
+		} else {
+			qcgc_incmark();
+			qcgc_state.incmark_since_sweep++;
+		}
+	}
+
+	// FIXME: alligned_alloc requires size to be a multiple of the alignment
+	object_t *result = aligned_alloc(QCGC_ARENA_SIZE, size);
+#if QCGC_INIT_ZERO
+	memset(result, 0, size);
+#endif
+	qcgc_hbtable_insert(result);
+	result->flags = QCGC_GRAY_FLAG;
+
+	qcgc_state.cells_since_incmark += bytes_to_cells(size);
+	qcgc_state.cells_since_collect += bytes_to_cells(size);
+
+	return result;
+}
+
 object_t *qcgc_allocate_slowpath(size_t size) {
 #if LOG_ALLOCATION
 	size_t cells = bytes_to_cells(size);
@@ -79,23 +107,19 @@ object_t *qcgc_allocate_slowpath(size_t size) {
 		}
 	}
 
-	if (LIKELY(size <= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
-		// Use bump / fit allocator
-		if (qcgc_allocator_state.use_bump_allocator) {
-			result = bump_allocate(size);
-		} else {
-			result = qcgc_fit_allocate(size);
-
-			// Fallback to bump allocator
-			if (result == NULL) {
-				result = bump_allocate(size);
-			}
-		}
-		qcgc_state.free_cells -= bytes_to_cells(size);
+	// Use bump / fit allocator
+	if (qcgc_allocator_state.use_bump_allocator) {
+		result = bump_allocate(size);
 	} else {
-		// Use huge block allocator
-		result = qcgc_large_allocate(size);
+		result = qcgc_fit_allocate(size);
+
+		// Fallback to bump allocator
+		if (result == NULL) {
+			result = bump_allocate(size);
+		}
 	}
+	qcgc_state.free_cells -= bytes_to_cells(size);
+
 	qcgc_state.cells_since_incmark += bytes_to_cells(size);
 	qcgc_state.cells_since_collect += bytes_to_cells(size);
 	return result;

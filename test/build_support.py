@@ -282,7 +282,6 @@ ffi.cdef("""
         void qcgc_allocator_destroy(void);
         object_t *qcgc_fit_allocate(size_t bytes);
         object_t *qcgc_bump_allocate(size_t bytes);
-        object_t *qcgc_large_allocate(size_t bytes);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
 
         // static functions
@@ -315,6 +314,8 @@ ffi.cdef("""
 
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
+
+        object_t *qcgc_allocate_large(size_t bytes);
         """)
 
 ################################################################################
@@ -391,6 +392,7 @@ ffi.set_source("support",
         void qcgc_initialize(void);
         void qcgc_destroy(void);
         object_t *qcgc_allocate(size_t size);
+        object_t *qcgc_allocate_large(size_t bytes);
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
         void qcgc_write(object_t *object);
@@ -587,7 +589,6 @@ ffi.set_source("support",
         void qcgc_allocator_destroy(void);
         object_t *qcgc_fit_allocate(size_t bytes);
         object_t *qcgc_bump_allocate(size_t bytes);
-        object_t *qcgc_large_allocate(size_t bytes);
         void qcgc_fit_allocator_empty_lists(void);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
         void qcgc_bump_allocator_renew_block(void);

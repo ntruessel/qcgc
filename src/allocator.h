@@ -124,20 +124,3 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_bump_allocate(size_t bytes) {
 	result->flags = QCGC_GRAY_FLAG;
 	return result;
 }
-
-/**
- * Allocate new memory region using huge block allocator
- *
- * @param	bytes	Desired size of the memory region in bytes
- * @return	Pointer to memory large enough to hold size bytes, NULL in case of
- *			errors, already zero initialized if QCGC_INIT_ZERO is set
- */
-QCGC_STATIC QCGC_INLINE object_t *qcgc_large_allocate(size_t bytes) {
-	object_t *result = aligned_alloc(QCGC_ARENA_SIZE, bytes);
-#if QCGC_INIT_ZERO
-	memset(result, 0, bytes);
-#endif
-	qcgc_hbtable_insert(result);
-	result->flags = QCGC_GRAY_FLAG;
-	return result;
-}
