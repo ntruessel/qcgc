@@ -73,7 +73,7 @@ class QCGCTest(unittest.TestCase):
         return ffi.cast("myobject_t *", obj).refs[index]
 
     def ss_size(self):
-        return lib.qcgc_shadowstack.top - lib.qcgc_shadowstack.base
+        return lib._qcgc_shadowstack.top - lib._qcgc_shadowstack.base
 
     def get_blocktype(self, ptr):
         return lib.qcgc_arena_get_blocktype(lib.qcgc_arena_addr(ptr),

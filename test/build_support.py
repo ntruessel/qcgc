@@ -234,7 +234,7 @@ ffi.cdef("""
         struct qcgc_shadowstack {
                 object_t **top;
                 object_t **base;
-        } qcgc_shadowstack;
+        } _qcgc_shadowstack;
 
         typedef enum gc_phase {
                 GC_PAUSE,
@@ -387,7 +387,7 @@ ffi.set_source("support",
         struct qcgc_shadowstack {
                 object_t **top;
                 object_t **base;
-        } qcgc_shadowstack;
+        } _qcgc_shadowstack;
 
         void qcgc_initialize(void);
         void qcgc_destroy(void);

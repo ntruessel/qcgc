@@ -113,8 +113,8 @@ QCGC_STATIC void mark_setup(bool incremental) {
 	qcgc_state.phase = GC_MARK;
 
 	// Always push all roots to make shadowstack pushes faster
-	for (object_t **it = qcgc_shadowstack.base;
-		it < qcgc_shadowstack.top;
+	for (object_t **it = _qcgc_shadowstack.base;
+		it < _qcgc_shadowstack.top;
 		it++) {
 		qcgc_push_object(*it);
 	}

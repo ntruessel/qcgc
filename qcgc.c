@@ -212,15 +212,15 @@ QCGC_STATIC QCGC_INLINE void initialize_shadowstack(void) {
 	assert(stack != NULL);
 	mprotect(_trap_page_addr(stack), 4096, PROT_NONE);
 
-	qcgc_shadowstack.top = stack;
-	qcgc_shadowstack.base = stack;
+	_qcgc_shadowstack.top = stack;
+	_qcgc_shadowstack.base = stack;
 }
 
 QCGC_STATIC void destroy_shadowstack(void) {
-	mprotect(_trap_page_addr(qcgc_shadowstack.base), 4096, PROT_READ |
+	mprotect(_trap_page_addr(_qcgc_shadowstack.base), 4096, PROT_READ |
 				PROT_WRITE);
 
-	free(qcgc_shadowstack.base);
+	free(_qcgc_shadowstack.base);
 }
 
 QCGC_STATIC object_t *bump_allocate(size_t size) {

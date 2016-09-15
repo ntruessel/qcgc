@@ -27,7 +27,7 @@ typedef struct object_s {
 struct qcgc_shadowstack {
 	object_t **top;
 	object_t **base;
-} qcgc_shadowstack;
+} _qcgc_shadowstack;
 
 /**
  * Initialize the garbage collector.
@@ -78,8 +78,8 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
  * @param	object	The root object
  */
 QCGC_STATIC QCGC_INLINE void qcgc_push_root(object_t *object) {
-	*qcgc_shadowstack.top = object;
-	qcgc_shadowstack.top++;
+	*_qcgc_shadowstack.top = object;
+	_qcgc_shadowstack.top++;
 }
 
 /**
@@ -88,8 +88,8 @@ QCGC_STATIC QCGC_INLINE void qcgc_push_root(object_t *object) {
  * @param	count	Number of object to pop
  */
 QCGC_STATIC QCGC_INLINE void qcgc_pop_root(size_t count) {
-	qcgc_shadowstack.top -= count;
-	assert(qcgc_shadowstack.base <= qcgc_shadowstack.top);
+	_qcgc_shadowstack.top -= count;
+	assert(_qcgc_shadowstack.base <= _qcgc_shadowstack.top);
 }
 
 /**
