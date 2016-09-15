@@ -59,7 +59,7 @@ class QCGCTest(unittest.TestCase):
         ffi.cast("myobject_t *", obj).refs[index] = ffi.cast("myobject_t *", ref)
 
     def gp_gray_stack_has(self, obj):
-        for i in range(lib.qcgc_state.gp_gray_stack.index):
+        for i in range(lib.qcgc_state.gp_gray_stack.count):
             if (lib.qcgc_state.gp_gray_stack.items[i] == obj):
                 return True
         return False

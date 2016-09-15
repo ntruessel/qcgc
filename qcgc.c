@@ -29,9 +29,9 @@ QCGC_STATIC object_t *bump_allocate(size_t size);
 
 void qcgc_initialize(void) {
 	initialize_shadowstack();
-	qcgc_state.prebuilt_objects = qcgc_shadow_stack_create(16); // XXX
+	qcgc_state.prebuilt_objects = qcgc_object_stack_create(16); // XXX
 	qcgc_state.weakrefs = qcgc_weakref_bag_create(16); // XXX
-	qcgc_state.gp_gray_stack = qcgc_gray_stack_create(16); // XXX
+	qcgc_state.gp_gray_stack = qcgc_object_stack_create(16); // XXX
 	qcgc_state.gray_stack_size = 0;
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_state.cells_since_incmark = 0;
@@ -145,7 +145,7 @@ void qcgc_write(object_t *object) {
 	if (((object->flags & QCGC_PREBUILT_OBJECT) != 0) &&
 			((object->flags & QCGC_PREBUILT_REGISTERED) == 0)) {
 		object->flags |= QCGC_PREBUILT_REGISTERED;
-		qcgc_state.prebuilt_objects = qcgc_shadow_stack_push(
+		qcgc_state.prebuilt_objects = qcgc_object_stack_push(
 				qcgc_state.prebuilt_objects, object);
 	}
 
@@ -161,13 +161,13 @@ void qcgc_write(object_t *object) {
 		// NOTE: No mark test here, as prebuilt objects are always reachable
 		// Push prebuilt object to general purpose gray stack
 		qcgc_state.gray_stack_size++;
-		qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
+		qcgc_state.gp_gray_stack = qcgc_object_stack_push(
 				qcgc_state.gp_gray_stack, object);
 	} else if ((object_t *) qcgc_arena_addr((cell_t *) object) == object) {
 		if (qcgc_hbtable_is_marked(object)) {
 			// Push huge block to general purpose gray stack
 			qcgc_state.gray_stack_size++;
-			qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
+			qcgc_state.gp_gray_stack = qcgc_object_stack_push(
 					qcgc_state.gp_gray_stack, object);
 		}
 	} else {
@@ -176,7 +176,7 @@ void qcgc_write(object_t *object) {
 			// This was black before, push it to gray stack again
 			arena_t *arena = qcgc_arena_addr((cell_t *) object);
 			qcgc_state.gray_stack_size++;
-			arena->gray_stack = qcgc_gray_stack_push(
+			arena->gray_stack = qcgc_object_stack_push(
 					arena->gray_stack, object);
 		}
 	}

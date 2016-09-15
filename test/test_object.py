@@ -22,7 +22,7 @@ class ObjectTestCase(QCGCTest):
         lib.qcgc_state.phase = lib.GC_MARK
         lib.qcgc_write(ffi.cast("object_t *", o))
         self.assertEqual(ffi.cast("object_t *", o).flags & lib.QCGC_GRAY_FLAG, lib.QCGC_GRAY_FLAG)
-        self.assertEqual(lib.arena_gray_stack(arena).index, 1)
+        self.assertEqual(lib.arena_gray_stack(arena).count, 1)
         self.assertEqual(lib.arena_gray_stack(arena).items[0], o)
 
 if __name__ == "__main__":

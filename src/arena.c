@@ -45,7 +45,7 @@ arena_t *qcgc_arena_create(void) {
 	result->mark_bitmap[QCGC_ARENA_FIRST_CELL_INDEX / 8] = 1;
 
 	// Create gray stack
-	result->gray_stack = qcgc_gray_stack_create(QCGC_GRAY_STACK_INIT_SIZE);
+	result->gray_stack = qcgc_object_stack_create(QCGC_GRAY_STACK_INIT_SIZE);
 	return result;
 }
 

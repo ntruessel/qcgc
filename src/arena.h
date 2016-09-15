@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include "gray_stack.h"
+#include "object_stack.h"
 
 #define QCGC_ARENA_SIZE (1<<QCGC_ARENA_SIZE_EXP)
 
@@ -31,7 +31,7 @@ typedef uint8_t cell_t[16];
 typedef union {
 	struct {
 		union {
-			gray_stack_t *gray_stack;
+			object_stack_t *gray_stack;
 			uint8_t block_bitmap[QCGC_ARENA_BITMAP_SIZE];
 		};
 		uint8_t mark_bitmap[QCGC_ARENA_BITMAP_SIZE];

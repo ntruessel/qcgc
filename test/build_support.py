@@ -50,40 +50,21 @@ ffi.cdef("""
         """)
 
 ################################################################################
-# gray_stack                                                                   #
+# object_stack                                                                 #
 ################################################################################
 ffi.cdef("""
-        typedef struct gray_stack_s {
-                size_t index;
-                size_t size;
-                object_t *items[];
-        } gray_stack_t;
-
-        gray_stack_t *qcgc_gray_stack_create(size_t size);
-
-        gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item);
-        object_t *qcgc_gray_stack_top(gray_stack_t *stack);
-        gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack);
-        """)
-
-################################################################################
-# shadow_stack                                                                 #
-################################################################################
-ffi.cdef("""
-        typedef struct shadow_stack_s {
+        typedef struct object_stack_s {
                 size_t count;
                 size_t size;
                 object_t *items[];
-        } shadow_stack_t;
+        } object_stack_t;
 
-        shadow_stack_t *qcgc_shadow_stack_create(size_t size);
+        object_stack_t *qcgc_object_stack_create(size_t size);
 
-        shadow_stack_t *qcgc_shadow_stack_push(shadow_stack_t *stack,
-                    object_t *item);
-        object_t *qcgc_shadow_stack_top(shadow_stack_t *stack);
-        shadow_stack_t *qcgc_shadow_stack_pop(shadow_stack_t *stack);
+        object_stack_t *qcgc_object_stack_push(object_stack_t *stack, object_t *item);
+        object_t *qcgc_object_stack_top(object_stack_t *stack);
+        object_stack_t *qcgc_object_stack_pop(object_stack_t *stack);
         """)
-
 
 ################################################################################
 # arena                                                                        #
@@ -107,7 +88,7 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         cell_t *arena_cells(arena_t *arena);
         uint8_t *arena_mark_bitmap(arena_t *arena);
         uint8_t *arena_block_bitmap(arena_t *arena);
-        gray_stack_t *arena_gray_stack(arena_t *arena);
+        object_stack_t *arena_gray_stack(arena_t *arena);
 
         arena_t *qcgc_arena_create(void);
         void qcgc_arena_destroy(arena_t *arena);
@@ -243,9 +224,9 @@ ffi.cdef("""
         } gc_phase_t;
 
         struct qcgc_state {
-                shadow_stack_t *prebuilt_objects;
+                object_stack_t *prebuilt_objects;
                 weakref_bag_t *weakrefs;
-                gray_stack_t *gp_gray_stack;
+                object_stack_t *gp_gray_stack;
                 size_t gray_stack_size;
                 gc_phase_t phase;
                 size_t cells_since_incmark;
@@ -417,38 +398,23 @@ ffi.set_source("support",
         #include "../src/event_logger.h"
 
 /******************************************************************************/
-        // gray_stack.h
-        typedef struct gray_stack_s {
-                size_t index;
-                size_t size;
-                object_t *items[];
-        } gray_stack_t;
-
-        __attribute__ ((warn_unused_result))
-        gray_stack_t *qcgc_gray_stack_create(size_t size);
-
-        __attribute__ ((warn_unused_result))
-        gray_stack_t *qcgc_gray_stack_push(gray_stack_t *stack, object_t *item);
-
-        object_t *qcgc_gray_stack_top(gray_stack_t *stack);
-
-        __attribute__ ((warn_unused_result))
-        gray_stack_t *qcgc_gray_stack_pop(gray_stack_t *stack);
-
-/******************************************************************************/
-        // shadow_stack.h
-        typedef struct shadow_stack_s {
+        // object_stack.h
+        typedef struct object_stack_s {
                 size_t count;
                 size_t size;
                 object_t *items[];
-        } shadow_stack_t;
+        } object_stack_t;
 
-        shadow_stack_t *qcgc_shadow_stack_create(size_t size);
+        __attribute__ ((warn_unused_result))
+        object_stack_t *qcgc_object_stack_create(size_t size);
 
-        shadow_stack_t *qcgc_shadow_stack_push(shadow_stack_t *stack,
-                    object_t *item);
-        object_t *qcgc_shadow_stack_top(shadow_stack_t *stack);
-        shadow_stack_t *qcgc_shadow_stack_pop(shadow_stack_t *stack);
+        __attribute__ ((warn_unused_result))
+        object_stack_t *qcgc_object_stack_push(object_stack_t *stack, object_t *item);
+
+        object_t *qcgc_object_stack_top(object_stack_t *stack);
+
+        __attribute__ ((warn_unused_result))
+        object_stack_t *qcgc_object_stack_pop(object_stack_t *stack);
 
 /******************************************************************************/
         // arena.h
@@ -463,7 +429,7 @@ ffi.set_source("support",
         typedef union {
             struct {
                 union {
-                    gray_stack_t *gray_stack;
+                    object_stack_t *gray_stack;
                     uint8_t block_bitmap[QCGC_ARENA_BITMAP_SIZE];
                 };
                 uint8_t mark_bitmap[QCGC_ARENA_BITMAP_SIZE];
@@ -561,9 +527,9 @@ ffi.set_source("support",
         } gc_phase_t;
 
         struct qcgc_state {
-                shadow_stack_t *prebuilt_objects;
+                object_stack_t *prebuilt_objects;
                 weakref_bag_t *weakrefs;
-                gray_stack_t *gp_gray_stack;
+                object_stack_t *gp_gray_stack;
                 size_t gray_stack_size;
                 gc_phase_t phase;
                 size_t cells_since_incmark;
@@ -670,7 +636,7 @@ ffi.set_source("support",
             return arena->block_bitmap;
         }
 
-        gray_stack_t *arena_gray_stack(arena_t *arena) {
+        object_stack_t *arena_gray_stack(arena_t *arena) {
             return arena->gray_stack;
         }
 

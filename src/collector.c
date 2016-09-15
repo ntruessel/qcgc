@@ -18,10 +18,10 @@ void qcgc_mark(void) {
 	while (qcgc_state.gray_stack_size > 0) {
 		// General purpose gray stack (prebuilt objects and huge blocks)
 
-		while (qcgc_state.gp_gray_stack->index > 0) {
-			object_t *top = qcgc_gray_stack_top(qcgc_state.gp_gray_stack);
+		while (qcgc_state.gp_gray_stack->count > 0) {
+			object_t *top = qcgc_object_stack_top(qcgc_state.gp_gray_stack);
 			qcgc_state.gray_stack_size--;
-			qcgc_state.gp_gray_stack = qcgc_gray_stack_pop(
+			qcgc_state.gp_gray_stack = qcgc_object_stack_pop(
 					qcgc_state.gp_gray_stack);
 			qcgc_pop_object(top);
 		}
@@ -30,10 +30,10 @@ void qcgc_mark(void) {
 		for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 			arena_t *arena = qcgc_allocator_state.arenas->items[i];
 
-			while (arena->gray_stack->index > 0) {
-				object_t *top = qcgc_gray_stack_top(arena->gray_stack);
+			while (arena->gray_stack->count > 0) {
+				object_t *top = qcgc_object_stack_top(arena->gray_stack);
 				qcgc_state.gray_stack_size--;
-				arena->gray_stack = qcgc_gray_stack_pop(arena->gray_stack);
+				arena->gray_stack = qcgc_object_stack_pop(arena->gray_stack);
 				qcgc_pop_object(top);
 			}
 		}
@@ -50,13 +50,13 @@ void qcgc_incmark(void) {
 	mark_setup(true);
 
 	// General purpose gray stack (prebuilt objects and huge blocks)
-	size_t to_process = MAX(qcgc_state.gp_gray_stack->index / 2,
+	size_t to_process = MAX(qcgc_state.gp_gray_stack->count / 2,
 			QCGC_INC_MARK_MIN);
 
-	while (to_process > 0 && qcgc_state.gp_gray_stack->index > 0) {
-		object_t *top = qcgc_gray_stack_top(qcgc_state.gp_gray_stack);
+	while (to_process > 0 && qcgc_state.gp_gray_stack->count > 0) {
+		object_t *top = qcgc_object_stack_top(qcgc_state.gp_gray_stack);
 		qcgc_state.gray_stack_size--;
-		qcgc_state.gp_gray_stack = qcgc_gray_stack_pop(
+		qcgc_state.gp_gray_stack = qcgc_object_stack_pop(
 				qcgc_state.gp_gray_stack);
 		qcgc_pop_object(top);
 		to_process--;
@@ -65,12 +65,12 @@ void qcgc_incmark(void) {
 	// Arena gray stacks
 	for (size_t i = 0; i < qcgc_allocator_state.arenas->count; i++) {
 		arena_t *arena = qcgc_allocator_state.arenas->items[i];
-		to_process = MAX(arena->gray_stack->index / 2, QCGC_INC_MARK_MIN);
+		to_process = MAX(arena->gray_stack->count / 2, QCGC_INC_MARK_MIN);
 
-		while (to_process > 0 && arena->gray_stack->index > 0) {
-			object_t *top = qcgc_gray_stack_top(arena->gray_stack);
+		while (to_process > 0 && arena->gray_stack->count > 0) {
+			object_t *top = qcgc_object_stack_top(arena->gray_stack);
 			qcgc_state.gray_stack_size--;
-			arena->gray_stack = qcgc_gray_stack_pop(arena->gray_stack);
+			arena->gray_stack = qcgc_object_stack_pop(arena->gray_stack);
 			qcgc_pop_object(top);
 			to_process--;
 		}
@@ -104,7 +104,7 @@ QCGC_STATIC void mark_setup(bool incremental) {
 		size_t count = qcgc_state.prebuilt_objects->count;
 		for (size_t i = 0; i < count; i++) {
 			qcgc_state.gray_stack_size++;
-			qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
+			qcgc_state.gp_gray_stack = qcgc_object_stack_push(
 					qcgc_state.gp_gray_stack,
 					qcgc_state.prebuilt_objects->items[i]);
 		}
@@ -163,7 +163,7 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 				// Did mark it / was white before
 				object->flags |= QCGC_GRAY_FLAG;
 				qcgc_state.gray_stack_size++;
-				qcgc_state.gp_gray_stack = qcgc_gray_stack_push(
+				qcgc_state.gp_gray_stack = qcgc_object_stack_push(
 						qcgc_state.gp_gray_stack, object);
 			}
 			return;
@@ -176,7 +176,7 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 			object->flags |= QCGC_GRAY_FLAG;
 			qcgc_arena_set_blocktype(arena, index, BLOCK_BLACK);
 			qcgc_state.gray_stack_size++;
-			arena->gray_stack = qcgc_gray_stack_push(arena->gray_stack, object);
+			arena->gray_stack = qcgc_object_stack_push(arena->gray_stack, object);
 		}
 	}
 }
