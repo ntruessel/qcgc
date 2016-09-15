@@ -8,14 +8,14 @@ class HugeBlockTableTestCase(QCGCTest):
             self.assertNotEqual(ffi.NULL, lib.qcgc_hbtable.bucket[i])
 
     def test_add(self):
-        o = lib.qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+        o = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         #
         b = lib.bucket(o)
         self.assertTrue(self.hbtable_has(o))
         self.assertFalse(lib.qcgc_hbtable_is_marked(o))
 
     def test_mark(self):
-        o = lib.qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+        o = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         lib.qcgc_hbtable_mark(o)
         #
         b = lib.bucket(o)
@@ -23,9 +23,9 @@ class HugeBlockTableTestCase(QCGCTest):
         self.assertTrue(lib.qcgc_hbtable_is_marked(o))
 
     def test_sweep(self):
-        o = lib.qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+        o = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         lib.qcgc_hbtable_mark(o)
-        p = lib.qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+        p = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         #
         lib.qcgc_hbtable_sweep()
         #
@@ -34,7 +34,7 @@ class HugeBlockTableTestCase(QCGCTest):
         self.assertFalse(lib.qcgc_hbtable_is_marked(o))
 
     def test_mark_twice(self):
-        o = lib.qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
+        o = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         self.assertFalse(lib.qcgc_hbtable_is_marked(o))
         self.assertTrue(lib.qcgc_hbtable_mark(o))
         self.assertFalse(lib.qcgc_hbtable_mark(o))

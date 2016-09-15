@@ -315,7 +315,7 @@ ffi.cdef("""
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
 
-        object_t *qcgc_allocate_large(size_t bytes);
+        object_t *_qcgc_allocate_large(size_t bytes);
         """)
 
 ################################################################################
@@ -392,7 +392,7 @@ ffi.set_source("support",
         void qcgc_initialize(void);
         void qcgc_destroy(void);
         object_t *qcgc_allocate(size_t size);
-        object_t *qcgc_allocate_large(size_t bytes);
+        object_t *_qcgc_allocate_large(size_t bytes);
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
         void qcgc_write(object_t *object);

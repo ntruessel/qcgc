@@ -46,7 +46,7 @@ void qcgc_destroy(void);
  * @return	Pointer to memory region large enough to hold size bytes or NULL in
  *			case of errros
  */
-object_t *qcgc_allocate_large(size_t size);
+object_t *_qcgc_allocate_large(size_t size);
 
 /**
  * Allocator slowpath. May trigger garabge collection.
@@ -55,7 +55,7 @@ object_t *qcgc_allocate_large(size_t size);
  * @return	Pointer to memory region large enough to hold size bytes or NULL in
  *			case of errros
  */
-object_t *qcgc_allocate_slowpath(size_t size);
+object_t *_qcgc_allocate_slowpath(size_t size);
 
 /**
  * Allocate a new object. May trigger garabge collection.
@@ -67,9 +67,9 @@ object_t *qcgc_allocate_slowpath(size_t size);
 QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
 	// FIXME: Create a fastpath
 	if (UNLIKELY(size >= 1<<QCGC_LARGE_ALLOC_THRESHOLD_EXP)) {
-		return qcgc_allocate_large(size);
+		return _qcgc_allocate_large(size);
 	}
-	return qcgc_allocate_slowpath(size);
+	return _qcgc_allocate_slowpath(size);
 }
 
 /**
