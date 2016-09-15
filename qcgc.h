@@ -2,7 +2,8 @@
  * @file	qcgc.h
  */
 
-#pragma once
+#ifndef __QCGC_H
+#define __QCGC_H
 
 #include "config.h"
 
@@ -45,6 +46,44 @@ struct qcgc_bump_allocator {
 	cell_t *ptr;
 	size_t remaining_cells;
 } _qcgc_bump_allocator;
+
+/**
+ * Object stack
+ */
+typedef struct object_stack_s {
+	size_t count;
+	size_t size;
+	object_t *items[];
+} object_stack_t;
+
+/**
+ * Arena
+ */
+
+#define QCGC_ARENA_SIZE (1<<QCGC_ARENA_SIZE_EXP)
+
+#define QCGC_ARENA_BITMAP_SIZE (1<<(QCGC_ARENA_SIZE_EXP - 7)) // 1 / 128
+#define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
+
+#define QCGC_ARENA_FIRST_CELL_INDEX (1<<(QCGC_ARENA_SIZE_EXP - 10))
+
+typedef union {
+	struct {
+		union {
+			object_stack_t *gray_stack;
+			uint8_t block_bitmap[QCGC_ARENA_BITMAP_SIZE];
+		};
+		uint8_t mark_bitmap[QCGC_ARENA_BITMAP_SIZE];
+	};
+	cell_t cells[QCGC_ARENA_CELLS_COUNT];
+} arena_t;
+
+typedef enum blocktype {
+	BLOCK_EXTENT,
+	BLOCK_FREE,
+	BLOCK_WHITE,
+	BLOCK_BLACK,
+} blocktype_t;
 
 /*******************************************************************************
  * Internal functions                                                          *
@@ -156,3 +195,5 @@ void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
  * @param	visit	The function to be called on the referenced objects
  */
 extern void qcgc_trace_cb(object_t *object, void (*visit)(object_t *object));
+
+#endif

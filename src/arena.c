@@ -12,6 +12,7 @@
 #include "allocator.h"
 #include "event_logger.h"
 #include "gc_state.h"
+#include "object_stack.h"
 
 arena_t *qcgc_arena_create(void) {
 	qcgc_event_logger_log(EVENT_NEW_ARENA, 0, NULL);

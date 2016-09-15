@@ -2,12 +2,6 @@
 
 #include "../qcgc.h"
 
-typedef struct object_stack_s {
-	size_t count;
-	size_t size;
-	object_t *items[];
-} object_stack_t;
-
 __attribute__ ((warn_unused_result))
 object_stack_t *qcgc_object_stack_create(size_t size);
 

@@ -11,9 +11,8 @@ SRC		= qcgc.c \
 		  src/bag.c \
 		  src/collector.c \
 		  src/event_logger.c \
-		  src/gray_stack.c \
 		  src/hugeblocktable.c \
-		  src/shadow_stack.c \
+		  src/object_stack.c \
 		  src/signal_handler.c \
 		  src/weakref.c
 

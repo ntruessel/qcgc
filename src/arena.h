@@ -9,51 +9,6 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include "object_stack.h"
-
-#define QCGC_ARENA_SIZE (1<<QCGC_ARENA_SIZE_EXP)
-
-#define QCGC_ARENA_BITMAP_SIZE (1<<(QCGC_ARENA_SIZE_EXP - 7)) // 1 / 128
-#define QCGC_ARENA_CELLS_COUNT (1<<(QCGC_ARENA_SIZE_EXP - 4))
-
-#define QCGC_ARENA_FIRST_CELL_INDEX (1<<(QCGC_ARENA_SIZE_EXP - 10))
-
-/**
- * @typedef cell_t
- * The smallest unit of memory that can be addressed and allocated in arenas.
- */
-typedef uint8_t cell_t[16];
-
-/**
- * @typedef arena_t
- * Arena object
- */
-typedef union {
-	struct {
-		union {
-			object_stack_t *gray_stack;
-			uint8_t block_bitmap[QCGC_ARENA_BITMAP_SIZE];
-		};
-		uint8_t mark_bitmap[QCGC_ARENA_BITMAP_SIZE];
-	};
-	cell_t cells[QCGC_ARENA_CELLS_COUNT];
-} arena_t;
-
-/**
- * @typedef blocktype_t
- * Blocktypes:
- * - BLOCK_EXTENT	Extension of previous block
- * - BLOCK_FREE		Free block
- * - BLOCK_WHITE	Allocated block, marked white
- * - BLOCK_BLACK	Allocated block, marked black
- */
-typedef enum blocktype {
-	BLOCK_EXTENT,
-	BLOCK_FREE,
-	BLOCK_WHITE,
-	BLOCK_BLACK,
-} blocktype_t;
-
 /**
  * Create a new arena.
  *
