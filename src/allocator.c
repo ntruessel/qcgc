@@ -93,15 +93,25 @@ void qcgc_bump_allocator_renew_block(bool force_arena) {
 			large_free_list[QCGC_LARGE_FREE_LISTS - 1] = free_list;
 		qcgc_state.free_cells -= _qcgc_bump_allocator.remaining_cells;
 	} else {
-		// FIXME: Reuse arenas
-		// FIXME: Nifty decision making whether to allocate new arena
-		bool new_arena = false;
-		if (force_arena || new_arena) {
-			arena_t *arena = qcgc_arena_create();
+		if (qcgc_allocator_state.free_arenas->count > 0) {
+			// Reuse arena
+			arena_t *arena = qcgc_allocator_state.free_arenas->items[0];
+			qcgc_allocator_state.free_arenas = qcgc_arena_bag_remove_index(
+					qcgc_allocator_state.free_arenas, 0);
 			bump_allocator_assign(&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
 					QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 			qcgc_allocator_state.arenas =
 				qcgc_arena_bag_add(qcgc_allocator_state.arenas, arena);
+		} else {
+			// FIXME: Nifty decision making whether to allocate new arena
+			bool new_arena = false;
+			if (force_arena || new_arena) {
+				arena_t *arena = qcgc_arena_create();
+				bump_allocator_assign(&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
+						QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
+				qcgc_allocator_state.arenas =
+					qcgc_arena_bag_add(qcgc_allocator_state.arenas, arena);
+			}
 		}
 	}
 #if CHECKED
