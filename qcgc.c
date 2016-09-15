@@ -61,7 +61,7 @@ void qcgc_destroy(void) {
 	free(qcgc_state.gp_gray_stack);
 }
 
-object_t *qcgc_allocate(size_t size) {
+object_t *qcgc_allocate_slowpath(size_t size) {
 #if LOG_ALLOCATION
 	size_t cells = bytes_to_cells(size);
 	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),

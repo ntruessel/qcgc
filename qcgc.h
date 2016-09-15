@@ -40,13 +40,25 @@ void qcgc_initialize(void);
 void qcgc_destroy(void);
 
 /**
+ * Allocator slowpath. May trigger garabge collection.
+ *
+ * @param	size	Object size in bytes
+ * @return	Pointer to memory region large enough to hold size bytes or NULL in
+ *			case of errros
+ */
+object_t *qcgc_allocate_slowpath(size_t size);
+
+/**
  * Allocate a new object. May trigger garabge collection.
  *
  * @param	size	Object size in bytes
  * @return	Pointer to memory region large enough to hold size bytes or NULL in
  *			case of errros
  */
-object_t *qcgc_allocate(size_t size);
+QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
+	// FIXME: Create a fastpath
+	return qcgc_allocate_slowpath(size);
+}
 
 /**
  * Push root object.
