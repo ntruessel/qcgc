@@ -103,15 +103,14 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 		}
 	}
 
-	// XXX: Make these faster
-	qcgc_state.free_cells -= bytes_to_cells(size);
-
-	qcgc_state.cells_since_incmark += bytes_to_cells(size);
-	qcgc_state.cells_since_collect += bytes_to_cells(size);
+	// FIXME: Free cells not maintained
 
 	if (!use_fit_allocator) {
 		assert(_qcgc_bump_allocator.remaining_cells < cells);
 		qcgc_bump_allocator_renew_block(false);
+
+		qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
+		qcgc_state.cells_since_collect += _qcgc_bump_allocator.remaining_cells;
 
 		if (_qcgc_bump_allocator.ptr != NULL &&
 				_qcgc_bump_allocator.remaining_cells >= cells) {
@@ -122,9 +121,13 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	// Fit allocate
 	object_t *result = qcgc_fit_allocate(size);
 	if (result != NULL) {
+		qcgc_state.cells_since_incmark += bytes_to_cells(size);
+		qcgc_state.cells_since_collect += bytes_to_cells(size);
 		return result;
 	}
 	qcgc_bump_allocator_renew_block(true);
+	qcgc_state.cells_since_incmark += _qcgc_bump_allocator.remaining_cells;
+	qcgc_state.cells_since_collect += _qcgc_bump_allocator.remaining_cells;
 	return qcgc_bump_allocate(size);
 }
 

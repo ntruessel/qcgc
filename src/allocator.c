@@ -91,13 +91,13 @@ void qcgc_bump_allocator_renew_block(bool force_arena) {
 		free_list = qcgc_exp_free_list_remove_index(free_list, 0);
 		qcgc_allocator_state.fit_state.
 			large_free_list[QCGC_LARGE_FREE_LISTS - 1] = free_list;
+		qcgc_state.free_cells -= _qcgc_bump_allocator.remaining_cells;
 	} else {
+		// FIXME: Reuse arenas
 		// FIXME: Nifty decision making whether to allocate new arena
 		bool new_arena = false;
 		if (force_arena || new_arena) {
 			arena_t *arena = qcgc_arena_create();
-			qcgc_state.free_cells += QCGC_ARENA_CELLS_COUNT -
-				QCGC_ARENA_FIRST_CELL_INDEX;
 			bump_allocator_assign(&(arena->cells[QCGC_ARENA_FIRST_CELL_INDEX]),
 					QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX);
 			qcgc_allocator_state.arenas =
@@ -166,6 +166,7 @@ object_t *qcgc_fit_allocate(size_t bytes) {
 	memset(result, 0, cells * sizeof(cell_t));
 #endif
 
+	qcgc_state.free_cells -= cells;
 	result->flags = QCGC_GRAY_FLAG;
 	return result;
 }
@@ -197,6 +198,7 @@ void qcgc_fit_allocator_add(cell_t *ptr, size_t cells) {
 					qcgc_allocator_state.fit_state.large_free_list[index],
 					(struct exp_free_list_item_s) {ptr, cells});
 	}
+	qcgc_state.free_cells += cells;
 }
 
 QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
@@ -220,6 +222,7 @@ QCGC_STATIC cell_t *fit_allocator_small_first_fit(size_t index, size_t cells) {
 				qcgc_arena_set_blocktype(qcgc_arena_addr(result + cells),
 						qcgc_arena_cell_index(result + cells), BLOCK_FREE);
 				qcgc_fit_allocator_add(result + cells, list_cell_size - cells);
+				qcgc_state.free_cells -= list_cell_size - cells;
 			}
 			return result;
 		}
@@ -267,6 +270,7 @@ QCGC_STATIC cell_t *fit_allocator_large_fit(size_t index, size_t cells) {
 			qcgc_arena_set_blocktype(qcgc_arena_addr(result + cells),
 					qcgc_arena_cell_index(result + cells), BLOCK_FREE);
 			qcgc_fit_allocator_add(result + cells, best_fit_cells - cells);
+			qcgc_state.free_cells -= best_fit_cells - cells;
 		}
 	} else {
 		// No best fit, go for first fit
@@ -294,6 +298,7 @@ QCGC_STATIC cell_t *fit_allocator_large_first_fit(size_t index, size_t cells) {
 				qcgc_arena_set_blocktype(qcgc_arena_addr(item.ptr + cells),
 						qcgc_arena_cell_index(item.ptr + cells), BLOCK_FREE);
 				qcgc_fit_allocator_add(item.ptr + cells, item.size - cells);
+				qcgc_state.free_cells -= item.size - cells;
 			}
 			return item.ptr;
 		}

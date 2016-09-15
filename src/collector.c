@@ -12,6 +12,9 @@ QCGC_STATIC QCGC_INLINE void qcgc_push_object(object_t *object);
 QCGC_STATIC void mark_setup(bool incremental);
 QCGC_STATIC void mark_cleanup(bool incremental);
 
+QCGC_STATIC void check_free_cells(void);
+QCGC_STATIC void check_largest_free_block(void);
+
 void qcgc_mark(void) {
 	mark_setup(false);
 
@@ -184,6 +187,7 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 void qcgc_sweep(void) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_COLLECT);
+	check_free_cells();
 #endif
 	{
 		struct log_info_s {
@@ -225,35 +229,11 @@ void qcgc_sweep(void) {
 	// Fragmenation = 1 - (largest block / total free space)
 	// Use bump allocator when fragmentation < 50%
 #if CHECKED
-	size_t free_cells = 0;
-	size_t largest_free_block = 0;
-		for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
-			if (qcgc_allocator_state.fit_state.small_free_list[i]->count > 0) {
-				largest_free_block = i + 1;
-			}
-			free_cells += qcgc_allocator_state.fit_state.small_free_list[i]
-				->count * (i + 1);
-		}
-		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
-			for (size_t j = 0; j < qcgc_allocator_state.fit_state.
-					large_free_list[i]->count; j++) {
-				free_cells += qcgc_allocator_state.fit_state.large_free_list[i]
-					->items[j].size;
-				largest_free_block = MAX(largest_free_block,
-					qcgc_allocator_state.fit_state.large_free_list[i]
-					->items[j].size);
-			}
-		}
-	assert(free_cells == qcgc_state.free_cells);
-	assert(largest_free_block == qcgc_state.largest_free_block);
-	assert(free_cells <= qcgc_allocator_state.arenas->count * (QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX));
-	assert(qcgc_allocator_state.arenas->count *
-			(QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX) >=
-			free_cells);
+	check_free_cells();
+	check_largest_free_block();
 #endif
 	update_weakrefs();
 
-	qcgc_state.free_cells += _qcgc_bump_allocator.remaining_cells;
 	{
 		struct log_info_s {
 			size_t arenas;
@@ -293,3 +273,40 @@ void qcgc_sweep(void) {
 #endif
 }
 
+void check_free_cells(void) {
+	size_t free_cells = 0;
+		for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
+			free_cells += qcgc_allocator_state.fit_state.small_free_list[i]
+				->count * (i + 1);
+		}
+		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
+			for (size_t j = 0; j < qcgc_allocator_state.fit_state.
+					large_free_list[i]->count; j++) {
+				free_cells += qcgc_allocator_state.fit_state.large_free_list[i]
+					->items[j].size;
+			}
+		}
+	assert(free_cells == qcgc_state.free_cells);
+	assert(free_cells <= qcgc_allocator_state.arenas->count * (QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX));
+	assert(qcgc_allocator_state.arenas->count *
+			(QCGC_ARENA_CELLS_COUNT - QCGC_ARENA_FIRST_CELL_INDEX) >=
+			free_cells);
+}
+
+void check_largest_free_block(void) {
+	size_t largest_free_block = 0;
+		for (size_t i = 0; i < QCGC_SMALL_FREE_LISTS; i++) {
+			if (qcgc_allocator_state.fit_state.small_free_list[i]->count > 0) {
+				largest_free_block = i + 1;
+			}
+		}
+		for (size_t i = 0; i < QCGC_LARGE_FREE_LISTS; i++) {
+			for (size_t j = 0; j < qcgc_allocator_state.fit_state.
+					large_free_list[i]->count; j++) {
+				largest_free_block = MAX(largest_free_block,
+					qcgc_allocator_state.fit_state.large_free_list[i]
+					->items[j].size);
+			}
+		}
+	assert(largest_free_block == qcgc_state.largest_free_block);
+}

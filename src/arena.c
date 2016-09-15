@@ -177,7 +177,6 @@ bool qcgc_arena_sweep(arena_t *arena) {
 						memset(arena->cells + last_free_cell, 0,
 								sizeof(cell_t) * (cell - last_free_cell));
 #endif
-						qcgc_state.free_cells += cell - last_free_cell;
 						qcgc_state.largest_free_block = MAX(
 								qcgc_state.largest_free_block,
 								cell - last_free_cell);
@@ -196,7 +195,6 @@ bool qcgc_arena_sweep(arena_t *arena) {
 		memset(arena->cells + last_free_cell, 0,
 				sizeof(cell_t) * (QCGC_ARENA_CELLS_COUNT - last_free_cell));
 #endif
-		qcgc_state.free_cells += QCGC_ARENA_CELLS_COUNT - last_free_cell;
 		qcgc_state.largest_free_block = MAX(
 				qcgc_state.largest_free_block,
 				QCGC_ARENA_CELLS_COUNT - last_free_cell);
