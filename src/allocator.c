@@ -36,6 +36,8 @@ void qcgc_allocator_initialize(void) {
 		qcgc_allocator_state.fit_state.large_free_list[i] =
 			qcgc_exp_free_list_create(QCGC_LARGE_FREE_LIST_INIT_SIZE);
 	}
+
+	qcgc_bump_allocator_renew_block();
 }
 
 void qcgc_allocator_destroy(void) {
@@ -80,16 +82,7 @@ void qcgc_bump_allocator_renew_block(void) {
 		}
 	}
 #endif
-	// Add remaining memory to fit allocator
-	if (_qcgc_bump_allocator.remaining_cells > 0) {
-		qcgc_arena_set_blocktype(
-				qcgc_arena_addr(_qcgc_bump_allocator.ptr),
-				qcgc_arena_cell_index(
-					_qcgc_bump_allocator.ptr),
-				BLOCK_FREE);
-		qcgc_fit_allocator_add(_qcgc_bump_allocator.ptr,
-				_qcgc_bump_allocator.remaining_cells);
-	}
+	qcgc_reset_bump_ptr();
 
 	// Try finding some huge block from fit allocator
 	exp_free_list_t *free_list = qcgc_allocator_state.fit_state.
@@ -113,6 +106,7 @@ void qcgc_bump_allocator_renew_block(void) {
 
 	qcgc_allocator_state.fit_state.
 		large_free_list[QCGC_LARGE_FREE_LISTS - 1] = free_list;
+	qcgc_allocator_state.use_bump_allocator = true;
 #if CHECKED
 	assert(_qcgc_bump_allocator.ptr != NULL);
 	assert(qcgc_arena_get_blocktype(

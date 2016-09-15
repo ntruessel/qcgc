@@ -73,7 +73,6 @@ object_t *qcgc_fit_allocate(size_t bytes);
  */
 void qcgc_fit_allocator_empty_lists(void);
 
-
 /**
  * Add memory to free lists
  *
@@ -81,6 +80,23 @@ void qcgc_fit_allocator_empty_lists(void);
  * @param	cells	Size of memory region in cells
  */
 void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
+
+/**
+ * Reset bump pointer
+ */
+QCGC_STATIC QCGC_INLINE void qcgc_reset_bump_ptr(void) {
+	if (_qcgc_bump_allocator.remaining_cells > 0) {
+		qcgc_arena_set_blocktype(
+				qcgc_arena_addr(_qcgc_bump_allocator.ptr),
+				qcgc_arena_cell_index(
+					_qcgc_bump_allocator.ptr),
+				BLOCK_FREE);
+		qcgc_fit_allocator_add(_qcgc_bump_allocator.ptr,
+				_qcgc_bump_allocator.remaining_cells);
+		_qcgc_bump_allocator.ptr = NULL;
+		_qcgc_bump_allocator.remaining_cells = 0;
+	}
+}
 
 /**
  * Find a new block for the bump allocator

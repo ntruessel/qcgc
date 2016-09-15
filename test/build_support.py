@@ -256,6 +256,7 @@ ffi.cdef("""
         bool use_bump_allocator(void);
 
         void bump_ptr_reset(void);
+        void qcgc_reset_bump_ptr(void);
 
         void qcgc_allocator_initialize(void);
         void qcgc_allocator_destroy(void);
@@ -564,6 +565,7 @@ ffi.set_source("support",
         void qcgc_fit_allocator_empty_lists(void);
         void qcgc_fit_allocator_add(cell_t *ptr, size_t cells);
         void qcgc_bump_allocator_renew_block(void);
+        void qcgc_reset_bump_ptr(void);
 
 /******************************************************************************/
         // collector.h

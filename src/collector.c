@@ -253,6 +253,9 @@ void qcgc_sweep(void) {
 #endif
 	qcgc_allocator_state.use_bump_allocator = qcgc_state.free_cells <
 		2 * qcgc_state.largest_free_block;
+	if (!qcgc_allocator_state.use_bump_allocator) {
+		qcgc_reset_bump_ptr();
+	}
 
 	update_weakrefs();
 

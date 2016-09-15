@@ -89,7 +89,29 @@ object_t *_qcgc_allocate_large(size_t size) {
 	return result;
 }
 
+/*
 object_t *_qcgc_allocate_slowpath(size_t size) {
+	bool use_fit_allocator = _qcgc_bump_allocator.ptr == NULL;
+
+	if (UNLIKELY(qcgc_state.cells_since_incmark >
+				qcgc_state.incmark_threshold)) {
+		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
+			qcgc_reset_bump_ptr();
+			qcgc_collect();
+			use_fit_allocator = false; // Try using bump allocator again
+		} else {
+			qcgc_incmark();
+			qcgc_state.incmark_since_sweep++;
+		}
+	}
+}
+*/
+
+object_t *_qcgc_allocate_slowpath(size_t size) {
+#if CHECKED
+	assert(qcgc_allocator_state.use_bump_allocator ==
+			(_qcgc_bump_allocator.ptr != NULL));
+#endif
 	object_t *result;
 
 	if (UNLIKELY(qcgc_state.cells_since_incmark >

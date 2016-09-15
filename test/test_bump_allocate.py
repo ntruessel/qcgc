@@ -53,6 +53,7 @@ class BumpAllocatorTest(QCGCTest):
         size = lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index
         lib.qcgc_fit_allocator_add(ffi.addressof(first_cell), size)
 
+        lib.bump_ptr_reset()
         p = self.bump_allocate(16)
         self.assertEqual(ffi.addressof(first_cell), p)
 

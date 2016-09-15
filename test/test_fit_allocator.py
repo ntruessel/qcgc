@@ -5,13 +5,13 @@ from qcgc_test import QCGCTest
 class FitAllocatorTest(QCGCTest):
     def test_initialization(self):
         # self.assertEqual( <config_value> ,lib.arenas().size)
-        self.assertEqual(0, lib.arenas().count)
+        self.assertEqual(1, lib.arenas().count)
         self.assertNotEqual(ffi.NULL, lib.arenas().items)
         # self.assertEqual( <config_value> ,lib.free_arenas().size)
         self.assertEqual(0, lib.free_arenas().count)
         self.assertNotEqual(ffi.NULL, lib.free_arenas().items)
-        self.assertEqual(ffi.NULL, lib._qcgc_bump_allocator.ptr)
-        self.assertEqual(0, lib._qcgc_bump_allocator.remaining_cells)
+        self.assertEqual(ffi.addressof(lib.arena_cells(lib.arenas().items[0])[lib.qcgc_arena_first_cell_index]), lib._qcgc_bump_allocator.ptr)
+        self.assertEqual(lib.qcgc_arena_cells_count - lib.qcgc_arena_first_cell_index, lib._qcgc_bump_allocator.remaining_cells)
         for i in range(lib.qcgc_small_free_lists):
             self.assertEqual(lib.QCGC_SMALL_FREE_LIST_INIT_SIZE, lib.small_free_list(i).size)
             self.assertEqual(0, lib.small_free_list(i).count)
