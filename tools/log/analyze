@@ -1,48 +1,56 @@
 #!/usr/bin/env python3
 
 import sys
+from statistics import mean
 from logutils.iterator import LogIterator
 from logutils.visitor import LogEventVisitor
 
 class SummaryVisitor(LogEventVisitor):
     def __init__(self):
-        self._log_start = 0.0
+        self.fullmark = []
+        self.incmark = []
+        self.sweep = []
+        self.arenas = []
+        self.memory_usage_before = []
+        self.memory_usage_after = []
+        self.fragmentation = []
         self.total_time = 0.0
         #
-        self._sweep_start = 0.0
-        self.sweep_time = 0.0
-        self.arenas_sweeped = 0
-        self.max_arenas = 0
-        self.sweeps = 0
-        #
+        self._log_start = 0.0
         self._mark_start = 0.0
-        self.mark_time = 0.0
-        self.incmark_time = 0.0
-        self.incmark_steps = 0
+        self._sweep_start = 0.0
 
     def visit_log_start(self, event):
         self.log_start = event.time()
+        self.arena_cells = (event.arena_cells * 63) // 64
 
     def visit_log_stop(self, event):
         self.total_time = event.time() - self._log_start
 
     def visit_sweep_start(self, event):
         self._sweep_start = event.time()
-        self.arenas_sweeped += event.arenas
-        self.max_arenas = max(self.max_arenas, event.arenas)
-        self.sweeps += 1
+        self.arenas.append(event.arenas)
+        total = event.arenas * self.arena_cells
+        self.memory_usage_before.append((total - event.free_cells) / total)
 
     def visit_sweep_done(self, event):
-        self.sweep_time += event.time() - self._sweep_start
+        self.sweep.append(event.time() - self._sweep_start)
+        total = event.arenas * self.arena_cells
+        self.memory_usage_after.append((total - event.free_cells) / total)
+        if event.free_cells > 0:
+            fragmentation = 1 - event.largest_free_block / event.free_cells
+        else:
+            fragmentation = 0
+        self.fragmentation.append(fragmentation)
 
     def visit_mark_start(self, event):
         self._mark_start = event.time()
 
     def visit_mark_done(self, event):
-        self.mark_time += event.time() - self._mark_start
         if event.incremental:
-            self.incmark_time += event.time() - self._mark_start
-            self.incmark_steps += 1
+            self.incmark.append(event.time() - self._mark_start)
+        else:
+            self.fullmark.append(event.time() - self._mark_start)
 
 def print_summary(filename):
     log = LogIterator(filename)
@@ -53,19 +61,35 @@ def print_summary(filename):
     if v.total_time == 0:
         print("Log did not stop, analysis results can't be displayed")
     else:
-        print("Normal Execution             : {:.2%}".format((v.total_time - v.mark_time - v.sweep_time) / v.total_time))
-        print("Marking                      : {:.2%}".format(v.mark_time / v.total_time))
-        if v.mark_time == 0:
-            print("  unable to calculate incremental/non-incremental distribution, as no mark steps were performed")
-        print("  incremental                : {:.2%}".format(v.incmark_time / v.mark_time))
-        print("  non-incremental            : {:.2%}".format((v.mark_time - v.incmark_time) / v.mark_time))
-        if v.incmark_steps == 0:
-            print("  unable to calculate avg. incmark pause, as no mark step was incremental")
-        print("  avg. incmark pause         : {:.2f}ms".format(v.incmark_time / v.incmark_steps * 1000))
-        print("Sweeping                     : {:.2%}".format(v.sweep_time / v.total_time))
-        print("  count                      : {:d}".format(v.sweeps))
-        print("  max arenas allocated       : {:d}".format(v.max_arenas))
-        print("  avg. sweep time per arena  : {:.2f}ms".format(v.sweep_time / v.arenas_sweeped * 1000))
+        Mark_Time = sum(v.incmark) + sum(v.fullmark)
+        GC_Time = Mark_Time + sum(v.sweep)
+        print("Normal Execution             : {:.2%}".format((v.total_time - GC_Time) / v.total_time))
+        print("Marking                      : {:.2%}".format(Mark_Time / v.total_time))
+        print("  incremental                : {:.2%}".format(sum(v.incmark) / Mark_Time))
+        print("    min pause                : {:.2f}ms".format(min(v.incmark) * 1000))
+        print("    avg pause                : {:.2f}ms".format(mean(v.incmark) * 1000))
+        print("    max pause                : {:.2f}ms".format(max(v.incmark) * 1000))
+        print("  non-incremental            : {:.2%}".format(sum(v.fullmark) / Mark_Time))
+        print("    min pause                : {:.2f}ms".format(min(v.fullmark) * 1000))
+        print("    avg pause                : {:.2f}ms".format(mean(v.fullmark) * 1000))
+        print("    max pause                : {:.2f}ms".format(max(v.fullmark) * 1000))
+        print("Sweeping                     : {:.2%}".format(sum(v.sweep) / v.total_time))
+        print("  count                      : {:d}".format(len(v.sweep)))
+        print("  max arenas allocated       : {:d}".format(max(v.arenas)))
+        print("  min pause                  : {:.2f}ms".format(min(v.sweep)))
+        print("  avg pause                  : {:.2f}ms".format(mean(v.sweep)))
+        print("  max pause                  : {:.2f}ms".format(max(v.sweep)))
+        print("  Memory Usage before Sweep")
+        print("    min                      : {:.2%}".format(min(v.memory_usage_before)))
+        print("    avg                      : {:.2%}".format(mean(v.memory_usage_before)))
+        print("    max                      : {:.2%}".format(max(v.memory_usage_before)))
+        print("  Memory Usage after Sweep")
+        print("    min                      : {:.2%}".format(min(v.memory_usage_after)))
+        print("    avg                      : {:.2%}".format(mean(v.memory_usage_after)))
+        print("    max                      : {:.2%}".format(max(v.memory_usage_after)))
+        print("  min fragmentation          : {:.2%}".format(min(v.fragmentation)))
+        print("  avg fragmentation          : {:.2%}".format(mean(v.fragmentation)))
+        print("  max fragmentation          : {:.2%}".format(max(v.fragmentation)))
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:

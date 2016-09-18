@@ -23,11 +23,15 @@ class UnknownEvent(EventBase):
         return "[{: 4d}.{:09d}] Unknown event (event id = {})".format(self.sec, self.nsec, self.eventID)
 
 class LogStartEvent(EventBase):
+    def parse_additional_data(self, f, size):
+        buf = f.read(size)
+        self.arena_cells, = struct.unpack("L", buf)
+
     def accept(self, visitor):
         visitor.visit_log_start(self)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] Log start".format(self.sec, self.nsec)
+        return "[{: 4d}.{:09d}] Log start, cells per arena: {}".format(self.sec, self.nsec, self.arena_cells)
 
 class LogStopEvent(EventBase):
     def accept(self, visitor):
