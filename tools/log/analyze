@@ -87,9 +87,14 @@ def print_summary(filename):
         print("    min                      : {:.2%}".format(min(v.memory_usage_after)))
         print("    avg                      : {:.2%}".format(mean(v.memory_usage_after)))
         print("    max                      : {:.2%}".format(max(v.memory_usage_after)))
-        print("  min fragmentation          : {:.2%}".format(min(v.fragmentation)))
-        print("  avg fragmentation          : {:.2%}".format(mean(v.fragmentation)))
-        print("  max fragmentation          : {:.2%}".format(max(v.fragmentation)))
+        print("  Overall Memory Usage")
+        print("    min                      : {:.2%}".format(min(v.memory_usage_before + v.memory_usage_after)))
+        print("    avg                      : {:.2%}".format(mean(v.memory_usage_before + v.memory_usage_after)))
+        print("    max                      : {:.2%}".format(max(v.memory_usage_before + v.memory_usage_after)))
+        print("  Fragmentation")
+        print("    min                      : {:.2%}".format(min(v.fragmentation)))
+        print("    avg                      : {:.2%}".format(mean(v.fragmentation)))
+        print("    max                      : {:.2%}".format(max(v.fragmentation)))
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:
