@@ -88,6 +88,9 @@ object_t *_qcgc_allocate_large(size_t size) {
 object_t *_qcgc_allocate_slowpath(size_t size) {
 	bool use_fit_allocator = _qcgc_bump_allocator.ptr == NULL;
 	size_t cells = bytes_to_cells(size);
+#if LOG_ALLOCATOR_SWITCH
+	bool old_use_fit_allocator = use_fit_allocator;
+#endif
 
 	if (UNLIKELY(qcgc_state.cells_since_incmark >
 				qcgc_state.incmark_threshold)) {
@@ -124,13 +127,44 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 #endif
 
 			result->flags = QCGC_GRAY_FLAG;
+#if LOG_ALLOCATOR_SWITCH
+			if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
+				// Allocator switched
+				struct log_info_s {
+					size_t allocations;
+					bool fit_allocator;
+				};
+				struct log_info_s log_info = {
+					qcgc_allocations,
+					_qcgc_bump_allocator.ptr == NULL,
+				};
+				qcgc_event_logger_log(EVENT_ALLOCATOR_SWITCH, sizeof(struct log_info_s),
+						(uint8_t *) &log_info);
+			}
+#endif
 			return result;
 		}
 	}
 
 	// Fit allocate
+	result = qcgc_fit_allocate(size);
 	if (result != NULL) {
 		qcgc_state.cells_since_incmark += bytes_to_cells(size);
+#if LOG_ALLOCATOR_SWITCH
+		if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
+			// Allocator switched
+			struct log_info_s {
+				size_t allocations;
+				bool fit_allocator;
+			};
+			struct log_info_s log_info = {
+				qcgc_allocations,
+				_qcgc_bump_allocator.ptr == NULL,
+			};
+			qcgc_event_logger_log(EVENT_ALLOCATOR_SWITCH, sizeof(struct log_info_s),
+					(uint8_t *) &log_info);
+		}
+#endif
 		return result;
 	}
 	qcgc_bump_allocator_renew_block(true);
@@ -150,6 +184,21 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 #endif
 
 	result->flags = QCGC_GRAY_FLAG;
+#if LOG_ALLOCATOR_SWITCH
+	if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
+		// Allocator switched
+		struct log_info_s {
+			size_t allocations;
+			bool fit_allocator;
+		};
+		struct log_info_s log_info = {
+			qcgc_allocations,
+			_qcgc_bump_allocator.ptr == NULL,
+		};
+		qcgc_event_logger_log(EVENT_ALLOCATOR_SWITCH, sizeof(struct log_info_s),
+				(uint8_t *) &log_info);
+	}
+#endif
 	return result;
 }
 

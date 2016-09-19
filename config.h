@@ -12,6 +12,7 @@
 #define LOGFILE "./qcgc_events.log"			// Default logfile
 #define LOG_ALLOCATION 1					// Enable allocation log
 #define LOG_DUMP_FREELIST_STATS 1			// Dump freelist stats
+#define LOG_ALLOCATOR_SWITCH 1				// Log allocator switches
 
 #define QCGC_SHADOWSTACK_SIZE 163840		// Total shadowstack size
 #define QCGC_ARENA_BAG_INIT_SIZE 16			// Initial size of the arena bag

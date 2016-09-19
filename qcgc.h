@@ -59,6 +59,10 @@ typedef struct object_stack_s {
 	object_t *items[];
 } object_stack_t;
 
+#if LOG_ALLOCATOR_SWITCH
+size_t qcgc_allocations = 0;
+#endif
+
 /**
  * Arena
  */
@@ -199,6 +203,10 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
 	assert(size > 0);
 #endif
 	size_t cells = bytes_to_cells(size);
+
+#if LOG_ALLOCATOR_SWITCH
+	qcgc_allocations++;
+#endif
 
 #if LOG_ALLOCATION
 	qcgc_event_logger_log(EVENT_ALLOCATE, sizeof(size_t),
