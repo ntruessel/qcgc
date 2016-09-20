@@ -24,7 +24,7 @@ class SummaryVisitor(LogEventVisitor):
 
     def visit_log_start(self, event):
         self.log_start = event.time()
-        self.arena_cells = (event.arena_cells * 63) // 64
+        self.arena_cells = (event.arena_cells * 63) // 64 // 16
 
     def visit_log_stop(self, event):
         self.total_time = event.time() - self._log_start
