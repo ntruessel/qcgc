@@ -20,4 +20,4 @@ void qcgc_hbtable_insert(object_t *object);
 bool qcgc_hbtable_mark(object_t *object);
 bool qcgc_hbtable_has(object_t *object);
 bool qcgc_hbtable_is_marked(object_t *object);
-void qcgc_hbtable_sweep(void);
+void qcgc_hbtable_sweep(bool minor);

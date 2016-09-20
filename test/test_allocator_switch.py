@@ -14,7 +14,7 @@ class AllocatorSwitchTest(QCGCTest):
             self.assertEqual(self.get_blocktype(ffi.cast("cell_t *",o)), lib.BLOCK_WHITE)
 
         lib.qcgc_reset_bump_ptr()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib._qcgc_bump_allocator.ptr, ffi.NULL)
         self.assertEqual(lib._qcgc_bump_allocator.end, ffi.NULL)
         self.allocate(1)

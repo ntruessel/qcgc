@@ -44,9 +44,10 @@ void qcgc_arena_mark_free(cell_t *ptr);
  * Sweep given arena.
  *
  * @param	arena	Arena
+ * @param	minor	Minor collection?
  * @return	Whether arena is empty after sweeping
  */
-bool qcgc_arena_sweep(arena_t *arena);
+bool qcgc_arena_sweep(arena_t *arena, bool minor);
 
 /**
  * Sweep given arena, but only reset black to white, no white to free

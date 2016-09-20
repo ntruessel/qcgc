@@ -65,7 +65,7 @@ bool qcgc_hbtable_is_marked(object_t *object) {
 	return false;
 }
 
-void qcgc_hbtable_sweep(void) {
+void qcgc_hbtable_sweep(bool minor) {
 	for (size_t i = 0; i < QCGC_HBTABLE_BUCKETS; i++) {
 		hbbucket_t *b = qcgc_hbtable.bucket[i];
 		size_t j = 0;
@@ -81,7 +81,10 @@ void qcgc_hbtable_sweep(void) {
 		}
 		qcgc_hbtable.bucket[i] = b;
 	}
-	qcgc_hbtable.mark_flag_ref = !qcgc_hbtable.mark_flag_ref;
+	if (!minor) {
+		// Black to white
+		qcgc_hbtable.mark_flag_ref = !qcgc_hbtable.mark_flag_ref;
+	}
 }
 
 QCGC_STATIC size_t bucket(object_t *object) {

@@ -27,7 +27,7 @@ class HugeBlockTableTestCase(QCGCTest):
         lib.qcgc_hbtable_mark(o)
         p = lib._qcgc_allocate_large(2**lib.QCGC_LARGE_ALLOC_THRESHOLD_EXP)
         #
-        lib.qcgc_hbtable_sweep()
+        lib.qcgc_hbtable_sweep(False)
         #
         b = lib.bucket(o)
         self.assertTrue(self.hbtable_has(o))

@@ -98,7 +98,7 @@ class MarkIncTestCase(QCGCTest):
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_BLACK)
 
         lib.bump_ptr_reset()
-        lib.qcgc_sweep()
+        lib.qcgc_sweep(False)
 
         for o in reachable:
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_WHITE)

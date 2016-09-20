@@ -36,6 +36,8 @@ struct qcgc_state {
 	size_t incmark_since_sweep;
 	size_t incmark_threshold;
 	size_t incmark_to_sweep;
+	size_t minors_since_major;
+	size_t minors_to_major;
 
 	size_t free_cells;			// Overall amount of free cells without huge
 								// blocks and free areans. Valid right after sweep

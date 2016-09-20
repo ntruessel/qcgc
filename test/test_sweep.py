@@ -13,7 +13,7 @@ class SweepTestCase(QCGCTest):
                     1)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 10)
 
-        self.assertTrue(lib.qcgc_arena_sweep(arena))
+        self.assertTrue(lib.qcgc_arena_sweep(arena, False))
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 0)
         self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
@@ -37,7 +37,7 @@ class SweepTestCase(QCGCTest):
 
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 10)
 
-        self.assertFalse(lib.qcgc_arena_sweep(arena))
+        self.assertFalse(lib.qcgc_arena_sweep(arena, False))
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 10)
         self.assertEqual(lib.qcgc_arena_free_blocks(arena), 1)
@@ -70,7 +70,7 @@ class SweepTestCase(QCGCTest):
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
 
-        self.assertFalse(lib.qcgc_arena_sweep(arena))
+        self.assertFalse(lib.qcgc_arena_sweep(arena, False))
         self.assertEqual(lib.qcgc_arena_black_blocks(arena), 0)
         self.assertEqual(lib.qcgc_arena_white_blocks(arena), 3)
         self.assertEqual(lib.qcgc_arena_free_blocks(arena), 2)
@@ -96,7 +96,7 @@ class SweepTestCase(QCGCTest):
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
             self.set_blocktype(p, b[1])
 
-        lib.qcgc_arena_sweep(arena)
+        lib.qcgc_arena_sweep(arena, False)
 
         have_elems = [5,8,19]
 
@@ -123,7 +123,7 @@ class SweepTestCase(QCGCTest):
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
             self.set_blocktype(p, b[1])
 
-        lib.qcgc_arena_sweep(arena)
+        lib.qcgc_arena_sweep(arena, False)
 
         have_elems = [0]
 
@@ -146,7 +146,7 @@ class SweepTestCase(QCGCTest):
             p = ffi.addressof(lib.arena_cells(arena)[i + b[0]])
             self.set_blocktype(p, b[1])
 
-        lib.qcgc_arena_sweep(arena)
+        lib.qcgc_arena_sweep(arena, False)
 
         have_elems = [0]
 
@@ -164,7 +164,7 @@ class SweepTestCase(QCGCTest):
         p = self.bump_allocate(16)
         arena = lib.qcgc_arena_addr(ffi.cast("cell_t *", p))
 
-        lib.qcgc_arena_sweep(arena)
+        lib.qcgc_arena_sweep(arena, False)
 
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", lib.bump_ptr())), lib.BLOCK_FREE)
 
@@ -172,13 +172,13 @@ class SweepTestCase(QCGCTest):
         o = self.allocate_ref(1)
         self.push_root(o)
         #
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         #
         p = self.allocate(1)
         self.set_ref(o, 0, p)
         #
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         #
         self.assertIn(self.get_blocktype(ffi.cast("cell_t *", p)), [lib.BLOCK_WHITE, lib.BLOCK_BLACK])
 

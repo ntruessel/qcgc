@@ -19,7 +19,7 @@ class PrebuiltObjectTestCase(QCGCTest):
         self.set_ref(s, 3, s)
 
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", r)), lib.BLOCK_WHITE)
         self.assertEqual(self.get_blocktype(ffi.cast("cell_t *", s)), lib.BLOCK_WHITE)
 

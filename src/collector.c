@@ -184,7 +184,7 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 	}
 }
 
-void qcgc_sweep(void) {
+void qcgc_sweep(bool minor) {
 #if CHECKED
 	assert(qcgc_state.phase == GC_COLLECT);
 	check_free_cells();
@@ -202,7 +202,7 @@ void qcgc_sweep(void) {
 				(uint8_t *) &log_info);
 	}
 
-	qcgc_hbtable_sweep();
+	qcgc_hbtable_sweep(minor);
 	size_t i = 0;
 	qcgc_state.free_cells = 0;
 	qcgc_state.largest_free_block = 0;
@@ -211,7 +211,7 @@ void qcgc_sweep(void) {
 	while (i < qcgc_allocator_state.arenas->count) {
 		arena_t *arena = qcgc_allocator_state.arenas->items[i];
 		// The arena that contains the bump pointer is autmatically skipped
-		if (qcgc_arena_sweep(arena)) {
+		if (qcgc_arena_sweep(arena, minor)) {
 			// Free
 			qcgc_allocator_state.arenas = qcgc_arena_bag_remove_index(
 					qcgc_allocator_state.arenas, i);

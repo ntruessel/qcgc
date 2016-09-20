@@ -109,7 +109,7 @@ ffi.cdef(""" const size_t qcgc_arena_size;
         size_t qcgc_arena_black_blocks(arena_t *arena);
 
         bool qcgc_arena_pseudo_sweep(arena_t *arena);
-        bool qcgc_arena_sweep(arena_t *arena);
+        bool qcgc_arena_sweep(arena_t *arena, bool minor);
 
         size_t qcgc_arena_sizeof(void);
         """)
@@ -204,7 +204,7 @@ ffi.cdef("""
         void qcgc_hbtable_insert(object_t *object);
         bool qcgc_hbtable_mark(object_t *object);
         bool qcgc_hbtable_is_marked(object_t *object);
-        void qcgc_hbtable_sweep(void);
+        void qcgc_hbtable_sweep(bool minor);
         size_t bucket(object_t *object);
         """)
 
@@ -233,6 +233,8 @@ ffi.cdef("""
                 size_t incmark_since_sweep;
                 size_t incmark_threshold;
                 size_t incmark_to_sweep;
+                size_t minors_since_major;
+                size_t minors_to_major;
                 size_t free_cells;
                 size_t largest_free_block;
         } qcgc_state;
@@ -292,7 +294,7 @@ ffi.cdef("""
         void qcgc_destroy(void);
         void qcgc_write(object_t *object);
         object_t *qcgc_allocate(size_t size);
-        void qcgc_collect(void);
+        void qcgc_collect(bool minor);
 
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
@@ -306,7 +308,7 @@ ffi.cdef("""
 ffi.cdef("""
         void qcgc_mark(void);
         void qcgc_incmark(void);
-        void qcgc_sweep(void);
+        void qcgc_sweep(bool minor);
         """)
 
 ################################################################################
@@ -356,6 +358,7 @@ ffi.cdef("""
 ffi.set_source("support",
         """
         #include "../config.h"
+        #include <stdbool.h>
         #include <stddef.h>
         #include <stdint.h>
 
@@ -388,7 +391,7 @@ ffi.set_source("support",
         void qcgc_push_root(object_t *object);
         void qcgc_pop_root(size_t count);
         void qcgc_write(object_t *object);
-        void qcgc_collect(void);
+        void qcgc_collect(bool minor);
         void qcgc_register_weakref(object_t *weakrefobj, object_t **target);
 
 
@@ -447,7 +450,7 @@ ffi.set_source("support",
         void qcgc_arena_destroy(arena_t *arena);
         void qcgc_arena_mark_allocated(cell_t *ptr, size_t cells);
         void qcgc_arena_mark_free(cell_t *ptr);
-        bool qcgc_arena_sweep(arena_t *arena);
+        bool qcgc_arena_sweep(arena_t *arena, bool minor);
         bool qcgc_arena_pseudo_sweep(arena_t *arena);
 
         arena_t *qcgc_arena_addr(cell_t *ptr);
@@ -514,7 +517,7 @@ ffi.set_source("support",
         void qcgc_hbtable_insert(object_t *object);
         bool qcgc_hbtable_mark(object_t *object);
         bool qcgc_hbtable_is_marked(object_t *object);
-        void qcgc_hbtable_sweep(void);
+        void qcgc_hbtable_sweep(bool minor);
         size_t bucket(object_t *object);
 
 /******************************************************************************/
@@ -535,6 +538,8 @@ ffi.set_source("support",
                 size_t incmark_since_sweep;
                 size_t incmark_threshold;
                 size_t incmark_to_sweep;
+                size_t minors_since_major;
+                size_t minors_to_major;
                 size_t free_cells;
                 size_t largest_free_block;
         } qcgc_state;
@@ -566,7 +571,7 @@ ffi.set_source("support",
         // collector.h
         void qcgc_mark(void);
         void qcgc_incmark(void);
-        void qcgc_sweep(void);
+        void qcgc_sweep(bool minor);
 
 /******************************************************************************/
         // weakref.h

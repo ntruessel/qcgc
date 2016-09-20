@@ -22,6 +22,7 @@
 	}															\
 } while(0)
 
+
 QCGC_STATIC QCGC_INLINE void initialize_shadowstack(void);
 QCGC_STATIC QCGC_INLINE void destroy_shadowstack(void);
 
@@ -34,6 +35,7 @@ void qcgc_initialize(void) {
 	qcgc_state.phase = GC_PAUSE;
 	qcgc_state.cells_since_incmark = 0;
 	qcgc_state.incmark_since_sweep = 0;
+	qcgc_state.minors_since_major = 0;
 	qcgc_state.free_cells = 0;
 	qcgc_state.largest_free_block = 0;
 	qcgc_allocator_initialize();
@@ -44,6 +46,8 @@ void qcgc_initialize(void) {
 			"QCGC_INCMARK", QCGC_INCMARK_THRESHOLD);
 	env_or_fallback(qcgc_state.incmark_to_sweep,
 			"QCGC_INCMARK_TO_SWEEP", QCGC_INCMARK_TO_SWEEP);
+	env_or_fallback(qcgc_state.minors_to_major,
+			"QCGC_MINORS_TO_MAJOR", QCGC_MINORS_TO_MAJOR);
 
 	setup_signal_handler();
 }
@@ -65,7 +69,8 @@ object_t *_qcgc_allocate_large(size_t size) {
 	if (UNLIKELY(qcgc_state.cells_since_incmark >
 				qcgc_state.incmark_threshold)) {
 		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
-			qcgc_collect();
+			qcgc_collect(qcgc_state.minors_since_major <
+					qcgc_state.minors_to_major);
 		} else {
 			qcgc_incmark();
 			qcgc_state.incmark_since_sweep++;
@@ -96,7 +101,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 				qcgc_state.incmark_threshold)) {
 		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
 			qcgc_reset_bump_ptr();
-			qcgc_collect();
+			qcgc_collect(false);
 			use_fit_allocator = false; // Try using bump allocator again
 		} else {
 			qcgc_incmark();
@@ -202,39 +207,15 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	return result;
 }
 
-/*
-object_t *_qcgc_allocate_slowpath(size_t size) {
-	object_t *result;
-
-	if (UNLIKELY(qcgc_state.cells_since_incmark >
-				qcgc_state.incmark_threshold)) {
-		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
-			qcgc_collect();
-		} else {
-			qcgc_incmark();
-			qcgc_state.incmark_since_sweep++;
-		}
-	}
-
-	// Use bump / fit allocator
-	if (_qcgc_bump_allocator.ptr != NULL) {
-		result = bump_allocate(size);
-	} else {
-		result = qcgc_fit_allocate(size);
-
-		// Fallback to bump allocator
-		if (result == NULL) {
-			result = bump_allocate(size);
-		}
-	}
-	return result;
-}
-*/
-
-void qcgc_collect(void) {
+void qcgc_collect(bool minor) {
 	qcgc_mark();
-	qcgc_sweep();
+	qcgc_sweep(minor);
 	qcgc_state.incmark_since_sweep = 0;
+	if (minor) {
+		qcgc_state.minors_since_major++;
+	} else {
+		qcgc_state.minors_since_major = 0;
+	}
 }
 
 void qcgc_write(object_t *object) {

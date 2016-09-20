@@ -9,13 +9,13 @@ class CellCountingTestCase(QCGCTest):
         for _ in range(10):
             self.push_root(self.allocate(1))
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 10)
         #
         for _ in range(10):
             self.pop_root()
         #
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, 0) # As the arena is free now
         self.assertEqual(lib.qcgc_state.largest_free_block, 0)
 
@@ -23,9 +23,9 @@ class CellCountingTestCase(QCGCTest):
         for _ in range(10):
             self.push_root(self.allocate(1))
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 10)
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 10)
 
     def test_fit_all_free(self):
@@ -33,13 +33,13 @@ class CellCountingTestCase(QCGCTest):
             self.allocate(1)
             self.push_root(self.allocate(1)) # Make it non coalesced
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 10)
 
         for _ in range(10):
             self.push_root(lib.qcgc_fit_allocate(1))
 
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 20)
 
     def test_custom_layout_full_sweep(self):
@@ -63,7 +63,7 @@ class CellCountingTestCase(QCGCTest):
 
         lib.qcgc_state.free_cells = 0
         lib.qcgc_state.largest_free_block = 0
-        lib.qcgc_arena_sweep(arena)
+        lib.qcgc_arena_sweep(arena, False)
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 3)
         self.assertEqual(lib.qcgc_state.largest_free_block,  self.arena_blocks - 43)
 
@@ -72,7 +72,7 @@ class CellCountingTestCase(QCGCTest):
             self.push_root(self.allocate(1))
 
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
 
         self.assertEqual(lib.qcgc_state.free_cells, self.arena_blocks - 2 ** 9)
         self.assertEqual(lib.qcgc_state.largest_free_block, self.arena_blocks - 2 ** 9)

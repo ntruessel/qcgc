@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -268,8 +269,10 @@ void qcgc_write(object_t *object);
 
 /**
  * Run garbage collection.
+ *
+ * @param	minor	Minor collection
  */
-void qcgc_collect(void);
+void qcgc_collect(bool minor);
 
 /**
  * Weakref registration.

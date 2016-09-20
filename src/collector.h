@@ -6,4 +6,4 @@
 
 void qcgc_incmark(void);
 void qcgc_mark(void);
-void qcgc_sweep(void);
+void qcgc_sweep(bool minor);

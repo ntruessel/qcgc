@@ -19,7 +19,7 @@ class WeakrefTestCase(QCGCTest):
         self.push_root(wr)
         # Collect
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         #
         self.assertEqual(self.get_ref(wr, 0), prebuilt)
 
@@ -29,7 +29,7 @@ class WeakrefTestCase(QCGCTest):
         wr = self.allocate_weakref(alive)
         # Collect
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         # There is nothing to check besides that this does not crash
 
     def weakref_to_alive_and_dead(self, alive, dead):
@@ -41,7 +41,7 @@ class WeakrefTestCase(QCGCTest):
         self.push_root(wr_to_dead)
         # Collect
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         #
         self.assertEqual(self.get_ref(wr_to_alive, 0), alive)
         self.assertEqual(self.get_ref(wr_to_dead, 0), ffi.NULL)

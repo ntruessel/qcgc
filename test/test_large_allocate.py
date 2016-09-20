@@ -57,7 +57,7 @@ class LargeAllocateTestCase(QCGCTest):
             ffi.cast("cell_t *", r)), lib.BLOCK_BLACK)
         #
         lib.bump_ptr_reset()
-        lib.qcgc_sweep()
+        lib.qcgc_sweep(False)
         #
         self.assertTrue(self.hbtable_has(o))
         self.assertFalse(self.hbtable_marked(o))

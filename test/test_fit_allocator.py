@@ -219,7 +219,7 @@ class FitAllocatorTest(QCGCTest):
         for r in roots:
             self.push_root(r)
         lib.bump_ptr_reset()
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         for _ in roots:
             self.pop_root()
         #
@@ -228,7 +228,7 @@ class FitAllocatorTest(QCGCTest):
         del roots[0]
         for r in roots:
             self.push_root(r)
-        lib.qcgc_collect()
+        lib.qcgc_collect(False)
         for _ in roots:
             self.pop_root()
         #

@@ -117,7 +117,7 @@ bool qcgc_arena_pseudo_sweep(arena_t *arena) {
 	return false;
 }
 
-bool qcgc_arena_sweep(arena_t *arena) {
+bool qcgc_arena_sweep(arena_t *arena, bool minor) {
 #if CHECKED
 	assert(arena != NULL);
 	assert(qcgc_arena_is_coalesced(arena));
@@ -134,7 +134,12 @@ bool qcgc_arena_sweep(arena_t *arena) {
 			i < QCGC_ARENA_BITMAP_SIZE;
 			i++) {
 		uint8_t new_block = arena->block_bitmap[i] & arena->mark_bitmap[i];
-		uint8_t new_mark = arena->block_bitmap[i] ^ arena->mark_bitmap[i];
+		uint8_t new_mark;
+		if (minor) {
+			new_mark = arena->block_bitmap[i] | arena->mark_bitmap[i];
+		} else {
+			new_mark = arena->block_bitmap[i] ^ arena->mark_bitmap[i];
+		}
 
 		arena->block_bitmap[i] = new_block;
 
