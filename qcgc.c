@@ -106,7 +106,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 
 	object_t *result = NULL;
 	if (!use_fit_allocator) {
-		qcgc_bump_allocator_renew_block(false);
+		qcgc_bump_allocator_renew_block(size, false);
 
 		qcgc_state.cells_since_incmark += _qcgc_bump_allocator.end -
 			_qcgc_bump_allocator.ptr;
@@ -167,7 +167,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 #endif
 		return result;
 	}
-	qcgc_bump_allocator_renew_block(true);
+	qcgc_bump_allocator_renew_block(size, true);
 	qcgc_state.cells_since_incmark +=
 		_qcgc_bump_allocator.end - _qcgc_bump_allocator.ptr;
 

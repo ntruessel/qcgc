@@ -66,7 +66,7 @@ class QCGCTest(unittest.TestCase):
 
     def bump_allocate(self, size):
         if self.bump_remaining_cells() < lib.bytes_to_cells(size):
-            lib.qcgc_bump_allocator_renew_block();
+            lib.qcgc_bump_allocator_renew_block(size, True);
         return lib.qcgc_bump_allocate(size);
 
     def get_ref(self, obj, index):
