@@ -192,10 +192,12 @@ void qcgc_sweep(bool minor) {
 	{
 		struct log_info_s {
 			size_t arenas;
+			bool minor; // For python reasons
 			size_t free_cells;
 		};
 		struct log_info_s log_info = {
 			qcgc_allocator_state.arenas->count,
+			minor,
 			qcgc_state.free_cells,
 		};
 		qcgc_event_logger_log(EVENT_SWEEP_START, sizeof(struct log_info_s),

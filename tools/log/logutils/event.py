@@ -43,13 +43,13 @@ class LogStopEvent(EventBase):
 class SweepStartEvent(EventBase):
     def parse_additional_data(self, f, size):
         buf = f.read(size)
-        self.arenas, self.free_cells = struct.unpack("LL", buf)
+        self.arenas, self.minor, self.free_cells = struct.unpack("L?L", buf)
 
     def accept(self, visitor):
         visitor.visit_sweep_start(self)
 
     def __str__(self):
-        return "[{: 4d}.{:09d}] Sweep start, {} arenas".format(self.sec, self.nsec, self.arenas)
+        return "[{: 4d}.{:09d}] {} sweep start, {} arenas".format(self.sec, self.nsec, "Minor" if self.minor else "Major", self.arenas)
 
 class SweepDoneEvent(EventBase):
     def parse_additional_data(self, f, size):

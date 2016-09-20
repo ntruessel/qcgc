@@ -1,1 +1,1 @@
-__all__ = ["iterator"]
+__all__ = ["iterator", "visitor"]
