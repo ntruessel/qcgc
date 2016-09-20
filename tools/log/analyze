@@ -12,6 +12,7 @@ class SummaryVisitor(LogEventVisitor):
         self.sweep = []
         self.arenas = []
         self.collect_pause = []
+        self.mark_cycle = []
         self.memory_usage_before = []
         self.memory_usage_after = []
         self.fragmentation = []
@@ -21,6 +22,7 @@ class SummaryVisitor(LogEventVisitor):
         self._mark_start = 0.0
         self._sweep_start = 0.0
         self._collect_start = 0.0
+        self._current_mark_cycle = []
 
     def visit_log_start(self, event):
         self.log_start = event.time()
@@ -34,6 +36,8 @@ class SummaryVisitor(LogEventVisitor):
         self.arenas.append(event.arenas)
         total = event.arenas * self.arena_cells
         self.memory_usage_before.append((total - event.free_cells) / total)
+        self.mark_cycle.append(sum(self._current_mark_cycle))
+        self._current_mark_cycle = []
 
     def visit_sweep_done(self, event):
         self.sweep.append(event.time() - self._sweep_start)
@@ -56,6 +60,8 @@ class SummaryVisitor(LogEventVisitor):
             self.incmark.append(event.time() - self._mark_start)
         else:
             self.fullmark.append(event.time() - self._mark_start)
+
+        self._current_mark_cycle.append(event.time() - self._mark_start)
 
 def print_summary(filename):
     log = LogIterator(filename)
@@ -84,7 +90,9 @@ def print_summary(filename):
         print("  count                      : {:d}".format(len(v.sweep)))
         print("  avg arenas allocated       : {:2f}".format(mean(v.arenas)))
         print("  max arenas allocated       : {:d}".format(max(v.arenas)))
-        print("  avg per arena              : {:.6f}".format(sum(v.sweep) / sum(v.arenas) * 1000))
+        print("  min per arena              : {:.6f}ns".format(min([t / a for t,a in zip(v.sweep, v.arenas)]) * 1000000))
+        print("  avg per arena              : {:.6f}ns".format(sum(v.sweep) / sum(v.arenas) * 1000000))
+        print("  max per arena              : {:.6f}ns".format(max([t / a for t,a in zip(v.sweep, v.arenas)]) * 1000000))
         print("  min pause                  : {:.6f}ms".format(min(v.sweep) * 1000))
         print("  avg pause                  : {:.6f}ms".format(mean(v.sweep) * 1000))
         print("  max pause                  : {:.6f}ms".format(max(v.sweep) * 1000))
@@ -104,6 +112,9 @@ def print_summary(filename):
         print("    min                      : {:.2%}".format(min(v.fragmentation)))
         print("    avg                      : {:.2%}".format(mean(v.fragmentation)))
         print("    max                      : {:.2%}".format(max(v.fragmentation)))
+        print("Avg Mark Cycle               : {:.6f}ms".format(mean(v.mark_cycle) * 1000))
+        print("Max Mark Cycle               : {:.6f}ms".format(max(v.mark_cycle) * 1000))
+        print("Avg Sweep Cycle              : {:.6f}ms".format(mean(v.sweep) * 1000))
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:

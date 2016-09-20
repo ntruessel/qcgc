@@ -4,8 +4,6 @@ import sys
 from logutils.iterator import LogIterator
 from logutils.visitor import LogEventVisitor
 
-arena_cells = (2**20 / 4) * (63/64)
-
 class DataDim:
     def __init__(self, name):
         self._data = []
@@ -54,13 +52,16 @@ class FragmentationVisitor(LogEventVisitor):
         self.data.add_dim(DataDim("Fragmentation"))
         self.data.add_dim(DataDim("Memory Usage"))
 
+    def visit_log_start(self, event):
+        self.arena_cells = (event.arena_cells * 63) // 64 // 16
+
     def visit_sweep_start(self, event):
-        total = event.arenas * arena_cells
+        total = event.arenas * self.arena_cells
         assert total >= event.free_cells
         self.data.append_line([event.time(), '-', (total - event.free_cells) / total])
 
     def visit_sweep_done(self, event):
-        total = event.arenas * arena_cells;
+        total = event.arenas * self.arena_cells;
         assert total >= event.free_cells
         if event.free_cells > 0:
             fragmentation = 1 - event.largest_free_block / event.free_cells
