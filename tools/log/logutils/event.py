@@ -123,4 +123,16 @@ class FreelistDumpEvent(EventBase):
         return "[{: 4d}.{:09d}] Freelist dump. Size {}, Count {}".format(
                 self.sec, self.nsec, self.size, self.count)
 
+class AllocatorSwitchEvent(EventBase):
+    def parse_additional_data(self, f, size):
+        buf = f.read(size)
+        self.use_bump, self.allocations = struct.unpack("?L", buf)
+
+    def accept(self, visitor):
+        visitor.visit_allocator_switch(self)
+
+    def __str__(self):
+        return "[{: 4d}.{:09d}] Allocator switch. Now using {} allocator.".format(
+                self.sec, self.nsec, "bump" if self.use_bump else "fit")
+
 del EventBase

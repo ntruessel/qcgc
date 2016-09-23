@@ -60,7 +60,7 @@ typedef struct object_stack_s {
 } object_stack_t;
 
 #if LOG_ALLOCATOR_SWITCH
-size_t qcgc_allocations = 0;
+size_t qcgc_allocations;
 #endif
 
 /**

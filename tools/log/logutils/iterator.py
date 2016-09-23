@@ -32,6 +32,8 @@ class LogIterator:
                 result = MarkDoneEvent(sec, nsec)
             elif (eventID == 8):
                 result = FreelistDumpEvent(sec, nsec)
+            elif (eventID == 9):
+                result = AllocatorSwitchEvent(sec, nsec)
             else:
                 result = UnknownEvent(sec, nsec, eventID)
 

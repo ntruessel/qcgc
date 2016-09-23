@@ -29,5 +29,8 @@ class LogEventVisitor:
     def visit_freelist_dump(self, event):
         self.default(event)
 
+    def visit_allocator_switch(self, event):
+        self.default(event)
+
     def default(self, event):
         pass
