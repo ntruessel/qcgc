@@ -13,7 +13,6 @@ class UsageVisitor(LogEventVisitor):
         self.use_bump = True # Intergrity check
 
     def visit_allocator_switch(self, event):
-        assert event.use_bump != self.use_bump
         self.add(event.allocations - self.last_allocations)
         self.last_allocations = event.allocations
         self.add = self.bump_allocations.append if event.use_bump else self.fit_allocations.append
