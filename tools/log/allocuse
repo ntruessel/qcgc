@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import sys
+from logutils.iterator import LogIterator
+from logutils.visitor import LogEventVisitor
+
+class UsageVisitor(LogEventVisitor):
+    def __init__(self):
+        self.fit_allocations = []
+        self.bump_allocations = []
+        self.add = self.bump_allocations.append
+        self.last_allocations = 0
+        self.use_bump = True # Intergrity check
+
+    def visit_allocator_switch(self, event):
+        self.add(event.allocations - self.last_allocations)
+        self.last_allocations = event.allocations
+        self.add = self.bump_allocations.append if event.use_bump else self.fit_allocations.append
+        self.use_bump = event.use_bump
+
+def print_summary(filename):
+    log = LogIterator(filename)
+    v = UsageVisitor()
+    for event in log:
+        event.accept(v)
+    #
+    total_allocs = sum(v.fit_allocations + v.bump_allocations)
+    print("Allocator switches:  {}".format(len(v.fit_allocations + v.bump_allocations)))
+    print("Total allocations:   {}".format(total_allocs))
+    print("Fit allocator used:  {:2%}".format(sum(v.fit_allocations) / total_allocs))
+    print("Bump allocator used: {:2%}".format(sum(v.bump_allocations) / total_allocs))
+
+if __name__ == "__main__":
+    for filename in sys.argv[1:]:
+        print_summary(filename)
