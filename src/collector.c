@@ -225,7 +225,12 @@ void qcgc_sweep(bool minor) {
 			i++;
 		}
 	}
-	qcgc_state.phase = GC_PAUSE;
+
+	if (minor) {
+		qcgc_state.phase = GC_MARK;
+	} else {
+		qcgc_state.phase = GC_PAUSE;
+	}
 
 	// Determine whether fragmentation is too high
 	// Fragmenation = 1 - (largest block / total free space)

@@ -117,7 +117,8 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 				qcgc_state.incmark_threshold)) {
 		if (qcgc_state.incmark_since_sweep == qcgc_state.incmark_to_sweep) {
 			qcgc_reset_bump_ptr();
-			qcgc_collect(false);
+			qcgc_collect(qcgc_state.minors_since_major <
+					qcgc_state.minors_to_major);
 			use_fit_allocator = false; // Try using bump allocator again
 		} else {
 			qcgc_incmark();

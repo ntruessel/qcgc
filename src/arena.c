@@ -143,50 +143,92 @@ bool qcgc_arena_sweep(arena_t *arena, bool minor) {
 
 		arena->block_bitmap[i] = new_block;
 
-		if (new_block == new_mark) {
-			// Both are 0
-			continue;
-		}
+		if (!minor) {
+			if (new_block == new_mark) {
+				// Both are 0
+				continue;
+			}
 
-		if (!new_block) {
-			// Only entries in the mark bitmap
-			if (last_free_cell != 0) {
-				// Coalesce
-				new_mark = 0;
+			if (!new_block) {
+				// Only entries in the mark bitmap
+				if (last_free_cell != 0) {
+					// Coalesce
+					new_mark = 0;
+				} else {
+					uint8_t first = __builtin_ctz(new_mark);
+					new_mark = 1 << first;
+					last_free_cell = i * 8 + first;
+				}
 			} else {
-				uint8_t first = __builtin_ctz(new_mark);
-				new_mark = 1 << first;
-				last_free_cell = i * 8 + first;
+				for (size_t j = 0; j < 8; j++) {
+					size_t cell = i * 8 + j;
+					uint8_t m = (new_mark >> j) & 0x1;
+					uint8_t b = (new_block >> j) & 0x1;
+					uint8_t mask = 1 << j;
+					if (m) {
+						// Free
+						if (last_free_cell != 0) {
+							// Coalesce
+							new_mark &= ~mask;
+						} else {
+							last_free_cell = cell;
+						}
+					} else if (b) {
+						// White
+						free = false;
+						if (last_free_cell != 0) {
+							qcgc_fit_allocator_add(arena->cells + last_free_cell,
+									cell - last_free_cell);
+#if DEBUG_ZERO_ON_SWEEP
+							memset(arena->cells + last_free_cell, 0,
+									sizeof(cell_t) * (cell - last_free_cell));
+#endif
+							qcgc_state.largest_free_block = MAX(
+									qcgc_state.largest_free_block,
+									cell - last_free_cell);
+							last_free_cell = 0;
+						}
+					}
+				}
 			}
 		} else {
+			// Minor, no white blocks
+			if (!new_mark) {
+				continue;
+			}
+
 			for (size_t j = 0; j < 8; j++) {
 				size_t cell = i * 8 + j;
 				uint8_t m = (new_mark >> j) & 0x1;
 				uint8_t b = (new_block >> j) & 0x1;
 				uint8_t mask = 1 << j;
 				if (m) {
-					// Free
-					if (last_free_cell != 0) {
-						// Coalesce
-						new_mark &= ~mask;
-					} else {
-						last_free_cell = cell;
-					}
-				} else if (b) {
-					// White
-					free = false;
-					if (last_free_cell != 0) {
-						qcgc_fit_allocator_add(arena->cells + last_free_cell,
-								cell - last_free_cell);
+					if (b) {
+						// Black
+						free = false;
+						if (last_free_cell != 0) {
+							qcgc_fit_allocator_add(arena->cells + last_free_cell,
+									cell - last_free_cell);
 #if DEBUG_ZERO_ON_SWEEP
-						memset(arena->cells + last_free_cell, 0,
-								sizeof(cell_t) * (cell - last_free_cell));
+							memset(arena->cells + last_free_cell, 0,
+									sizeof(cell_t) * (cell - last_free_cell));
 #endif
-						qcgc_state.largest_free_block = MAX(
-								qcgc_state.largest_free_block,
-								cell - last_free_cell);
-						last_free_cell = 0;
+							qcgc_state.largest_free_block = MAX(
+									qcgc_state.largest_free_block,
+									cell - last_free_cell);
+							last_free_cell = 0;
+						}
+					} else {
+						// Free
+						if (last_free_cell != 0) {
+							// Coalesce
+							new_mark &= ~mask;
+						} else {
+							last_free_cell = cell;
+						}
 					}
+				} else {
+					assert(!b);
 				}
 			}
 		}
