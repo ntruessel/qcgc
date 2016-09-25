@@ -51,6 +51,8 @@ class FragmentationVisitor(LogEventVisitor):
         self.data.add_dim(DataDim("Time"))
         self.data.add_dim(DataDim("Fragmentation"))
         self.data.add_dim(DataDim("Memory Usage"))
+        self.data.add_dim(DataDim("Arenas"))
+        self.data.add_dim(DataDim("Allocated Arenas"))
 
     def visit_log_start(self, event):
         self.arena_cells = (event.arena_cells * 63) // 64 // 16
@@ -58,7 +60,9 @@ class FragmentationVisitor(LogEventVisitor):
     def visit_sweep_start(self, event):
         total = event.arenas * self.arena_cells
         assert total >= event.free_cells
-        self.data.append_line([event.time(), '-', (total - event.free_cells) / total])
+        utilization = (total - event.free_cells) / total
+        self.data.append_line([event.time(), '-', utilization,
+            event.arenas, event.arenas * utilization])
 
     def visit_sweep_done(self, event):
         total = event.arenas * self.arena_cells;
@@ -67,7 +71,9 @@ class FragmentationVisitor(LogEventVisitor):
             fragmentation = 1 - event.largest_free_block / event.free_cells
         else:
             fragmentation = 0
-        self.data.append_line([event.time(), fragmentation, (total - event.free_cells) / total])
+        utilization = (total - event.free_cells) / total
+        self.data.append_line([event.time(), fragmentation, utilization,
+            event.arenas, event.arenas * utilization])
 
 def print_data(filename):
     log = LogIterator(filename)
