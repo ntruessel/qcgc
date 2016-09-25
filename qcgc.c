@@ -264,12 +264,6 @@ void qcgc_write(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 #endif
-	if (!(object->flags & QCGC_GRAY_FLAG) == _qcgc_gray_flag_inverted) {
-		// Already gray, skip
-		return;
-	}
-	object->flags ^= QCGC_GRAY_FLAG;
-
 	// Register prebuilt object if necessary
 	if (((object->flags & QCGC_PREBUILT_OBJECT) != 0) &&
 			((object->flags & QCGC_PREBUILT_REGISTERED) == 0)) {
@@ -277,6 +271,12 @@ void qcgc_write(object_t *object) {
 		qcgc_state.prebuilt_objects = qcgc_object_stack_push(
 				qcgc_state.prebuilt_objects, object);
 	}
+
+	if (!(object->flags & QCGC_GRAY_FLAG) == _qcgc_gray_flag_inverted) {
+		// Already gray, skip
+		return;
+	}
+	object->flags ^= QCGC_GRAY_FLAG;
 
 	if (qcgc_state.phase == GC_PAUSE) {
 		return; // We are done

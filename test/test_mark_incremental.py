@@ -98,10 +98,41 @@ class MarkIncTestCase(QCGCTest):
             self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_BLACK)
 
         lib.bump_ptr_reset()
-        lib.qcgc_sweep()
+        lib.qcgc_collect()
 
         for o in reachable:
-            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_WHITE)
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_LIGHT_GRAY)
+        # Do it a second time
+        reachable = list()
+        unreachable = list()
+
+        for i in range(2 * lib.QCGC_INC_MARK_MIN):
+            o = self.allocate_ref(1)
+            self.push_root(o)
+            reachable.append(o)
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *",o)), lib.MARK_COLOR_LIGHT_GRAY)
+
+
+        lib.qcgc_incmark() # Marks ALL root objects
+        self.assertEqual(lib.qcgc_state.phase, lib.GC_MARK)
+
+        for o in reachable:
+            self.assertIn(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), [lib.MARK_COLOR_DARK_GRAY, lib.MARK_COLOR_BLACK])
+            if (lib.qcgc_get_mark_color(ffi.cast("object_t *", o)) == lib.MARK_COLOR_BLACK):
+                # Trigger write barrier and add object
+                lib.qcgc_write(ffi.cast("object_t *", o))
+                self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_DARK_GRAY)
+
+        lib.qcgc_mark()
+
+        for o in reachable:
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_BLACK)
+
+        lib.bump_ptr_reset()
+        lib.qcgc_collect()
+
+        for o in reachable:
+            self.assertEqual(lib.qcgc_get_mark_color(ffi.cast("object_t *", o)), lib.MARK_COLOR_LIGHT_GRAY)
 
     def test_root_changes_while_marking(self):
         reachable = list()

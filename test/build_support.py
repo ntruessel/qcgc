@@ -357,6 +357,7 @@ ffi.set_source("support",
         """
         #include "../config.h"
         #include <stddef.h>
+        #include <stdbool.h>
         #include <stdint.h>
 
 /******************************************************************************/
@@ -380,6 +381,8 @@ ffi.set_source("support",
             cell_t *ptr;
             cell_t *end;
         } _qcgc_bump_allocator;
+
+        bool _qcgc_gray_flag_inverted;
 
         void qcgc_initialize(void);
         void qcgc_destroy(void);
@@ -726,7 +729,7 @@ ffi.set_source("support",
                 blocktype_t blocktype = qcgc_arena_get_blocktype(
                         qcgc_arena_addr((cell_t *) object),
                         qcgc_arena_cell_index((cell_t *) object));
-                bool gray = (object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG;
+                bool gray = !(object->flags & QCGC_GRAY_FLAG) == _qcgc_gray_flag_inverted;
                 if (blocktype == BLOCK_WHITE) {
                         if (gray) {
                                 return MARK_COLOR_LIGHT_GRAY;
