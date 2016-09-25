@@ -179,7 +179,6 @@ object_t *qcgc_fit_allocate(size_t bytes) {
 #endif
 
 	qcgc_state.free_cells -= cells;
-	result->flags = QCGC_GRAY_FLAG;
 	return result;
 }
 

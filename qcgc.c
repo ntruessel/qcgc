@@ -36,6 +36,7 @@ void qcgc_initialize(void) {
 	qcgc_state.incmark_since_sweep = 0;
 	qcgc_state.free_cells = 0;
 	qcgc_state.largest_free_block = 0;
+	_qcgc_gray_flag_inverted = false;
 	qcgc_allocator_initialize();
 	qcgc_hbtable_initialize();
 	qcgc_event_logger_initialize();
@@ -94,7 +95,7 @@ object_t *_qcgc_allocate_large(size_t size) {
 	memset(result, 0, size);
 #endif
 	qcgc_hbtable_insert(result);
-	result->flags = QCGC_GRAY_FLAG;
+	result->flags = (_qcgc_gray_flag_inverted ? 0 : QCGC_GRAY_FLAG);
 
 	qcgc_state.cells_since_incmark += bytes_to_cells(size);
 
@@ -142,7 +143,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 			memset(result, 0, cells * sizeof(cell_t));
 #endif
 
-			result->flags = QCGC_GRAY_FLAG;
+			result->flags = (_qcgc_gray_flag_inverted ? 0 : QCGC_GRAY_FLAG);
 #if LOG_ALLOCATOR_SWITCH
 			if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
 				// Allocator switched
@@ -166,6 +167,11 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	result = qcgc_fit_allocate(size);
 	if (result != NULL) {
 		qcgc_state.cells_since_incmark += bytes_to_cells(size);
+#if QCGC_INIT_ZERO
+		memset(result, 0, cells * sizeof(cell_t));
+#endif
+
+		result->flags = (_qcgc_gray_flag_inverted ? 0 : QCGC_GRAY_FLAG);
 #if LOG_ALLOCATOR_SWITCH
 		if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
 			// Allocator switched
@@ -199,7 +205,7 @@ object_t *_qcgc_allocate_slowpath(size_t size) {
 	memset(result, 0, cells * sizeof(cell_t));
 #endif
 
-	result->flags = QCGC_GRAY_FLAG;
+	result->flags = (_qcgc_gray_flag_inverted ? 0 : QCGC_GRAY_FLAG);
 #if LOG_ALLOCATOR_SWITCH
 	if ((_qcgc_bump_allocator.ptr == NULL) != old_use_fit_allocator) {
 		// Allocator switched
@@ -251,17 +257,18 @@ void qcgc_collect(void) {
 	qcgc_mark();
 	qcgc_sweep();
 	qcgc_state.incmark_since_sweep = 0;
+	_qcgc_gray_flag_inverted = !_qcgc_gray_flag_inverted;
 }
 
 void qcgc_write(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
 #endif
-	if ((object->flags & QCGC_GRAY_FLAG) != 0) {
+	if (!(object->flags & QCGC_GRAY_FLAG) == _qcgc_gray_flag_inverted) {
 		// Already gray, skip
 		return;
 	}
-	object->flags |= QCGC_GRAY_FLAG;
+	object->flags ^= QCGC_GRAY_FLAG;
 
 	// Register prebuilt object if necessary
 	if (((object->flags & QCGC_PREBUILT_OBJECT) != 0) &&

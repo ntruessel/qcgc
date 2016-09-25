@@ -143,15 +143,13 @@ QCGC_STATIC void mark_cleanup(bool incremental) {
 QCGC_STATIC QCGC_INLINE void qcgc_pop_object(object_t *object) {
 #if CHECKED
 	assert(object != NULL);
-	assert((object->flags & QCGC_PREBUILT_OBJECT) == QCGC_PREBUILT_OBJECT ||
-			(object->flags & QCGC_GRAY_FLAG) == QCGC_GRAY_FLAG);
 	if (((object->flags & QCGC_PREBUILT_OBJECT) == 0) &&
 		((object_t *) qcgc_arena_addr((cell_t *) object) != object)) {
 		assert(qcgc_arena_get_blocktype(qcgc_arena_addr((cell_t *) object),
 					qcgc_arena_cell_index((cell_t *) object)) == BLOCK_BLACK);
 	}
 #endif
-	object->flags &= ~QCGC_GRAY_FLAG;
+	object->flags ^= QCGC_GRAY_FLAG;
 	qcgc_trace_cb(object, &qcgc_push_object);
 }
 
@@ -164,7 +162,11 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 		if ((object_t *) arena == object) {
 			if (qcgc_hbtable_mark(object)) {
 				// Did mark it / was white before
-				object->flags |= QCGC_GRAY_FLAG;
+				if (_qcgc_gray_flag_inverted) {
+					object->flags &= ~QCGC_GRAY_FLAG;
+				} else {
+					object->flags |= QCGC_GRAY_FLAG;
+				}
 				qcgc_state.gray_stack_size++;
 				qcgc_state.gp_gray_stack = qcgc_object_stack_push(
 						qcgc_state.gp_gray_stack, object);
@@ -176,7 +178,11 @@ QCGC_STATIC void qcgc_push_object(object_t *object) {
 		}
 		size_t index = qcgc_arena_cell_index((cell_t *) object);
 		if (qcgc_arena_get_blocktype(arena, index) == BLOCK_WHITE) {
-			object->flags |= QCGC_GRAY_FLAG;
+			if (_qcgc_gray_flag_inverted) {
+				object->flags &= ~QCGC_GRAY_FLAG;
+			} else {
+				object->flags |= QCGC_GRAY_FLAG;
+			}
 			qcgc_arena_set_blocktype(arena, index, BLOCK_BLACK);
 			qcgc_state.gray_stack_size++;
 			arena->gray_stack = qcgc_object_stack_push(arena->gray_stack, object);

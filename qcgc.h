@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -62,6 +63,11 @@ typedef struct object_stack_s {
 #if LOG_ALLOCATOR_SWITCH
 size_t qcgc_allocations;
 #endif
+
+/**
+ * Gray flag meaning
+ */
+bool _qcgc_gray_flag_inverted;
 
 /**
  * Arena
@@ -234,7 +240,7 @@ QCGC_STATIC QCGC_INLINE object_t *qcgc_allocate(size_t size) {
 	memset(result, 0, cells * sizeof(cell_t));
 #endif
 
-	result->flags = QCGC_GRAY_FLAG;
+	result->flags = (_qcgc_gray_flag_inverted ? 0 : QCGC_GRAY_FLAG);
 	return result;
 }
 
